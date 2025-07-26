@@ -6,19 +6,21 @@ import sys
 import time
 import webbrowser
 import threading
-import dotenv
-dotenv.load_dotenv()
-
-
-
 
 LD_Function = os.path.abspath(r"C:\Users\User\OneDrive - itc.edu.kh\Desktop\WorkSpace\programing\Python\application framwork\LD_player_QT\LD-Player")
-print("Adding to path:", LD_Function)
+
+
 
 if LD_Function not in sys.path:
     sys.path.append(LD_Function)
 
+# for s in sys.path:
+#     print(s]
+
 import Main as Open # type: ignore
+import dotenv
+dotenv.load_dotenv(dotenv_path=".git/.env")
+
 
 class BobPrimeApp(QMainWindow):
     def __init__(self):
@@ -61,7 +63,7 @@ class BobPrimeApp(QMainWindow):
                 padding: 5px;
             }
         """)
-        os.system("cls")
+        # os.system("cls")
         self.starttime = time.time()
         self.time_label = QLabel()
         self.timer = QTimer()
