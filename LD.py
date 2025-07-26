@@ -6,15 +6,13 @@ import sys
 import time
 import webbrowser
 import threading
-LD_Function = os.path.abspath("C:/Users/User/OneDrive - itc.edu.kh/Desktop/WorkSpace/programing/Python/LD-Player")
+
+LD_Function = os.path.abspath(r"C:\Users\User\OneDrive - itc.edu.kh\Desktop\WorkSpace\programing\Python\application framwork\LD_player_QT\LD-Player")
 print("Adding to path:", LD_Function)
 
 if LD_Function not in sys.path:
     sys.path.append(LD_Function)
 
-print("Current sys.path:")
-for p in sys.path:
-    print(p)
 import Main as Open # type: ignore
 
 class BobPrimeApp(QMainWindow):

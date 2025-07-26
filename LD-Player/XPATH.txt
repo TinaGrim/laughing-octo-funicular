@@ -1,0 +1,87 @@
+//android.widget.ImageView[@content-desc="Cancel"]
+
+
+//android.view.View[@content-desc="Create new account"]
+
+
+//android.view.View[@content-desc="Get started"]
+
+
+# allow 
+//android.widget.Button[@resource-id="com.android.packageinstaller:id/permission_allow_button"]
+
+#deny
+
+//android.widget.Button[@resource-id="com.android.packageinstaller:id/permission_deny_button"]
+
+#fist name
+
+
+//androidx.recyclerview.widget.RecyclerView/android.view.ViewGroup[2]/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup[1]/android.view.ViewGroup/android.view.ViewGroup/android.widget.EditText
+
+Tina
+
+#Last Name
+
+
+//androidx.recyclerview.widget.RecyclerView/android.view.ViewGroup[2]/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup[2]/android.view.ViewGroup/android.view.ViewGroup/android.widget.EditText
+
+Rith
+
+
+#Next
+
+//android.view.View[@content-desc="Next"]
+
+#dat month
+
+//android.widget.EditText[@resource-id="android:id/numberpicker_input" and @text="Mar"]
+
+#day
+
+
+//android.widget.EditText[@resource-id="android:id/numberpicker_input" and @text="02"]
+
+
+#year 
+
+//android.widget.EditText[@resource-id="android:id/numberpicker_input" and @text="2003"]
+
+
+#set
+
+//android.widget.Button[@resource-id="android:id/button1"]
+
+
+#Next
+
+//android.view.View[@content-desc="Next"]
+
+
+#Boy or girl
+
+//android.widget.Button[@content-desc="Female"]/android.view.ViewGroup/android.view.ViewGroup/android.widget.ImageView
+
+Male
+
+#Next
+
+//android.view.View[@content-desc="Next"]
+
+#choose email
+
+//android.view.View[@content-desc="Sign up with email"]
+
+
+#click
+
+//androidx.recyclerview.widget.RecyclerView/android.view.ViewGroup[2]/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup
+
+
+Example.com
+
+
+#Next
+
+//android.view.View[@content-desc="Next"]
+
