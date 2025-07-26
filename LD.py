@@ -6,6 +6,11 @@ import sys
 import time
 import webbrowser
 import threading
+import dotenv
+dotenv.load_dotenv()
+
+
+
 
 LD_Function = os.path.abspath(r"C:\Users\User\OneDrive - itc.edu.kh\Desktop\WorkSpace\programing\Python\application framwork\LD_player_QT\LD-Player")
 print("Adding to path:", LD_Function)
