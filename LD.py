@@ -6,16 +6,13 @@ import sys
 import time
 import webbrowser
 import threading
-
-LD_Function = os.path.abspath(os.path.join(os.path.dirname(__file__), "LD-Player"))
-
-if LD_Function not in sys.path:
-    sys.path.append(LD_Function)
-
-
-import Main as Open # type: ignore
 import dotenv
 dotenv.load_dotenv(dotenv_path=".git/.env")
+
+LD_Function = os.path.abspath(os.path.join(os.path.dirname(__file__), "LD-Player"))
+if LD_Function not in sys.path:
+    sys.path.append(LD_Function)
+import Main as Open # type: ignore
 
 class BobPrimeApp(QMainWindow):
     def __init__(self):
