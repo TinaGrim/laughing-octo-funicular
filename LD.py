@@ -7,20 +7,15 @@ import time
 import webbrowser
 import threading
 
-LD_Function = os.path.abspath(r"C:\Users\User\OneDrive - itc.edu.kh\Desktop\WorkSpace\programing\Python\application framwork\LD_player_QT\LD-Player")
-
-
+LD_Function = os.path.abspath(os.path.join(os.path.dirname(__file__), "LD-Player"))
 
 if LD_Function not in sys.path:
     sys.path.append(LD_Function)
 
-# for s in sys.path:
-#     print(s]
 
 import Main as Open # type: ignore
 import dotenv
 dotenv.load_dotenv(dotenv_path=".git/.env")
-
 
 class BobPrimeApp(QMainWindow):
     def __init__(self):
@@ -34,8 +29,6 @@ class BobPrimeApp(QMainWindow):
         self.setStyleSheet("""
             QMainWindow, QWidget{
             background-color: #292c3b;
-            margin: 0px;
-            padding: 0px;
             }
             QCheckBox {
                 color: white;
