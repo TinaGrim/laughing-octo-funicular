@@ -184,35 +184,24 @@ public class LDPlayerGUI extends JFrame {
         });
 
         // Button to get temp email
-        JButton emailBtn = createStyledButton("Get Email");
-        emailBtn.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                startThread(() -> {
-                    System.out.println("Getting temporary email...");
-                    runOptionCommand("get_mail");
-                });
-            }
-        });
+  
 
         // Button to test Option class
-        JButton testBtn = createStyledButton("remote");
+        JButton testBtn = createStyledButton("Remote");
         testBtn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 startThread(() -> {
                     System.out.println("Remote Option class...");
-                    runOptionCommand("remote");
+                    runOptionCommand("remote" ,"2");
                 });
             }
         });
 
         buttonPanel.add(openLDBtn);
-        buttonPanel.add(openAppiumBtn);
         buttonPanel.add(fullStartBtn);
         buttonPanel.add(setupBtn);
         buttonPanel.add(randomBtn);
-        buttonPanel.add(emailBtn);
         buttonPanel.add(testBtn);
         
         autoPostPanel.add(buttonPanel, BorderLayout.CENTER);
