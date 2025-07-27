@@ -21,6 +21,7 @@ if (isset($_GET['prompt'])) {
 $AI_response = "";
 $input_previous = "";
 
+
 header("Content-Type: application/json");
 
 // If no input provided, return error
