@@ -162,34 +162,6 @@ time.sleep(4)
 WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, """//android.view.View[@content-desc="Next"]
 """))).click()
 
-with open("Data1.txt", "w") as file:
+with open(f"/.git/Data{driver_number}.txt", "w") as file:
     file.write("First Name: {First_Name}, Last Name: {Last_Name} Email: {Mail}\nDate of Birth: {Day}/{month}/{Year}\nGender: {Gender}".format(First_Name=First_Name,Last_Name=Last_Name,Mail=Mail,Day=Day,month=month,Year=Year,Gender=Gender))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
