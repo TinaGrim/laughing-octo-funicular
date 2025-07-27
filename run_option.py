@@ -33,7 +33,6 @@ def main():
         # Import the Option class
         from Option import option #type: ignore
         opt = option()
-        print("SUCCESS: Option class imported successfully")
         
         if command == "open_ld":
             number = int(sys.argv[2]) if len(sys.argv) > 2 else 1
@@ -41,34 +40,18 @@ def main():
             opt.Open_LD(number)
             print("COMPLETED: LD Player instances opened successfully!")
             
-        elif command == "open_appium":
-            number = int(sys.argv[2]) if len(sys.argv) > 2 else 1
-            print(f"STARTING: Opening {number} Appium server(s)...")
-            # Start multiple Appium servers on different ports
-            base_port = 4723
-            for i in range(number):
-                port = base_port + i
-                print(f"  Starting Appium server on port {port}...")
-                opt.Open_Appium(port)
-            print(f"COMPLETED: {number} Appium servers started!")
-            
         elif command == "full_start":
             number = int(sys.argv[2]) if len(sys.argv) > 2 else 1
             print(f"STARTING: Full setup - Opening {number} LD Player(s) with Appium servers...")
             
-            # First open LD Players
             opt.Open_LD(number)
-            print(f"  Opened {number} LD Player instances")
+            print(f"Opened {number} LD Player instances")
+ 
+            opt.Full_setup(number)
+            print("COMPLETED: LD Player setup completed!")
             
-            # Then start Appium servers for each
-            base_port = 4723
-            for i in range(number):
-                port = base_port + i
-                print(f"  Starting Appium server {i+1} on port {port}...")
-                opt.Open_Appium(port)
-            
-            print(f"COMPLETED: Full setup complete - {number} LD Players with Appium servers!")
-            
+            opt.Remote_Driver(number)
+            print("COMPLETED: Remote drivers started!")
         elif command == "setup":
             number = int(sys.argv[2]) if len(sys.argv) > 2 else 1
             print(f"STARTING: Setting up {number} LD Player instance(s)...")
@@ -80,28 +63,6 @@ def main():
             print(f"STARTING: Starting {number} remote driver(s)...")
             opt.Remote_Driver(number)
             print("COMPLETED: Remote drivers started!")
-            
-        elif command == "get_mail":
-            print("STARTING: Getting temporary email...")
-            email = opt.Get_Temp_Mail()
-            print(f"COMPLETED: Temporary email: {email}")
-            
-        elif command == "random_data":
-            print("STARTING: Generating random user data...")
-            data = {
-                "name": opt.Random_Name(),
-                "gender": opt.Random_Gender(),
-                "year": opt.Random_Year(),
-                "month": opt.Random_Month(),
-                "day": opt.Random_Day()
-            }
-            print("COMPLETED: Random user data generated:")
-            print(json.dumps(data, indent=2))
-            
-        elif command == "remote":
-            print("STARTING: Testing Option class methods...")
-            print(f"  Remote name: {opt.Random_Name()}")
-            print("COMPLETED: Option class test completed!")
             
         else:
             print(f"ERROR: Unknown command: {command}")

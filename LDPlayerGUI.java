@@ -135,17 +135,6 @@ public class LDPlayerGUI extends JFrame {
             }
         });
 
-        // Button to open Appium servers only
-        JButton openAppiumBtn = createStyledButton("Open Appium");
-        openAppiumBtn.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                startThread(() -> {
-                    System.out.println("Opening Appium servers...");
-                    runOptionCommand("open_appium", "2"); // Open 2 Appium servers
-                });
-            }
-        });
 
         // Button for full start (LD + Appium)
         JButton fullStartBtn = createStyledButton("Full Start");
@@ -171,23 +160,9 @@ public class LDPlayerGUI extends JFrame {
             }
         });
 
-        // Button to get random data
-        JButton randomBtn = createStyledButton("Random Data");
-        randomBtn.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                startThread(() -> {
-                    System.out.println("Getting random user data...");
-                    runOptionCommand("random_data");
-                });
-            }
-        });
-
-        // Button to get temp email
-  
 
         // Button to test Option class
-        JButton testBtn = createStyledButton("Remote");
+        JButton testBtn = createStyledButton("Run");
         testBtn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -199,10 +174,9 @@ public class LDPlayerGUI extends JFrame {
         });
 
         buttonPanel.add(openLDBtn);
-        buttonPanel.add(fullStartBtn);
         buttonPanel.add(setupBtn);
-        buttonPanel.add(randomBtn);
         buttonPanel.add(testBtn);
+        buttonPanel.add(fullStartBtn);
         
         autoPostPanel.add(buttonPanel, BorderLayout.CENTER);
         

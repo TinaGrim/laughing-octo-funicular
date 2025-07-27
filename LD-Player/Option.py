@@ -25,7 +25,6 @@ class option():
         """Opening Cmd of Appium"""
         startupinfo = self.info(2)
         
-        
         subprocess.Popen(f'start /MIN cmd /c appium --port {port}', shell=True, startupinfo=startupinfo)
 
         time.sleep(1)
@@ -45,11 +44,14 @@ class option():
         subprocess.run(LDPlayer_setup_path, shell = True,startupinfo=startupinfo) 
         subprocess.run(LDPlayer_launcher_path, shell = True ,startupinfo=startupinfo)
         time.sleep(1)
-
-        for w in gw.getAllWindows():
-            if w.title == LD_Name:
-                w.moveTo(index * 215,0)
-                break
+        try:
+            for w in gw.getAllWindows():
+                if w.title == LD_Name:
+                    w.moveTo(index * 215,0)
+                    break
+            print(f"LDPlayer {index + 1} Arranged successfully")
+        except Exception as e:
+            print(f"Error moving window: {e}")
 
     def cap(self,port,choose):
         
