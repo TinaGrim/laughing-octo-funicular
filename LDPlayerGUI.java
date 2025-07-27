@@ -5,6 +5,7 @@ import java.awt.event.ActionListener;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 import java.net.URI;
 
 public class LDPlayerGUI extends JFrame {
@@ -429,6 +430,8 @@ public class LDPlayerGUI extends JFrame {
             }, 5, java.util.concurrent.TimeUnit.SECONDS); // Run after 5 seconds
         }
     }
+
+    private void startThread(Runnable task) {
         // Show loading indicator or disable button temporarily
         CompletableFuture.runAsync(task, executorService)
             .thenRun(() -> {
