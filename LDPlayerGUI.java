@@ -96,8 +96,7 @@ public class LDPlayerGUI extends JFrame {
         JButton logBtn = createStyledButton("📃Log");
         JButton lightBtn = createStyledButton("💡");
         
-        // THIS IS THE MAIN CONVERSION: Python webbrowser threading to Java
-        // Python: Group.clicked.connect(lambda: self.start_thread(webbrowser.open, "https://t.me/assemly"))
+
         groupBtn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -119,12 +118,104 @@ public class LDPlayerGUI extends JFrame {
     private JPanel createAutoPostPanel() {
         JPanel autoPostPanel = new JPanel(new BorderLayout());
         autoPostPanel.setBackground(new Color(41, 44, 59));
+
+        // Create a panel for multiple buttons
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        buttonPanel.setBackground(new Color(41, 44, 59));
+
+        // Button to open LD Players only
+        JButton openLDBtn = createStyledButton("Open LD");
+        openLDBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                startThread(() -> {
+                    System.out.println("Opening LD Player instances only...");
+                    runOptionCommand("open_ld", "2"); // Open 2 LD instances
+                });
+            }
+        });
+
+        // Button to open Appium servers only
+        JButton openAppiumBtn = createStyledButton("Open Appium");
+        openAppiumBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                startThread(() -> {
+                    System.out.println("Opening Appium servers...");
+                    runOptionCommand("open_appium", "2"); // Open 2 Appium servers
+                });
+            }
+        });
+
+        // Button for full start (LD + Appium)
+        JButton fullStartBtn = createStyledButton("Full Start");
+        fullStartBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                startThread(() -> {
+                    System.out.println("Starting full setup: LD Players + Appium servers...");
+                    runOptionCommand("full_start", "2"); // Open 2 LD instances with Appium
+                });
+            }
+        });
+
+        // Button to setup LD Players
+        JButton setupBtn = createStyledButton("Setup LD");
+        setupBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                startThread(() -> {
+                    System.out.println("Setting up LD Players...");
+                    runOptionCommand("setup", "2");
+                });
+            }
+        });
+
+        // Button to get random data
+        JButton randomBtn = createStyledButton("Random Data");
+        randomBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                startThread(() -> {
+                    System.out.println("Getting random user data...");
+                    runOptionCommand("random_data");
+                });
+            }
+        });
+
+        // Button to get temp email
+        JButton emailBtn = createStyledButton("Get Email");
+        emailBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                startThread(() -> {
+                    System.out.println("Getting temporary email...");
+                    runOptionCommand("get_mail");
+                });
+            }
+        });
+
+        // Button to test Option class
+        JButton testBtn = createStyledButton("remote");
+        testBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                startThread(() -> {
+                    System.out.println("Remote Option class...");
+                    runOptionCommand("remote");
+                });
+            }
+        });
+
+        buttonPanel.add(openLDBtn);
+        buttonPanel.add(openAppiumBtn);
+        buttonPanel.add(fullStartBtn);
+        buttonPanel.add(setupBtn);
+        buttonPanel.add(randomBtn);
+        buttonPanel.add(emailBtn);
+        buttonPanel.add(testBtn);
         
-        JLabel label = new JLabel("Auto Post Panel");
-        label.setForeground(Color.WHITE);
-        label.setHorizontalAlignment(SwingConstants.CENTER);
-        
-        autoPostPanel.add(label, BorderLayout.CENTER);
+        autoPostPanel.add(buttonPanel, BorderLayout.CENTER);
         
         return autoPostPanel;
     }
@@ -199,7 +290,78 @@ public class LDPlayerGUI extends JFrame {
         }
     }
 
-    // Generic method to start any thread (equivalent to Python's start_thread)
+    private void runPythonScript(String scriptPath) {
+        try {
+            // Use the correct Python executable path
+            ProcessBuilder processBuilder = new ProcessBuilder(
+                "C:/Users/User/.pyenv/pyenv-win/versions/3.10.11/python.exe", 
+                scriptPath
+            );
+            processBuilder.redirectErrorStream(true);
+            
+            Process process = processBuilder.start();
+            
+            // Read output in real-time
+            try (java.io.BufferedReader reader = new java.io.BufferedReader(
+                    new java.io.InputStreamReader(process.getInputStream()))) {
+                
+                String line;
+                System.out.println("Python script output:");
+                while ((line = reader.readLine()) != null) {
+                    System.out.println(line);
+                }
+            }
+            
+            int exitCode = process.waitFor();
+            System.out.println("Python script finished with exit code: " + exitCode);
+            
+        } catch (Exception e) {
+            System.err.println("Error running Python script: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    // Method to run Option class commands
+    private void runOptionCommand(String command, String... args) {
+        try {
+            // Build command array
+            java.util.List<String> commandList = new java.util.ArrayList<>();
+            commandList.add("C:/Users/User/.pyenv/pyenv-win/versions/3.10.11/python.exe");
+            commandList.add("run_option.py");
+            commandList.add(command);
+            
+            // Add arguments if provided
+            for (String arg : args) {
+                commandList.add(arg);
+            }
+            
+            ProcessBuilder processBuilder = new ProcessBuilder(commandList);
+            processBuilder.redirectErrorStream(true);
+            
+            Process process = processBuilder.start();
+            
+            // Read output in real-time
+            try (java.io.BufferedReader reader = new java.io.BufferedReader(
+                    new java.io.InputStreamReader(process.getInputStream()))) {
+                
+                String line;
+                System.out.println("Option command output:");
+                while ((line = reader.readLine()) != null) {
+                    System.out.println(line);
+                }
+            }
+            
+            int exitCode = process.waitFor();
+            System.out.println("Option command finished with exit code: " + exitCode);
+            
+        } catch (Exception e) {
+            System.err.println("Error running Option command: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+
+
     private void startThread(Runnable task) {
         CompletableFuture.runAsync(task, executorService)
             .exceptionally(throwable -> {
