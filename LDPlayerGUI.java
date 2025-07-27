@@ -141,9 +141,19 @@ public class LDPlayerGUI extends JFrame {
         openLDBtn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                // Provide immediate feedback
+                openLDBtn.setText("Opening...");
+                openLDBtn.setEnabled(false);
+                
                 startThread(() -> {
                     System.out.println("Opening LD Player instances only...");
                     runOptionCommand("open_ld", "2"); // Open 2 LD instances
+                    
+                    // Re-enable button on UI thread
+                    SwingUtilities.invokeLater(() -> {
+                        openLDBtn.setText("Open LD");
+                        openLDBtn.setEnabled(true);
+                    });
                 });
             }
         });
@@ -299,12 +309,13 @@ public class LDPlayerGUI extends JFrame {
         }
     }
 
-    // Method to run Option class commands
+    // Method to run Option class commands with better performance
     private void runOptionCommand(String command, String... args) {
         try {
             // Build command array
             java.util.List<String> commandList = new java.util.ArrayList<>();
             commandList.add("C:/Users/User/.pyenv/pyenv-win/versions/3.10.11/python.exe");
+            commandList.add("-u"); // Unbuffered output for real-time feedback
             commandList.add("run_option.py");
             commandList.add(command);
             
@@ -316,21 +327,24 @@ public class LDPlayerGUI extends JFrame {
             ProcessBuilder processBuilder = new ProcessBuilder(commandList);
             processBuilder.redirectErrorStream(true);
             
+            System.out.println("Starting: " + String.join(" ", commandList));
             Process process = processBuilder.start();
             
-            // Read output in real-time
+            // Read output in real-time with immediate flushing
             try (java.io.BufferedReader reader = new java.io.BufferedReader(
                     new java.io.InputStreamReader(process.getInputStream()))) {
                 
                 String line;
-                System.out.println("Option command output:");
                 while ((line = reader.readLine()) != null) {
-                    System.out.println(line);
+                    final String output = line; // For lambda
+                    SwingUtilities.invokeLater(() -> {
+                        System.out.println(output); // Update UI thread safely
+                    });
                 }
             }
             
             int exitCode = process.waitFor();
-            System.out.println("Option command finished with exit code: " + exitCode);
+            System.out.println("Process finished with exit code: " + exitCode);
             
         } catch (Exception e) {
             System.err.println("Error running Option command: " + e.getMessage());
@@ -341,8 +355,18 @@ public class LDPlayerGUI extends JFrame {
 
 
     private void startThread(Runnable task) {
+        // Show loading indicator or disable button temporarily
         CompletableFuture.runAsync(task, executorService)
+            .thenRun(() -> {
+                // Re-enable UI components after completion
+                SwingUtilities.invokeLater(() -> {
+                    System.out.println("Operation completed - UI ready");
+                });
+            })
             .exceptionally(throwable -> {
+                SwingUtilities.invokeLater(() -> {
+                    System.err.println("Operation failed: " + throwable.getMessage());
+                });
                 throwable.printStackTrace();
                 return null;
             });
