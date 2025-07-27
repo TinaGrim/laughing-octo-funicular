@@ -14,8 +14,19 @@ public class LDPlayerGUI extends JFrame {
     private ExecutorService executorService;
 
     public LDPlayerGUI() {
-        // Initialize executor service for faster threading
+        // Different types of ExecutorService you can use:
+        
+        // 1. CachedThreadPool (current) - Creates threads as needed, reuses existing ones
         executorService = Executors.newCachedThreadPool();
+        
+        // 2. FixedThreadPool - Fixed number of threads (good for limited resources)
+        // executorService = Executors.newFixedThreadPool(4); // 4 threads max
+        
+        // 3. SingleThreadExecutor - Only one background thread (for sequential tasks)
+        // executorService = Executors.newSingleThreadExecutor();
+        
+        // 4. ScheduledExecutorService - For delayed/repeated tasks
+        // executorService = Executors.newScheduledThreadPool(2);
         
         setupGUI();
         startTimer();
@@ -107,12 +118,9 @@ public class LDPlayerGUI extends JFrame {
         JButton lightBtn = createStyledButton("💡");
         
 
-        groupBtn.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // Java equivalent with faster threading
-                startWebBrowserThread("https://t.me/assemly");
-            }
+        groupBtn.addActionListener(e -> {
+            // Java equivalent with faster threading
+            startWebBrowserThread("https://t.me/assemly");
         });
         JLabel spacer = new JLabel("                    "); 
         spacer.setOpaque(false);
@@ -138,62 +146,67 @@ public class LDPlayerGUI extends JFrame {
 
         // Button to open LD Players only
         JButton openLDBtn = createStyledButton("Open LD");
-        openLDBtn.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // Provide immediate feedback
-                openLDBtn.setText("Opening...");
-                openLDBtn.setEnabled(false);
+        openLDBtn.addActionListener(e -> {
+            // Provide immediate feedback
+            openLDBtn.setText("Opening...");
+            openLDBtn.setEnabled(false);
+            
+            startThread(() -> {
+                System.out.println("Opening LD Player instances only...");
+                runOptionCommand("open_ld", "2"); // Open 2 LD instances
                 
-                startThread(() -> {
-                    System.out.println("Opening LD Player instances only...");
-                    runOptionCommand("open_ld", "2"); // Open 2 LD instances
-                    
-                    // Re-enable button on UI thread
-                    SwingUtilities.invokeLater(() -> {
-                        openLDBtn.setText("Open LD");
-                        openLDBtn.setEnabled(true);
-                    });
+                // Re-enable button on UI thread
+                SwingUtilities.invokeLater(() -> {
+                    openLDBtn.setText("Open LD");
+                    openLDBtn.setEnabled(true);
                 });
-            }
+            });
         });
 
 
         // Button for full start (LD + Appium)
         JButton fullStartBtn = createStyledButton("Full Start");
-        fullStartBtn.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                startThread(() -> {
+        fullStartBtn.addActionListener(e -> {
+            fullStartBtn.setText("Starting...");
+            fullStartBtn.setEnabled(false);
+            
+            // Method 1: Direct ExecutorService usage
+            executorService.submit(() -> {
+                try {
                     System.out.println("Starting full setup: LD Players + Appium servers...");
-                    runOptionCommand("full_start", "2"); // Open 2 LD instances with Appium
-                });
-            }
+                    runOptionCommand("full_start", "2");
+                    
+                    // Update UI on EDT thread
+                    SwingUtilities.invokeLater(() -> {
+                        fullStartBtn.setText("Full Start");
+                        fullStartBtn.setEnabled(true);
+                    });
+                } catch (Exception ex) {
+                    SwingUtilities.invokeLater(() -> {
+                        fullStartBtn.setText("Error!");
+                        fullStartBtn.setEnabled(true);
+                    });
+                    ex.printStackTrace();
+                }
+            });
         });
 
         // Button to setup LD Players
         JButton setupBtn = createStyledButton("Setup LD");
-        setupBtn.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                startThread(() -> {
-                    System.out.println("Setting up LD Players...");
-                    runOptionCommand("setup", "2");
-                });
-            }
+        setupBtn.addActionListener(e -> {
+            startThread(() -> {
+                System.out.println("Setting up LD Players...");
+                runOptionCommand("setup", "2");
+            });
         });
-
 
         // Button to test Option class
         JButton testBtn = createStyledButton("Run");
-        testBtn.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                startThread(() -> {
-                    System.out.println("Remote Option class...");
-                    runOptionCommand("remote" ,"2");
-                });
-            }
+        testBtn.addActionListener(e -> {
+            startThread(() -> {
+                System.out.println("Remote Option class...");
+                runOptionCommand("remote" ,"2");
+            });
         });
 
 
@@ -216,11 +229,13 @@ public class LDPlayerGUI extends JFrame {
         button.setBorderPainted(false);
         button.setMargin(new Insets(5, 5, 5, 5));
         
-        // Hover effect
+        // Hover effect using method references (reduces anonymous classes)
         button.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
             public void mouseEntered(java.awt.event.MouseEvent evt) {
                 button.setBackground(new Color(23, 110, 195)); // #176ec3
             }
+            @Override
             public void mouseExited(java.awt.event.MouseEvent evt) {
                 button.setBackground(new Color(19, 89, 157));
             }
@@ -354,7 +369,66 @@ public class LDPlayerGUI extends JFrame {
     
 
 
-    private void startThread(Runnable task) {
+    // Method 2: Using ExecutorService with Future for return values
+    private void runTaskWithResult() {
+        // Submit task that returns a value
+        Future<String> future = executorService.submit(() -> {
+            // This runs in background thread
+            Thread.sleep(2000); // Simulate work
+            return "Task completed successfully!";
+        });
+        
+        // Handle the result in another background thread
+        executorService.submit(() -> {
+            try {
+                String result = future.get(); // Wait for result
+                SwingUtilities.invokeLater(() -> {
+                    System.out.println("Result: " + result);
+                });
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    // Method 3: ExecutorService with timeout
+    private void runTaskWithTimeout() {
+        Future<Void> future = executorService.submit(() -> {
+            runOptionCommand("open_ld", "1");
+            return null;
+        });
+        
+        executorService.submit(() -> {
+            try {
+                future.get(30, java.util.concurrent.TimeUnit.SECONDS); // 30 second timeout
+                SwingUtilities.invokeLater(() -> {
+                    System.out.println("Task completed within timeout");
+                });
+            } catch (java.util.concurrent.TimeoutException e) {
+                future.cancel(true); // Cancel the task
+                SwingUtilities.invokeLater(() -> {
+                    System.out.println("Task timed out and was cancelled");
+                });
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    // Method 4: Schedule delayed tasks
+    private void scheduleDelayedTask() {
+        // Convert to ScheduledExecutorService for scheduling
+        if (executorService instanceof java.util.concurrent.ScheduledExecutorService) {
+            java.util.concurrent.ScheduledExecutorService scheduler = 
+                (java.util.concurrent.ScheduledExecutorService) executorService;
+            
+            scheduler.schedule(() -> {
+                SwingUtilities.invokeLater(() -> {
+                    System.out.println("Delayed task executed!");
+                });
+            }, 5, java.util.concurrent.TimeUnit.SECONDS); // Run after 5 seconds
+        }
+    }
         // Show loading indicator or disable button temporarily
         CompletableFuture.runAsync(task, executorService)
             .thenRun(() -> {
