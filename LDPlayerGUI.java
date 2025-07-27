@@ -43,7 +43,7 @@ public class LDPlayerGUI extends JFrame {
         tabbedPane.setBackground(new Color(41, 44, 59));
         tabbedPane.setForeground(Color.WHITE);
         
-        tabbedPane.addTab("Devices", new JLabel("Hello"));
+        tabbedPane.addTab("Devices", createDevicesPanel());
         tabbedPane.addTab("Auto Post", createAutoPostPanel());
         
         mainPanel.add(leftPanel, BorderLayout.WEST);
@@ -51,7 +51,17 @@ public class LDPlayerGUI extends JFrame {
         
         add(mainPanel);
     }
+    private JPanel createDevicesPanel() {
+        JPanel devices = new JPanel();
+        devices.setBackground(new Color(41, 44, 59));
+        devices.setLayout(new BorderLayout());
+        JLabel devicesLabel = new JLabel("Devices");
+        devicesLabel.setFont(new Font("Arial", Font.BOLD, 24));
+        devicesLabel.setForeground(Color.WHITE);
+        devices.add(devicesLabel, BorderLayout.NORTH);
 
+        return devices;
+    }
     private JPanel createLeftPanel() {
         JPanel leftPanel = new JPanel(new BorderLayout());
         leftPanel.setBackground(new Color(41, 44, 59));
@@ -104,8 +114,11 @@ public class LDPlayerGUI extends JFrame {
                 startWebBrowserThread("https://t.me/assemly");
             }
         });
-        
+        JLabel spacer = new JLabel("                    "); 
+        spacer.setOpaque(false);
+
         buttonPanel.add(menuBtn);
+        buttonPanel.add(spacer);
         buttonPanel.add(emailBtn);
         buttonPanel.add(apiBtn);
         buttonPanel.add(groupBtn);
@@ -172,6 +185,8 @@ public class LDPlayerGUI extends JFrame {
                 });
             }
         });
+
+
 
         buttonPanel.add(openLDBtn);
         buttonPanel.add(setupBtn);
