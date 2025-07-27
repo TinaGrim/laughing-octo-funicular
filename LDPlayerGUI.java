@@ -7,13 +7,20 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.net.URI;
-
+import java.net.URL;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.io.*;
+import javax.net.ssl.HttpsURLConnection;
 public class LDPlayerGUI extends JFrame {
     private JLabel timeLabel;
     private Timer timer;
     private long startTime;
     private ExecutorService executorService;
-
+    private JTextField textField;
+    private JButton sendButton;
+    private JTextArea chatArea;
+    private static final String PHP_API_URL = "http://127.0.0.1:8080/chatBot.php";
     public LDPlayerGUI() {
         // Different types of ExecutorService you can use:
         
@@ -100,13 +107,47 @@ public class LDPlayerGUI extends JFrame {
         
         // Bottom buttons panel
         JPanel buttonPanel = createButtonPanel();
-        
+        JPanel textPanel = textPanel();
+
         leftPanel.add(headerPanel, BorderLayout.NORTH);
+        leftPanel.add(textPanel, BorderLayout.CENTER);
         leftPanel.add(buttonPanel, BorderLayout.SOUTH);
         
         return leftPanel;
     }
+    private JPanel textPanel() {
+        JPanel textPanel = new JPanel(new BorderLayout());
+        textPanel.setBackground(new Color(41, 44, 59));
 
+        chatArea = new JTextArea(20,50);
+        chatArea.setEditable(false);
+        chatArea.setBackground(new Color(30, 30, 30));
+        chatArea.setForeground(Color.WHITE);
+        chatArea.setFont(new Font("Arial", Font.PLAIN, 14));
+        JPanel bottomPanel = new JPanel(new BorderLayout());
+
+        textField = new JTextField();  // Assign to class field, not local variable
+        textField.setBackground(new Color(30, 30, 30));
+        textField.setForeground(Color.WHITE);
+        textField.setFont(new Font("Arial", Font.PLAIN, 14));
+
+        sendButton = new JButton("Send");
+        sendButton.setBackground(new Color(0, 120, 215));
+        sendButton.setForeground(Color.WHITE);
+        sendButton.setFocusPainted(false);
+
+        textField.addActionListener(e -> 
+        sendMessageToPHP());
+        sendButton.addActionListener(e -> sendMessageToPHP());
+
+        bottomPanel.add(textField, BorderLayout.CENTER);
+        bottomPanel.add(sendButton, BorderLayout.EAST);
+
+        textPanel.add(chatArea, BorderLayout.CENTER);
+        textPanel.add(bottomPanel, BorderLayout.SOUTH);
+
+        return textPanel;
+    }
     private JPanel createButtonPanel() {
         JPanel buttonPanel = new JPanel(new FlowLayout());
         buttonPanel.setBackground(new Color(41, 44, 59));
@@ -136,7 +177,28 @@ public class LDPlayerGUI extends JFrame {
         
         return buttonPanel;
     }
+    private void sendMessageToPHP() {
+        String message = textField.getText().trim();
+        if (message.isEmpty()) return;
+        appendToChat("You: " + message);
+        textField.setText("");
+        sendButton.setEnabled(false);
+        sendButton.setText("Sending...");
 
+        executorService.submit(()-> {
+            try {
+                String response = sendPostRequestToPHP(message);
+                SwingUtilities.invokeLater(() -> {
+                    appendToChat("Lingsha: " + response);
+                    sendButton.setText("Send to Lingsha");
+                    sendButton.setEnabled(true);
+                });
+            } catch (Exception e) {
+                System.err.println("Error: " + e.getMessage());
+            }
+
+        });
+    }
     private JPanel createAutoPostPanel() {
         JPanel autoPostPanel = new JPanel(new BorderLayout());
         autoPostPanel.setBackground(new Color(41, 44, 59));
@@ -210,8 +272,6 @@ public class LDPlayerGUI extends JFrame {
             });
         });
 
-
-
         buttonPanel.add(openLDBtn);
         buttonPanel.add(setupBtn);
         buttonPanel.add(testBtn);
@@ -220,6 +280,47 @@ public class LDPlayerGUI extends JFrame {
         autoPostPanel.add(buttonPanel, BorderLayout.CENTER);
         
         return autoPostPanel;
+    }
+    private String sendPostRequestToPHP(String message) {
+        try {
+            URL url = new URL(PHP_API_URL);
+            HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
+            connection.setRequestMethod("POST");
+            connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+            connection.setDoOutput(true);
+            connection.setConnectTimeout(5000); 
+            connection.setReadTimeout(10000); 
+            String postData = "prompt=" + URLEncoder.encode(message,StandardCharsets.UTF_8.toString());
+
+            try (DataOutputStream writer = new
+            DataOutputStream(connection.
+            getOutputStream())) {
+                writer.writeBytes(postData);
+                writer.flush();
+            }
+            
+            int responseCode = connection.getResponseCode();
+            if (responseCode != 200) {
+                System.err.println("Error: " + responseCode);
+            }
+
+            StringBuilder response = new StringBuilder();
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    response.append(line);
+                }
+            }
+            return response.toString();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Error: " + e.getMessage();
+        }
+    }
+    private void appendToChat(String message) {
+        chatArea.append(message + "\n");
+        chatArea.setCaretPosition(chatArea.getDocument().getLength());
     }
 
     private JButton createStyledButton(String text) {
