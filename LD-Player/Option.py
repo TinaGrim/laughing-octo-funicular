@@ -29,20 +29,35 @@ class option():
 
         time.sleep(1)
     @timer
-    def LDPlayer(self,startupinfo, index):
+    def LDPlayer(self, startupinfo, index):
         """Opening LDPlayer by cmd"""
+        import platform
         startupinfo = self.info(1)
         
+        system = platform.system()
         
-        LDPlayer_launcher_path = f'"D:\\LDPlayer\\LDPlayer9\\ldconsole.exe" launch --index {index}'
-        LDPlayer_setup_path = f'"D:\\LDPlayer\\LDPlayer9\\ldconsole.exe" modify --index {index} --resolution 300,600,160 '
-        print("LDPlayer count:", index + 1)
+        if system == "Windows":
+            # Windows paths and commands
+            LDPlayer_launcher_path = f'"D:\\LDPlayer\\LDPlayer9\\ldconsole.exe" launch --index {index}'
+            LDPlayer_setup_path = f'"D:\\LDPlayer\\LDPlayer9\\ldconsole.exe" modify --index {index} --resolution 300,600,160 '
+            print("LDPlayer count:", index + 1)
+            
+            LD_Name = f"LDPlayer" if index == 0 else f"LDPlayer-{index}"
+            
+            subprocess.run(LDPlayer_setup_path, shell=True, startupinfo=startupinfo) 
+            subprocess.run(LDPlayer_launcher_path, shell=True, startupinfo=startupinfo)
         
-
-        LD_Name = f"LDPlayer" if index ==0 else f"LDPlayer-{index}"
-        
-        subprocess.run(LDPlayer_setup_path, shell = True,startupinfo=startupinfo) 
-        subprocess.run(LDPlayer_launcher_path, shell = True ,startupinfo=startupinfo)
+        elif system == "Darwin":  # macOS
+            # macOS doesn't support LDPlayer natively, but we can simulate or show a message
+            print(f"LDPlayer not supported on macOS. Simulating launch of LDPlayer {index + 1}")
+            print(f"Would launch: LDPlayer instance {index}")
+            # You could add alternative Android emulator commands here like:
+            # subprocess.run(["open", "-a", "Android Studio"], check=False)
+            
+        else:  # Linux
+            print(f"LDPlayer not supported on {system}. Simulating launch of LDPlayer {index + 1}")
+            print(f"Would launch: LDPlayer instance {index}")
+            # You could add alternative emulator commands here
         time.sleep(1)
         try:
             for w in gw.getAllWindows():
@@ -79,12 +94,17 @@ class option():
         }
         return des_cap 
     
-    def info(self,Show):
-        """Just for hide window """
-        startupinfo = subprocess.STARTUPINFO()
-        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-        startupinfo.wShowWindow = Show
-        return startupinfo
+    def info(self, Show):
+        """Just for hide window - Windows only"""
+        import platform
+        if platform.system() == "Windows":
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            startupinfo.wShowWindow = Show
+            return startupinfo
+        else:
+            # On macOS/Linux, return None since STARTUPINFO doesn't exist
+            return None
     
     def wait_for_ldplayer_device(self, device_name, timeout=60):
         """check if LDPlayer fully opened"""
