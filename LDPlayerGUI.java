@@ -1,7 +1,5 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.CompletableFuture;
@@ -11,7 +9,8 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.io.*;
-import javax.net.ssl.HttpsURLConnection;
+import java.net.HttpURLConnection;
+import java.net.ConnectException;
 public class LDPlayerGUI extends JFrame {
     private JLabel timeLabel;
     private Timer timer;
@@ -20,6 +19,7 @@ public class LDPlayerGUI extends JFrame {
     private JTextField textField;
     private JButton sendButton;
     private JTextArea chatArea;
+    private Process phpServerProcess; // Add this to track PHP server process
     private static final String PHP_API_URL = "http://127.0.0.1:8080/chatBot.php";
     public LDPlayerGUI() {
         // Different types of ExecutorService you can use:
@@ -36,6 +36,7 @@ public class LDPlayerGUI extends JFrame {
         // 4. ScheduledExecutorService - For delayed/repeated tasks
         // executorService = Executors.newScheduledThreadPool(2);
         
+        startPHPServer(); // Start PHP server automatically
         setupGUI();
         startTimer();
     }
@@ -131,10 +132,7 @@ public class LDPlayerGUI extends JFrame {
         textField.setForeground(Color.WHITE);
         textField.setFont(new Font("Arial", Font.PLAIN, 14));
 
-        sendButton = new JButton("Send");
-        sendButton.setBackground(new Color(0, 120, 215));
-        sendButton.setForeground(Color.WHITE);
-        sendButton.setFocusPainted(false);
+        sendButton = createStyledButton("Send");  // Use createStyledButton for consistent styling
 
         textField.addActionListener(e -> 
         sendMessageToPHP());
@@ -164,7 +162,7 @@ public class LDPlayerGUI extends JFrame {
             // Java equivalent with faster threading
             startWebBrowserThread("https://t.me/assemly");
         });
-        JLabel spacer = new JLabel("                    "); 
+        JLabel spacer = new JLabel(""); 
         spacer.setOpaque(false);
 
         buttonPanel.add(menuBtn);
@@ -180,12 +178,13 @@ public class LDPlayerGUI extends JFrame {
     private void sendMessageToPHP() {
         String message = textField.getText().trim();
         if (message.isEmpty()) return;
+        
         appendToChat("You: " + message);
         textField.setText("");
         sendButton.setEnabled(false);
         sendButton.setText("Sending...");
 
-        executorService.submit(()-> {
+        executorService.submit(() -> {
             try {
                 String response = sendPostRequestToPHP(message);
                 SwingUtilities.invokeLater(() -> {
@@ -194,9 +193,13 @@ public class LDPlayerGUI extends JFrame {
                     sendButton.setEnabled(true);
                 });
             } catch (Exception e) {
+                SwingUtilities.invokeLater(() -> {
+                    appendToChat("Error: " + e.getMessage());
+                    sendButton.setText("Send to Lingsha");
+                    sendButton.setEnabled(true);
+                });
                 System.err.println("Error: " + e.getMessage());
             }
-
         });
     }
     private JPanel createAutoPostPanel() {
@@ -283,29 +286,29 @@ public class LDPlayerGUI extends JFrame {
     }
     private String sendPostRequestToPHP(String message) {
         try {
-            URL url = new URL(PHP_API_URL);
-            HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
+            URL url = URI.create(PHP_API_URL).toURL(); // Modern approach
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection(); // Use HttpURLConnection for HTTP
             connection.setRequestMethod("POST");
             connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
             connection.setDoOutput(true);
-            connection.setConnectTimeout(5000); 
-            connection.setReadTimeout(10000); 
-            String postData = "prompt=" + URLEncoder.encode(message,StandardCharsets.UTF_8.toString());
+            connection.setConnectTimeout(10000); // 10 seconds
+            connection.setReadTimeout(30000);    // 30 seconds
+            
+            String postData = "prompt=" + URLEncoder.encode(message, StandardCharsets.UTF_8.toString());
 
-            try (DataOutputStream writer = new
-            DataOutputStream(connection.
-            getOutputStream())) {
+            try (DataOutputStream writer = new DataOutputStream(connection.getOutputStream())) {
                 writer.writeBytes(postData);
                 writer.flush();
             }
             
             int responseCode = connection.getResponseCode();
             if (responseCode != 200) {
-                System.err.println("Error: " + responseCode);
+                throw new Exception("HTTP Error: " + responseCode + " - " + connection.getResponseMessage());
             }
 
             StringBuilder response = new StringBuilder();
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
+            try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     response.append(line);
@@ -313,6 +316,8 @@ public class LDPlayerGUI extends JFrame {
             }
             return response.toString();
 
+        } catch (ConnectException e) {
+            return "Error: Cannot connect to PHP server. Make sure PHP server is running on " + PHP_API_URL;
         } catch (Exception e) {
             e.printStackTrace();
             return "Error: " + e.getMessage();
@@ -325,7 +330,7 @@ public class LDPlayerGUI extends JFrame {
 
     private JButton createStyledButton(String text) {
         JButton button = new JButton(text);
-        button.setBackground(new Color(19, 89, 157)); // #13599d
+        button.setBackground(new Color(0x3d11dc)); // Purple color without alpha channel
         button.setForeground(Color.WHITE);
         button.setFocusPainted(false);
         button.setBorderPainted(false);
@@ -335,11 +340,11 @@ public class LDPlayerGUI extends JFrame {
         button.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseEntered(java.awt.event.MouseEvent evt) {
-                button.setBackground(new Color(23, 110, 195)); // #176ec3
+                button.setBackground(new Color(0x5a1ee6)); // Lighter purple on hover
             }
             @Override
             public void mouseExited(java.awt.event.MouseEvent evt) {
-                button.setBackground(new Color(19, 89, 157));
+                button.setBackground(new Color(0x3d11dc)); // Original purple
             }
         });
         
@@ -373,22 +378,24 @@ public class LDPlayerGUI extends JFrame {
         }, executorService); // Use thread pool for better performance
     }
 
-    // Fallback method using Runtime.exec (similar to Python's webbrowser)
+    // Fallback method using ProcessBuilder (modern approach)
     private void openURLFallback(String url) {
         try {
             String os = System.getProperty("os.name").toLowerCase();
-            Runtime runtime = Runtime.getRuntime();
+            ProcessBuilder processBuilder;
             
             if (os.contains("win")) {
                 // Windows
-                runtime.exec("rundll32 url.dll,FileProtocolHandler " + url);
+                processBuilder = new ProcessBuilder("rundll32", "url.dll,FileProtocolHandler", url);
             } else if (os.contains("mac")) {
                 // macOS
-                runtime.exec("open " + url);
+                processBuilder = new ProcessBuilder("open", url);
             } else {
                 // Linux/Unix
-                runtime.exec("xdg-open " + url);
+                processBuilder = new ProcessBuilder("xdg-open", url);
             }
+            
+            processBuilder.start();
             System.out.println("Opened URL using fallback method: " + url);
         } catch (Exception e) {
             System.err.println("Fallback browser opening failed: " + e.getMessage());
@@ -399,7 +406,7 @@ public class LDPlayerGUI extends JFrame {
         try {
             // Use the correct Python executable path
             ProcessBuilder processBuilder = new ProcessBuilder(
-                "C:/Users/User/.pyenv/pyenv-win/versions/3.10.11/python.exe", 
+                "python", 
                 scriptPath
             );
             processBuilder.redirectErrorStream(true);
@@ -423,6 +430,64 @@ public class LDPlayerGUI extends JFrame {
         } catch (Exception e) {
             System.err.println("Error running Python script: " + e.getMessage());
             e.printStackTrace();
+        }
+    }
+
+    // Method to automatically start PHP server when GUI opens
+    private void startPHPServer() {
+        try {
+            // Check if PHP server is already running
+            if (isPHPServerRunning()) {
+                System.out.println("PHP server is already running on port 8080");
+                return;
+            }
+            
+            System.out.println("Starting PHP development server...");
+            
+            // Get current working directory (where chatBot.php is located)
+            String workingDir = System.getProperty("user.dir");
+            
+            ProcessBuilder processBuilder = new ProcessBuilder(
+                "php", "-S", "127.0.0.1:8080"
+            );
+            processBuilder.directory(new java.io.File(workingDir));
+            processBuilder.redirectErrorStream(true);
+            
+            // Start the PHP server process
+            phpServerProcess = processBuilder.start();
+            
+            // Give it a moment to start
+            Thread.sleep(2000);
+            
+            // Verify it started successfully
+            if (isPHPServerRunning()) {
+                System.out.println("✅ PHP server started successfully on http://127.0.0.1:8080");
+            } else {
+                System.err.println("❌ Failed to start PHP server");
+            }
+            
+        } catch (Exception e) {
+            System.err.println("Error starting PHP server: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    // Helper method to check if PHP server is running
+    private boolean isPHPServerRunning() {
+        try {
+            URL url = URI.create("http://127.0.0.1:8080").toURL();
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            connection.setConnectTimeout(2000); // 2 seconds timeout
+            connection.setReadTimeout(2000);
+            
+            int responseCode = connection.getResponseCode();
+            connection.disconnect();
+            
+            // Any response (even 404) means server is running
+            return responseCode > 0;
+        } catch (Exception e) {
+            return false;
         }
     }
 
@@ -567,6 +632,22 @@ public class LDPlayerGUI extends JFrame {
 
     @Override
     public void dispose() {
+        // Stop PHP server when application closes
+        if (phpServerProcess != null && phpServerProcess.isAlive()) {
+            System.out.println("Stopping PHP server...");
+            phpServerProcess.destroy();
+            try {
+                // Wait up to 5 seconds for graceful shutdown
+                if (!phpServerProcess.waitFor(5, java.util.concurrent.TimeUnit.SECONDS)) {
+                    System.out.println("Force killing PHP server...");
+                    phpServerProcess.destroyForcibly();
+                }
+                System.out.println("PHP server stopped");
+            } catch (InterruptedException e) {
+                phpServerProcess.destroyForcibly();
+            }
+        }
+        
         if (timer != null) {
             timer.stop();
         }
