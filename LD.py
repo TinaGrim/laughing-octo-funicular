@@ -8,11 +8,8 @@ import webbrowser
 import threading
 import dotenv
 dotenv.load_dotenv(dotenv_path=".git/.env")
+import LD_Player as Open
 
-LD_Function = os.path.abspath(os.path.join(os.path.dirname(__file__), "LD-Player"))
-if LD_Function not in sys.path:
-    sys.path.append(LD_Function)
-import Main as Open # type: ignore
 
 class BobPrimeApp(QMainWindow):
     def __init__(self):
@@ -140,7 +137,7 @@ class BobPrimeApp(QMainWindow):
 
         page_setup_layout_Header = QHBoxLayout()
         Open_ld = QPushButton("➕")
-        Open_ld.clicked.connect(lambda: self.start_thread(Open.LDPlayer().run, 2))
+        Open_ld.clicked.connect(lambda: self.start_thread(Open.run, 2))
         page_setup_layout_Header.addWidget(Open_ld)
         page_setup_layout_Header.addWidget(QPushButton("🗑️"))
         page_setup_layout_Header.addWidget(QPushButton("✒️"))
