@@ -13,7 +13,6 @@ import java.net.HttpURLConnection;
 import java.net.ConnectException;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.JSONArray;
 
 
 public class LDPlayerGUI extends JFrame {

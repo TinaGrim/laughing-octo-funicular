@@ -6,7 +6,17 @@ from appium.options.android.uiautomator2.base import UiAutomator2Options
 import random 
 import requests
 import os
-import pygetwindow as gw
+import platform
+
+
+try:
+    import pygetwindow as gw
+    HAS_PYGETWINDOW = True
+except ImportError:
+    gw = None
+    HAS_PYGETWINDOW = False
+    print("For Linux/macOs not supported")
+
 def timer(func):
     def wrapper(*args, **kwargs):
         start = time.time()
@@ -37,7 +47,7 @@ class option():
         system = platform.system()
         
         if system == "Windows":
-            # Windows paths and commands
+
             LDPlayer_launcher_path = f'"D:\\LDPlayer\\LDPlayer9\\ldconsole.exe" launch --index {index}'
             LDPlayer_setup_path = f'"D:\\LDPlayer\\LDPlayer9\\ldconsole.exe" modify --index {index} --resolution 300,600,160 '
             print("LDPlayer count:", index + 1)
@@ -46,25 +56,18 @@ class option():
             
             subprocess.run(LDPlayer_setup_path, shell=True, startupinfo=startupinfo) 
             subprocess.run(LDPlayer_launcher_path, shell=True, startupinfo=startupinfo)
-        
-        elif system == "Darwin":  # macOS
-            # macOS doesn't support LDPlayer natively, but we can simulate or show a message
-            print(f"LDPlayer not supported on macOS. Simulating launch of LDPlayer {index + 1}")
-            print(f"Would launch: LDPlayer instance {index}")
-            # You could add alternative Android emulator commands here like:
-            # subprocess.run(["open", "-a", "Android Studio"], check=False)
-            
-        else:  # Linux
-            print(f"LDPlayer not supported on {system}. Simulating launch of LDPlayer {index + 1}")
-            print(f"Would launch: LDPlayer instance {index}")
-            # You could add alternative emulator commands here
+        else:
+            print("Not supported for this OS")
         time.sleep(1)
         try:
-            for w in gw.getAllWindows():
-                if w.title == LD_Name:
-                    w.moveTo(index * 215,0)
-                    break
-            print(f"LDPlayer {index + 1} Arranged successfully")
+            if HAS_PYGETWINDOW and gw:
+                for w in gw.getAllWindows():
+                    if w.title == LD_Name:
+                        w.moveTo(index * 215,0)
+                        break
+                print(f"LDPlayer {index + 1} Arranged successfully")
+            else:
+                print(f"LDPlayer {index + 1} launched (window positioning unavailable in headless mode)")
         except Exception as e:
             print(f"Error moving window: {e}")
 
