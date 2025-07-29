@@ -10,7 +10,6 @@ import dotenv
 dotenv.load_dotenv(dotenv_path=".git/.env")
 import LD_Player as Open
 
-
 class BobPrimeApp(QMainWindow):
     def __init__(self):
         super().__init__()
