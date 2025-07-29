@@ -186,3 +186,11 @@ $RECYCLE.BIN/
 *.tmp
 *.temp
 tempCodeRunnerFile.*
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+*.cover
+.hypothesis/
+.tox/
