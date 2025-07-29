@@ -9,13 +9,13 @@ import os
 import platform
 
 
-try:
-    import pygetwindow as gw
-    HAS_PYGETWINDOW = True
-except ImportError:
-    gw = None
-    HAS_PYGETWINDOW = False
-    print("For Linux/macOs not supported")
+# try:
+#     import pygetwindow as gw
+#     HAS_PYGETWINDOW = True
+# except ImportError:
+#     gw = None
+#     HAS_PYGETWINDOW = False
+#     print("For Linux/macOs not supported")
 
 def timer(func):
     def wrapper(*args, **kwargs):
@@ -59,17 +59,18 @@ class option():
         else:
             print("Not supported for this OS")
         time.sleep(1)
-        try:
-            if HAS_PYGETWINDOW and gw:
-                for w in gw.getAllWindows():
-                    if w.title == LD_Name:
-                        w.moveTo(index * 215,0)
-                        break
-                print(f"LDPlayer {index + 1} Arranged successfully")
-            else:
-                print(f"LDPlayer {index + 1} launched (window positioning unavailable in headless mode)")
-        except Exception as e:
-            print(f"Error moving window: {e}")
+
+        # try:
+        #     if HAS_PYGETWINDOW and gw:
+        #         for w in gw.getAllWindows():
+        #             if w.title == LD_Name:
+        #                 w.moveTo(index * 215,0)
+        #                 break
+        #         print(f"LDPlayer {index + 1} Arranged successfully")
+        #     else:
+        #         print(f"LDPlayer {index + 1} launched (window positioning unavailable in headless mode)")
+        # except Exception as e:
+        #     print(f"Error moving window: {e}")
 
     def cap(self,port,choose):
         

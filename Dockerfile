@@ -1,11 +1,8 @@
-# Use Python 3.11 slim image
 FROM python:3.11-slim
 
-# Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV DISPLAY=:0
-
 
 RUN apt-get update && apt-get install -y \
     build-essential \
@@ -24,6 +21,7 @@ RUN apt-get update && apt-get install -y \
     libxcb-randr0 \
     libxcb-render-util0 \
     libxcb-xinerama0 \
+    libxcb-cursor0 \
     libxcb-xfixes0 \
     libxcb-shape0 \
     libxcb-sync1 \
@@ -35,22 +33,16 @@ RUN apt-get update && apt-get install -y \
     x11-apps \
     && rm -rf /var/lib/apt/lists/*
 
-
 WORKDIR /app
 
-
 COPY requirements.txt .
-
 RUN pip install -r requirements.txt
 
-
 COPY . .
-
 
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
 USER appuser
 
 EXPOSE 8000
-
 
 CMD ["python", "LD.py"]

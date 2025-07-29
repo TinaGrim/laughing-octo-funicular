@@ -3,4 +3,4 @@ pyside6
 python-dotenv
 Appium-Python-Client
 selenium
-pygetwindow
+
