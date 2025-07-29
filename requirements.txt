@@ -1,4 +1,4 @@
-request
+requests
 pyside6
 python-dotenv
 appium
