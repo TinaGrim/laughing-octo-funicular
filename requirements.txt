@@ -1,0 +1,6 @@
+request
+pyside6
+python-dotenv
+appium
+selenium
+pygetwindow
