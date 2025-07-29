@@ -11,6 +11,11 @@ import java.nio.charset.StandardCharsets;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.ConnectException;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.JSONArray;
+
+
 public class LDPlayerGUI extends JFrame {
     private JLabel timeLabel;
     private Timer timer;
@@ -21,22 +26,15 @@ public class LDPlayerGUI extends JFrame {
     private JTextArea chatArea;
     private Process phpServerProcess; // Add this to track PHP server process
     private static final String PHP_API_URL = "http://127.0.0.1:8080/chatBot.php";
+    private List<String> aiResponseList = new ArrayList<>();
+    private String aiResponse; 
+    private List<String> messageList = new ArrayList<>();
+    
     public LDPlayerGUI() {
-        // Different types of ExecutorService you can use:
-        
-        // 1. CachedThreadPool (current) - Creates threads as needed, reuses existing ones
         executorService = Executors.newCachedThreadPool();
         
-        // 2. FixedThreadPool - Fixed number of threads (good for limited resources)
-        // executorService = Executors.newFixedThreadPool(4); // 4 threads max
         
-        // 3. SingleThreadExecutor - Only one background thread (for sequential tasks)
-        // executorService = Executors.newSingleThreadExecutor();
-        
-        // 4. ScheduledExecutorService - For delayed/repeated tasks
-        // executorService = Executors.newScheduledThreadPool(2);
-        
-        startPHPServer(); // Start PHP server automatically
+        startPHPServer(); 
         setupGUI();
         startTimer();
     }
@@ -125,9 +123,23 @@ public class LDPlayerGUI extends JFrame {
         chatArea.setBackground(new Color(30, 30, 30));
         chatArea.setForeground(Color.WHITE);
         chatArea.setFont(new Font("Arial", Font.PLAIN, 14));
+        
+        // Enable text wrapping
+        chatArea.setLineWrap(true);                // Enable line wrapping
+        chatArea.setWrapStyleWord(true);           // Wrap at word boundaries, not character boundaries
+        
+        // Add scroll pane for better chat experience
+        JScrollPane scrollPane = new JScrollPane(chatArea);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER); // Disable horizontal scroll
+        scrollPane.getVerticalScrollBar().setBackground(new Color(41, 44, 59));
+        
         JPanel bottomPanel = new JPanel(new BorderLayout());
+        JLabel headPanel = new JLabel("Linsha Chat Bot");
+        headPanel.setFont(new Font("Arial", Font.BOLD, 24));
+        headPanel.setForeground(Color.WHITE);
 
-        textField = new JTextField();  // Assign to class field, not local variable
+        textField = new JTextField();  
         textField.setBackground(new Color(30, 30, 30));
         textField.setForeground(Color.WHITE);
         textField.setFont(new Font("Arial", Font.PLAIN, 14));
@@ -138,10 +150,11 @@ public class LDPlayerGUI extends JFrame {
         sendMessageToPHP());
         sendButton.addActionListener(e -> sendMessageToPHP());
 
+
         bottomPanel.add(textField, BorderLayout.CENTER);
         bottomPanel.add(sendButton, BorderLayout.EAST);
-
-        textPanel.add(chatArea, BorderLayout.CENTER);
+        textPanel.add(headPanel, BorderLayout.NORTH);
+        textPanel.add(scrollPane, BorderLayout.CENTER);  // Use scrollPane instead of chatArea
         textPanel.add(bottomPanel, BorderLayout.SOUTH);
 
         return textPanel;
@@ -314,7 +327,12 @@ public class LDPlayerGUI extends JFrame {
                     response.append(line);
                 }
             }
-            return response.toString();
+
+            aiResponse = response.toString();
+            aiResponseList.add(aiResponse);
+            messageList.add(message);
+
+            return aiResponse;
 
         } catch (ConnectException e) {
             return "Error: Cannot connect to PHP server. Make sure PHP server is running on " + PHP_API_URL;
