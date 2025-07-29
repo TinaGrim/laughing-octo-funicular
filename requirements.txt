@@ -1,6 +1,6 @@
 requests
 pyside6
 python-dotenv
-appium
+Appium-Python-Client
 selenium
 pygetwindow
