@@ -1,12 +1,8 @@
 import time
-from appium import webdriver
-from appium.options.android.uiautomator2.base import UiAutomator2Options
 from selenium.webdriver.common.by import By
-import subprocess
 import os
-from Option import option as Get #type: ignore
+from .Option import option as Get
 
-#from Drives 
 class LDPlayer():
     
     def run(self,number):

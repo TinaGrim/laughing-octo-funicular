@@ -8,7 +8,7 @@ import webbrowser
 import threading
 import dotenv
 dotenv.load_dotenv(dotenv_path=".git/.env")
-import LD_Player as Open
+from LD_Player import *
 
 class BobPrimeApp(QMainWindow):
     def __init__(self):
@@ -123,7 +123,7 @@ class BobPrimeApp(QMainWindow):
         self.Tabs.addTab(QLabel("Hello"), "Active")
         self.Tabs.addTab(self.Tab_auto_post(), "Auto Post")
         self.Tabs.addTab(QLabel("Hello"), "Manage")
-        self.Tabs.setCornerWidget(cornerContainer, Qt.TopRightCorner)
+        self.Tabs.setCornerWidget(cornerContainer, Qt.TopRightCorner) # type: ignore
         """End Tabs"""
         
         """Inside the main layout"""
@@ -138,8 +138,8 @@ class BobPrimeApp(QMainWindow):
 
         auto_post_widget = QWidget()
         auto_post_layout = QHBoxLayout()
-        auto_post_layout.setContentsMargins(0, 0, 0, 0)  # Remove all margins
-        auto_post_layout.setSpacing(5)  # Minimal spacing between left and right sections
+        auto_post_layout.setContentsMargins(0, 0, 0, 0)  
+        auto_post_layout.setSpacing(5)  
         
         # On left side
         """Schedule"""
@@ -161,12 +161,12 @@ class BobPrimeApp(QMainWindow):
         LD_Table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         LD_Table.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         LD_Table.resizeColumnsToContents()
-        # Set specific column resize modes for better content fitting
-        LD_Table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)  # No. column
-        LD_Table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)           # LD Name column
+
+        LD_Table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents) 
+        LD_Table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch) 
         LD_Table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         LD_Table.setSelectionMode(QTableWidget.SelectionMode.NoSelection)
-        # Set minimum row height for better appearance
+
         LD_Table.verticalHeader().setDefaultSectionSize(35)
         LD_Table.verticalHeader().setMinimumSectionSize(30)
         LD_Table.setCellWidget(0, 0, QCheckBox("1"))
@@ -193,7 +193,7 @@ class BobPrimeApp(QMainWindow):
 
         page_setup_layout_Header = QHBoxLayout()
         Open_ld = QPushButton("➕")
-        Open_ld.clicked.connect(lambda: self.start_thread(Open.run, 2))
+        Open_ld.clicked.connect(lambda: self.start_thread(LDPlayer().run,2))
         page_setup_layout_Header.addWidget(Open_ld)
         page_setup_layout_Header.addWidget(QPushButton("🗑️"))
         page_setup_layout_Header.addWidget(QPushButton("✒️"))
@@ -294,18 +294,7 @@ class BobPrimeApp(QMainWindow):
     def start_thread(self, func, *args, **kwargs) -> None:
         self.My_thread = Threader(func,*args,**kwargs)
         self.My_thread.start()
-
-
-class Threader(QThread):
-    def __init__(self, func, *args, **kwargs):
-        super().__init__()
-        self.func = func
-        self.arg = args
-        self.kwargs = kwargs
-    def run(self):
-        self.func(*self.arg, **self.kwargs)
-
-
+        
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = BobPrimeApp()  
