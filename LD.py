@@ -190,6 +190,7 @@ class BobPrimeApp(QMainWindow):
         auto_post_layout_right = QVBoxLayout()
         
         """"Header"""
+
         page_setup_layout_Header = QHBoxLayout()
         Open_ld = QPushButton("➕")
         Open_ld.clicked.connect(lambda: self.start_thread(Open.run, 2))
@@ -204,8 +205,8 @@ class BobPrimeApp(QMainWindow):
         page_setup_layout_Group_Layout = QVBoxLayout()
         
         page_setup_layout_Group_Layout.addWidget(QLabel("Page Name:"))
-        
-        page_setup_layout_Group.setLayout(page_setup_layout_Group_Layout)  
+    
+        page_setup_layout_Group.setLayout(page_setup_layout_Group_Layout)
         """End Page Setup Group"""
         
         auto_post_layout_right.addLayout(page_setup_layout_Header)
