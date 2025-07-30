@@ -1,21 +1,13 @@
 import time
-import unittest
+
 from appium import webdriver
 import subprocess
 from appium.options.android.uiautomator2.base import UiAutomator2Options
 import random 
 import requests
 import os
-import platform
 
 
-# try:
-#     import pygetwindow as gw
-#     HAS_PYGETWINDOW = True
-# except ImportError:
-#     gw = None
-#     HAS_PYGETWINDOW = False
-#     print("For Linux/macOs not supported")
 
 def timer(func):
     def wrapper(*args, **kwargs):

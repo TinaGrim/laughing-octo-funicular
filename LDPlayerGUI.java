@@ -23,7 +23,7 @@ public class LDPlayerGUI extends JFrame {
     private JTextField textField;
     private JButton sendButton;
     private JTextArea chatArea;
-    private Process phpServerProcess; // Add this to track PHP server process
+    private Process phpServerProcess; 
     private static final String PHP_API_URL = "http://127.0.0.1:8080/chatBot.php";
     private List<String> aiResponseList = new ArrayList<>();
     private String aiResponse; 
