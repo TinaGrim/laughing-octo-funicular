@@ -49,6 +49,24 @@ class BobPrimeApp(QMainWindow):
                 margin: 0px;
                 padding: 5px;
             }
+            QTabBar::tab {
+                margin: 0px;
+                padding: 5px 30px;
+                background-color: #292c3b
+            }
+            QTabBar::tab:selected {
+                background-color: #176ec3;
+            }
+            QTabWidget::pane {
+                top: 0px;
+                margin: 0px;
+                padding: 0px;
+                border: 1px solid #176ec3;
+            }
+            QTabWidget > QWidget {
+                margin: 0px;
+                padding: 0px;
+            }
         """)
         # os.system("cls")
         self.starttime = time.time()
@@ -73,9 +91,39 @@ class BobPrimeApp(QMainWindow):
         main_layout = QHBoxLayout()
         
         """"Tabs"""
+        cornerContainer = QWidget()
+        cornerLayout = QHBoxLayout()
+
+        lineSearch = QLineEdit()
+        lineSearch.setPlaceholderText("Search...")
+        lineSearch.setFixedHeight(24)  
+        lineSearch.setStyleSheet("margin: 0px; padding: 2px;")  
+
+        cornerSwitchButton = QPushButton("Switch")
+        cornerSwitchButton.setStyleSheet("margin: 0px; padding: 2px 20px; ")
+        cornerFlagButton = QPushButton("Flag")
+        cornerFlagButton.setStyleSheet("margin: 0px; padding: 2px 20px; ")
+        cornerSaveButton = QPushButton("Save")
+        cornerSaveButton.setStyleSheet("margin: 0px; padding: 2px 20px; ")
+
+        cornerLayout.addWidget(cornerSwitchButton)
+        cornerLayout.addWidget(cornerFlagButton)
+        cornerLayout.addWidget(lineSearch)
+        cornerLayout.addWidget(cornerSaveButton)
+        cornerLayout.setContentsMargins(0, 0, 0, 0)
+        cornerLayout.setAlignment(Qt.AlignmentFlag.AlignVCenter)  
+
+        
+        cornerContainer.setLayout(cornerLayout)
+        cornerContainer.setFixedHeight(30) 
+        cornerContainer.setStyleSheet("margin: 0px;")
+
         self.Tabs = QTabWidget()
         self.Tabs.addTab(QLabel("Hello"), "Devices")
+        self.Tabs.addTab(QLabel("Hello"), "Active")
         self.Tabs.addTab(self.Tab_auto_post(), "Auto Post")
+        self.Tabs.addTab(QLabel("Hello"), "Manage")
+        self.Tabs.setCornerWidget(cornerContainer, Qt.TopRightCorner)
         """End Tabs"""
         
         """Inside the main layout"""
@@ -85,10 +133,13 @@ class BobPrimeApp(QMainWindow):
         main_widget.setLayout(main_layout)
         self.setCentralWidget(main_widget)
 
+        
     def Tab_auto_post(self) -> QWidget:
 
         auto_post_widget = QWidget()
         auto_post_layout = QHBoxLayout()
+        auto_post_layout.setContentsMargins(0, 0, 0, 0)  # Remove all margins
+        auto_post_layout.setSpacing(5)  # Minimal spacing between left and right sections
         
         # On left side
         """Schedule"""
@@ -122,7 +173,7 @@ class BobPrimeApp(QMainWindow):
         LD_Table.setCellWidget(1, 0, QCheckBox("2"))
         LD_Table.setItem(0, 1, QTableWidgetItem("LD 1"))
         LD_Table.setItem(1, 1, QTableWidgetItem("LD 2"))
-        
+
         """End Table"""
 
         
@@ -139,7 +190,6 @@ class BobPrimeApp(QMainWindow):
         auto_post_layout_right = QVBoxLayout()
         
         """"Header"""
-
         page_setup_layout_Header = QHBoxLayout()
         Open_ld = QPushButton("➕")
         Open_ld.clicked.connect(lambda: self.start_thread(Open.run, 2))
@@ -154,8 +204,8 @@ class BobPrimeApp(QMainWindow):
         page_setup_layout_Group_Layout = QVBoxLayout()
         
         page_setup_layout_Group_Layout.addWidget(QLabel("Page Name:"))
-    
-        page_setup_layout_Group.setLayout(page_setup_layout_Group_Layout)
+        
+        page_setup_layout_Group.setLayout(page_setup_layout_Group_Layout)  
         """End Page Setup Group"""
         
         auto_post_layout_right.addLayout(page_setup_layout_Header)
@@ -167,7 +217,8 @@ class BobPrimeApp(QMainWindow):
         auto_post_layout.addWidget(auto_post_layout_right_widget,7)
         
         auto_post_widget.setLayout(auto_post_layout)
-        
+        auto_post_widget.setStyleSheet("margin: 0px;")
+
         return auto_post_widget
         
     def Left_view(self) -> QWidget:
