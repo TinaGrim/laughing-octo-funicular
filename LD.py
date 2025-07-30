@@ -22,6 +22,7 @@ class BobPrimeApp(QMainWindow):
         self.setStyleSheet("""
             QMainWindow, QWidget{
             background-color: #292c3b;
+            color: white;
             }
             QCheckBox {
                 color: white;
@@ -34,7 +35,6 @@ class BobPrimeApp(QMainWindow):
             image: url(Logo/check1.png);
             }
 
-
             QLabel {
                 color: white;
             }
@@ -42,6 +42,7 @@ class BobPrimeApp(QMainWindow):
                 background-color: #13599d;
                 margin: 0px;
                 padding: 5px;
+
             }
             QPushButton::pressed {
                 background-color: #176ec3;
@@ -65,7 +66,7 @@ class BobPrimeApp(QMainWindow):
         hours = elapsed // 3600
         minutes = (elapsed % 3600) // 60
         seconds = elapsed % 60
-        self.time_label.setText(f'<div style="font-size: 70px;">{hours:02}:{minutes:02}:{seconds:02}</div>')
+        self.time_label.setText(f'<div style="font-size: 50px;">{hours:02}:{minutes:02}:{seconds:02}</div>')
 
     def init(self) -> None:
         main_widget = QWidget()
@@ -109,9 +110,14 @@ class BobPrimeApp(QMainWindow):
         LD_Table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         LD_Table.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         LD_Table.resizeColumnsToContents()
-        LD_Table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        # Set specific column resize modes for better content fitting
+        LD_Table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)  # No. column
+        LD_Table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)           # LD Name column
         LD_Table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         LD_Table.setSelectionMode(QTableWidget.SelectionMode.NoSelection)
+        # Set minimum row height for better appearance
+        LD_Table.verticalHeader().setDefaultSectionSize(35)
+        LD_Table.verticalHeader().setMinimumSectionSize(30)
         LD_Table.setCellWidget(0, 0, QCheckBox("1"))
         LD_Table.setCellWidget(1, 0, QCheckBox("2"))
         LD_Table.setItem(0, 1, QTableWidgetItem("LD 1"))
@@ -186,11 +192,16 @@ class BobPrimeApp(QMainWindow):
         table.setHorizontalHeaderLabels(["No.", "LD Name", "ID", "Activity"])
         table.verticalHeader().setVisible(False)
         table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+
         table.setAutoFillBackground(False)
         table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         table.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         table.resizeColumnsToContents()
-        table.horizontalHeader().setSectionResizeMode(3,QHeaderView.ResizeMode.Stretch)
+
+        table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)  
+        table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)  
+        table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)  
+        table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)           
         table.setItem(0, 0, QTableWidgetItem("1"))
         table.setItem(1, 0, QTableWidgetItem("2"))
         table.setItem(0, 1, QTableWidgetItem("emulator"))

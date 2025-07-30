@@ -419,36 +419,6 @@ public class LDPlayerGUI extends JFrame {
         }
     }
 
-    private void runPythonScript(String scriptPath) {
-        try {
-            // Use the correct Python executable path
-            ProcessBuilder processBuilder = new ProcessBuilder(
-                "python", 
-                scriptPath
-            );
-            processBuilder.redirectErrorStream(true);
-            
-            Process process = processBuilder.start();
-            
-            // Read output in real-time
-            try (java.io.BufferedReader reader = new java.io.BufferedReader(
-                    new java.io.InputStreamReader(process.getInputStream()))) {
-                
-                String line;
-                System.out.println("Python script output:");
-                while ((line = reader.readLine()) != null) {
-                    System.out.println(line);
-                }
-            }
-            
-            int exitCode = process.waitFor();
-            System.out.println("Python script finished with exit code: " + exitCode);
-            
-        } catch (Exception e) {
-            System.err.println("Error running Python script: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
 
     // Method to automatically start PHP server when GUI opens
     private void startPHPServer() {
@@ -508,7 +478,6 @@ public class LDPlayerGUI extends JFrame {
         }
     }
 
-    // Method to run Option class commands with better performance
     private void runOptionCommand(String command, String... args) {
         try {
             // Build command array
@@ -518,7 +487,7 @@ public class LDPlayerGUI extends JFrame {
             commandList.add("run_option.py");
             commandList.add(command);
             
-            // Add arguments if provided
+            
             for (String arg : args) {
                 commandList.add(arg);
             }
@@ -552,67 +521,11 @@ public class LDPlayerGUI extends JFrame {
     }
     
 
-
-    // Method 2: Using ExecutorService with Future for return values
-    private void runTaskWithResult() {
-        // Submit task that returns a value
-        Future<String> future = executorService.submit(() -> {
-            // This runs in background thread
-            Thread.sleep(2000); // Simulate work
-            return "Task completed successfully!";
-        });
         
-        // Handle the result in another background thread
-        executorService.submit(() -> {
-            try {
-                String result = future.get(); // Wait for result
-                SwingUtilities.invokeLater(() -> {
-                    System.out.println("Result: " + result);
-                });
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
-    }
 
-    // Method 3: ExecutorService with timeout
-    private void runTaskWithTimeout() {
-        Future<Void> future = executorService.submit(() -> {
-            runOptionCommand("open_ld", "1");
-            return null;
-        });
-        
-        executorService.submit(() -> {
-            try {
-                future.get(30, java.util.concurrent.TimeUnit.SECONDS); // 30 second timeout
-                SwingUtilities.invokeLater(() -> {
-                    System.out.println("Task completed within timeout");
-                });
-            } catch (java.util.concurrent.TimeoutException e) {
-                future.cancel(true); // Cancel the task
-                SwingUtilities.invokeLater(() -> {
-                    System.out.println("Task timed out and was cancelled");
-                });
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
-    }
 
-    // Method 4: Schedule delayed tasks
-    private void scheduleDelayedTask() {
-        // Convert to ScheduledExecutorService for scheduling
-        if (executorService instanceof java.util.concurrent.ScheduledExecutorService) {
-            java.util.concurrent.ScheduledExecutorService scheduler = 
-                (java.util.concurrent.ScheduledExecutorService) executorService;
-            
-            scheduler.schedule(() -> {
-                SwingUtilities.invokeLater(() -> {
-                    System.out.println("Delayed task executed!");
-                });
-            }, 5, java.util.concurrent.TimeUnit.SECONDS); // Run after 5 seconds
-        }
-    }
+
+
 
     private void startThread(Runnable task) {
         // Show loading indicator or disable button temporarily
