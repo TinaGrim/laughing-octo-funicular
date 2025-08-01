@@ -61,11 +61,25 @@ class BobPrimeApp(QMainWindow):
                 top: 0px;
                 margin: 0px;
                 padding: 0px;
-                border: 1px solid #176ec3;
+                border: 1px solid #dcecf7;
             }
             QTabWidget > QWidget {
                 margin: 0px;
                 padding: 0px;
+            }
+            QGroupBox {
+                border: 2px solid gray;
+                border-radius: 5px;
+                margin: 0px;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                subcontrol-position: top left; 
+                background-color:#13599d;
+                padding: 0px 0px;
+                margin: 0px;
+                border-radius: 10px;
+                font-size: 12px;
             }
         """)
         # os.system("cls")
@@ -100,11 +114,11 @@ class BobPrimeApp(QMainWindow):
         lineSearch.setStyleSheet("margin: 0px; padding: 2px;")  
 
         cornerSwitchButton = QPushButton("Switch")
-        cornerSwitchButton.setStyleSheet("margin: 0px; padding: 2px 20px; ")
+        cornerSwitchButton.setStyleSheet("margin: 0px; padding: 4px 20px; ")
         cornerFlagButton = QPushButton("Flag")
-        cornerFlagButton.setStyleSheet("margin: 0px; padding: 2px 20px; ")
+        cornerFlagButton.setStyleSheet("margin: 0px; padding: 4px 20px; ")
         cornerSaveButton = QPushButton("Save")
-        cornerSaveButton.setStyleSheet("margin: 0px; padding: 2px 20px; ")
+        cornerSaveButton.setStyleSheet("margin: 0px; padding: 4px 20px; ")
 
         cornerLayout.addWidget(cornerSwitchButton)
         cornerLayout.addWidget(cornerFlagButton)
