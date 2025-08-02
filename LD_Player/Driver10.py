@@ -52,14 +52,14 @@ time.sleep(4)
 WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, """//androidx.recyclerview.widget.RecyclerView/android.view.ViewGroup[2]/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup[1]/android.view.ViewGroup/android.view.ViewGroup/android.widget.EditText"""))).click()
 
 time.sleep(4)
-First_Name = Get().Random_Name()
+First_Name = Get().__Random_Name()
 WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, """//androidx.recyclerview.widget.RecyclerView/android.view.ViewGroup[2]/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup[1]/android.view.ViewGroup/android.view.ViewGroup/android.widget.EditText"""))).send_keys(First_Name)
 
 time.sleep(4)
 WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, """//androidx.recyclerview.widget.RecyclerView/android.view.ViewGroup[2]/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup[2]/android.view.ViewGroup/android.view.ViewGroup/android.widget.EditText"""))).click()
 
 time.sleep(4)
-Last_Name = Get().Random_Name()
+Last_Name = Get().__Random_Name()
 WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, """//androidx.recyclerview.widget.RecyclerView/android.view.ViewGroup[2]/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup[2]/android.view.ViewGroup/android.view.ViewGroup/android.widget.EditText"""))).send_keys(Last_Name)
 
 time.sleep(4)
@@ -72,7 +72,7 @@ WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, """//a
 time.sleep(4)
 months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 Month_now= datetime.now().month
-month= Get().Random_Month()
+month= Get().__Random_Month()
 Year_Back = 0
 i = 2
 
@@ -94,7 +94,7 @@ except Exception:
 #Day
 time.sleep(4)
 
-Day = Get().Random_Day()
+Day = Get().__Random_Day()
 TodayDay = datetime.now().day
 try:
     if (Day<TodayDay):
@@ -120,7 +120,7 @@ except Exception:
 
 #Year
 time.sleep(4)
-Year = Get().Random_Year()
+Year = Get().__Random_Year()
 Year_Now = 2024 - Year_Back
 
 try:
@@ -140,7 +140,7 @@ WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, """//a
 time.sleep(4)
 WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, """//android.view.View[@content-desc="Next"]"""))).click()
 
-Gender = Get().Random_Gender()
+Gender = Get().__Random_Gender()
 time.sleep(4)
 WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, f"""//android.widget.Button[@content-desc="{Gender}"]/android.view.ViewGroup/android.view.ViewGroup/android.widget.ImageView"""))).click()
 
