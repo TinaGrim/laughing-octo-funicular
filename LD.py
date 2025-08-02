@@ -7,6 +7,11 @@ import time
 import webbrowser
 import threading
 import dotenv
+
+import signal
+import cv2
+
+signal.signal(signal.SIGINT, signal.SIG_DFL)
 dotenv.load_dotenv(dotenv_path=".git/.env")
 from LD_Player import *
 
@@ -90,10 +95,12 @@ class BobPrimeApp(QMainWindow):
             }
         """)
         # os.system("cls")
+        self.qrbutton = QPushButton("💡")
         self.starttime = time.time()
         self.time_label = QLabel()
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_time)
+        self.qrbutton.clicked.connect(lambda: self.open_qr("Logo/qr.jpg", 500, 800))
         self.timer.start(500)  
         self.update_time()
         self.init()
@@ -299,7 +306,7 @@ class BobPrimeApp(QMainWindow):
         table_Box_Bottom.addWidget(QPushButton("⛓️‍💥API"))
         table_Box_Bottom.addWidget(Group)
         table_Box_Bottom.addWidget(QPushButton("📃Log"))
-        table_Box_Bottom.addWidget(QPushButton("💡"))
+        table_Box_Bottom.addWidget(self.qrbutton)
         table_layout.addWidget(QLabel("Active Devices"))
         table_layout.addWidget(table)
         table_layout.addLayout(table_Box_Bottom)
@@ -311,7 +318,25 @@ class BobPrimeApp(QMainWindow):
         
         left_widget.setLayout(Left_Panel)
         return left_widget
+    
+    def open_qr(self, path,width,height):
+        """Open QR code in browser"""
+        qr_path = path
 
+        if(not os.path.exists(qr_path)):
+            print("QR Image Not Found")
+            
+        qr = cv2.imread(qr_path)
+        if(qr is None):
+            return
+        
+        try:
+            qr = cv2.resize(qr, (width, height))  
+            cv2.imshow("QR Code", qr)
+            cv2.waitKey(0)
+
+        except Exception as e:
+            print(f"Error opening QR code: {e}")
     def start_thread(self, func, *args, **kwargs) -> None:
         self.My_thread = Threader(func,*args,**kwargs)
         self.My_thread.start()
