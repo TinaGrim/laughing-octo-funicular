@@ -23,7 +23,7 @@ def timer(func):
         
 class option():
     @timer
-    def Open_Appium(self, port):
+    def __Open_Appium(self, port):
         """Opening Cmd of Appium"""
         startupinfo = self.info(2)
         
@@ -66,19 +66,19 @@ class option():
 
     def cap(self,port,choose):
         
-        desired_caps = self.get_des_cap(choose)
+        desired_caps = self.__get_des_cap(choose)
         options = UiAutomator2Options()
         
         
         for k, v in desired_caps.items():
             options.set_capability(k, v)
             
-        self.Open_Appium(port=port)
+        self.__Open_Appium(port=port)
         self.driver = webdriver.Remote(f"http://localhost:{port}", options=options) # type: ignore
 
         return self.driver
 
-    def get_des_cap(self, ID):
+    def __get_des_cap(self, ID):
         ID = (ID-1)*2 + 54
         des_cap = {
             "automationName": "UiAutomator2",
@@ -102,7 +102,7 @@ class option():
             # On macOS/Linux, return None since STARTUPINFO doesn't exist
             return None
     
-    def wait_for_ldplayer_device(self, device_name, timeout=60):
+    def __wait_for_ldplayer_device(self, device_name, timeout=60):
         """check if LDPlayer fully opened"""
         start_time = time.time()
         while time.time() - start_time < timeout:
@@ -154,36 +154,36 @@ class option():
         for i in range(0, Number):
             #Get().Open_LDPlayer(startupinfo, index = i)
             device_name = f"emulator-555{(i*2)+4}"
-            self.wait_for_ldplayer_device(device_name)
-            self.clear_app_data(device_name)        
-                    
-    def Random_Name(self):
+            self.__wait_for_ldplayer_device(device_name)
+            self.__clear_app_data(device_name)
+
+    def __Random_Name(self):
         NAME = ["Tina","Roth", "Thida","Jonh" , "Nher"]
         Name = random.choice(NAME)
         return Name
     
-    def Random_Gender(self):
+    def __Random_Gender(self):
         GENDER = ["Female","Male"]
         Gender = random.choice(GENDER)
         return Gender
     
-    def Get_Temp_Mail(self):
+    def __Get_Temp_Mail(self):
 
         Mail = requests.get("https://www.1secmail.com/api/v1/?action=genRandomMailbox&count=1")
         email = Mail.json()[0]
         return email
     
-    def Random_Year(self):
+    def __Random_Year(self):
         YEAR = random.randint(2000, 2005)
         return YEAR
-    def Random_Day(self):
+    def __Random_Day(self):
         Day = random.randint(15,30)
         return Day
-    def Random_Month(self):
+    def __Random_Month(self):
         months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
         MONTH = random.choice(months)
         return MONTH
     
-    def clear_app_data(self, device_name, package_name = "com.facebook.orca"):
+    def __clear_app_data(self, device_name, package_name = "com.facebook.orca"):
         Clear = subprocess.run(["adb", "-s", device_name, "shell", "pm", "clear", package_name])
         print("Clear out: ",Clear)
