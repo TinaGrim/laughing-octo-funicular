@@ -15,10 +15,17 @@ class BobPrimeApp(QMainWindow):
         super().__init__()
         self.setWindowTitle("Girm Prime App")
         self.setGeometry(100, 100, 1500, 800)
+        self.logo = "Logo/logo_icon_big.png"
 
-        pixmap = QPixmap("Logo/logo_icon_big.png").scaled(128, 128)
-        icon = QIcon(pixmap)
-        self.setWindowIcon(icon)
+        if os.path.exists(self.logo):
+            print("Logo found")
+            pixmap = QPixmap(self.logo).scaled(128, 128)
+            icon = QIcon(pixmap)
+            self.setWindowIcon(icon)
+        else:
+            print("Some logo not found")
+            sys.exit(1)
+            
         self.setStyleSheet("""
             QMainWindow, QWidget{
             background-color: #292c3b;
@@ -310,6 +317,9 @@ class BobPrimeApp(QMainWindow):
         self.My_thread.start()
         
 if __name__ == "__main__":
+    
+    QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
+    
     app = QApplication(sys.argv)
     window = BobPrimeApp()  
     window.show()
