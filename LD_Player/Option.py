@@ -8,6 +8,7 @@ import requests
 import os
 import pygetwindow as gw
 import names
+import traceback
 def timer(func):
     def wrapper(*args, **kwargs):
         start = time.time()
@@ -107,6 +108,7 @@ class option:
     def wait_for_ldplayer_device(self, device_name, timeout=60):
         """check if LDPlayer fully opened"""
         start_time = time.time()
+        
         while time.time() - start_time < timeout:
             # Check if command is available
             try:
@@ -131,6 +133,7 @@ class option:
                     )
                     if shell_result.returncode == 0 and "ok" in shell_result.stdout:
                         print(f"{device_name} is fully ready.")
+                        return True
         print(f"Timeout: {device_name} did not appear in adb devices.")
         return False
     
@@ -148,7 +151,6 @@ class option:
             subprocess.Popen(["python",Driver_path])
     
     def Full_setup(self,Number):
-        
         for i in range(0, Number):
             #Get().Open_LDPlayer(startupinfo, index = i)
             device_name = f"emulator-555{(i*2)+4}"
