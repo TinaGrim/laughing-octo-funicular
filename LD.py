@@ -18,6 +18,7 @@ from LD_Player import *
 class BobPrimeApp(QMainWindow):
     def __init__(self):
         super().__init__()
+        
         self.setWindowTitle("Girm Prime App")
         self.setGeometry(100, 100, 1500, 800)
         self.setStyleSheet("""
@@ -87,7 +88,7 @@ class BobPrimeApp(QMainWindow):
         self.logo = "Logo/logo_icon_big.png"
 
         if os.path.exists(self.logo):
-            print("Logo found")
+
             pixmap = QPixmap(self.logo).scaled(128, 128)
             icon = QIcon(pixmap)
             self.setWindowIcon(icon)
@@ -98,24 +99,81 @@ class BobPrimeApp(QMainWindow):
         self.qrbutton = QPushButton("💡")
         self.time_label = QLabel()
         self.timer = QTimer()
-        self.Activitys = QTimer()
+
         
         self.starttime = time.time()
         self.timer.timeout.connect(self.update_time)
         self.timer.start(500)
         
         self.qrbutton.clicked.connect(lambda: self.open_qr("Logo/qr.jpg", 500, 800))
-        self.Activitys.timeout.connect(lambda: self.check_activity())
-        self.Activitys.start(1000)
+
         self.update_time()
         self.init()
         
     def check_activity(self):
+        try:
+            self.drivers = Option().opened_drivers()
+            return self.drivers if self.drivers is not None else []
+        except Exception as e:
+            print(f"Error checking activity: {e}")
+            return []
+
+
+    def update_activity_table(self)->QTableWidget:
         
-        print(f"Drivers Activity: {Option().opened_drivers()}")
+        
+        if hasattr(self,'tabel'):
+            driver_list = self.check_activity()
+            self.update_exist_table()
+            return self.table
+        
+        
+        
+        driver_list = self.check_activity()
+        
+        if not driver_list:
+            return QTableWidget()
+        col = 0
+        self.table = QTableWidget(len(driver_list), 4)
+        
+        for i, driver_name in enumerate(driver_list):
+            self.table.setItem(i,col,QTableWidgetItem(len(driver_list)))
+            self.table.setItem(i, col+1, QTableWidgetItem(driver_name))
+            self.table.setItem(i, col+2, QTableWidgetItem(col))
+            self.table.setItem(i, col+3, QTableWidgetItem("Activity"))
+            
+            
+        #config
+        self.table.setHorizontalHeaderLabels(["No.", "LD Name", "ID", "Activity"])
+        self.table.verticalHeader().setVisible(False)
+        self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
 
+        self.table.setAutoFillBackground(False)
+        self.table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.table.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.table.resizeColumnsToContents()
 
+        self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)  
+        self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)  
+        self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)  
+        self.table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch) 
+        return self.table
+    
+    
 
+    def update_exist_table(self)-> QTableWidget:
+        driver_list = self.check_activity()
+        if not self.table:
+            return QTableWidget()
+        self.table.setRowCount(len(driver_list) if driver_list else 1)
+
+        for i, driver_name in enumerate(driver_list):
+            self.table.setItem(i,0, QTableWidgetItem(str(len(driver_list))))
+            self.table.setItem(i,1, QTableWidgetItem(driver_name))
+            self.table.setItem(i,2, QTableWidgetItem(str(i+1)))
+            self.table.setItem(i,3, QTableWidgetItem("Activity"))
+        return self.table
+    
     def update_time(self) -> None:
         """Update the time label with current time using replace"""
         elapsed = int(time.time() - self.starttime)
@@ -278,28 +336,11 @@ class BobPrimeApp(QMainWindow):
         table_Box_layout = QGroupBox()
         table_layout = QVBoxLayout()
         table_Box_Bottom = QHBoxLayout()
-        table = QTableWidget(2, 4)
-        table.setHorizontalHeaderLabels(["No.", "LD Name", "ID", "Activity"])
-        table.verticalHeader().setVisible(False)
-        table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
-
-        table.setAutoFillBackground(False)
-        table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        table.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        table.resizeColumnsToContents()
-
-        table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)  
-        table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)  
-        table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)  
-        table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)           
-        table.setItem(0, 0, QTableWidgetItem("1"))
-        table.setItem(1, 0, QTableWidgetItem("2"))
-        table.setItem(0, 1, QTableWidgetItem("emulator"))
-        table.setItem(1, 1, QTableWidgetItem("emulator"))
-        table.setItem(0, 2, QTableWidgetItem("23"))
-        table.setItem(1, 2, QTableWidgetItem("25"))
-        table.setItem(0, 3, QTableWidgetItem("Activity 1"))
-        table.setItem(1, 3, QTableWidgetItem("Activity2"))
+        if not hasattr(self, 'table'):
+            self.updatetable = self.update_activity_table() or self.table is None
+        else:
+            self.updatetable = self.update_exist_table()
+          
         """End Table"""
 
         """"Bottom Box"""
@@ -318,7 +359,7 @@ class BobPrimeApp(QMainWindow):
         table_Box_Bottom.addWidget(QPushButton("📃Log"))
         table_Box_Bottom.addWidget(self.qrbutton)
         table_layout.addWidget(QLabel("Active Devices"))
-        table_layout.addWidget(table)
+        table_layout.addWidget(self.updatetable)
         table_layout.addLayout(table_Box_Bottom)
         table_Box_layout.setLayout(table_layout)
         """"End Bottom Box"""

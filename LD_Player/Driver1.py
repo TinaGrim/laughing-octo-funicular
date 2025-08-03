@@ -163,5 +163,5 @@ WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, """//a
 """))).click()
 
 with open(f"Data{driver_number}.txt", "w") as file:
-    file.write("First Name: {First_Name}, Last Name: {Last_Name} Email: {Mail}\nDate of Birth: {Day}/{month}/{Year}\nGender: {Gender}".format(First_Name=First_Name,Last_Name=Last_Name,Mail=Mail,Day=Day,month=month,Year=Year,Gender=Gender))
+    file.write("First Name: {First_Name}, \nLast Name: {Last_Name} \nEmail: {Mail}\nDate of Birth: {Day}/{month}/{Year}\nGender: {Gender}".format(First_Name=First_Name,Last_Name=Last_Name,Mail=Mail,Day=Day,month=month,Year=Year,Gender=Gender))
 

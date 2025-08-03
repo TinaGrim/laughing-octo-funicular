@@ -7,8 +7,7 @@ import random
 import requests
 import os
 import pygetwindow as gw
-
-
+import names
 def timer(func):
     def wrapper(*args, **kwargs):
         start = time.time()
@@ -102,13 +101,14 @@ class option:
             startupinfo.wShowWindow = Show
             return startupinfo
         else:
-            # On macOS/Linux, return None since STARTUPINFO doesn't exist
+            # On macOS/Linux, return None 
             return None
     
     def wait_for_ldplayer_device(self, device_name, timeout=60):
         """check if LDPlayer fully opened"""
         start_time = time.time()
         while time.time() - start_time < timeout:
+            # Check if command is available
             try:
                 result = subprocess.run(
                     ['adb', 'devices'],
@@ -118,7 +118,6 @@ class option:
                 )
             except Exception as e:
                 print(f"Error running adb.exe: {e}")
-                return False
             
             # debugging
             for line in result.stdout.splitlines():
@@ -132,11 +131,6 @@ class option:
                     )
                     if shell_result.returncode == 0 and "ok" in shell_result.stdout:
                         print(f"{device_name} is fully ready.")
-                        self.drivers.append(device_name)
-                        
-            
-
-            
         print(f"Timeout: {device_name} did not appear in adb devices.")
         return False
     
@@ -163,14 +157,29 @@ class option:
             self.__clear_app_data(device_name)
             
     def opened_drivers(self):
-        """Get all opened drivers"""
-        return self.drivers
-    
+        Drivers_list = ["emulator-5554", "emulator-5556", "emulator-5558", "emulator-5560", "emulator-5562", "emulator-5564", "emulator-5566", "emulator-5568", "emulator-5570", "emulator-5572"]
+        Drivers_list_opened = []
+        try:
+            result = subprocess.run(
+                ['adb', 'devices'],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True
+            )
+        except Exception as e:
+            print(f"Error running adb.exe: {e}")
+            
+        """Activity Check"""
+        for line in result.stdout.splitlines():
+            for driver_name in Drivers_list:
+                if driver_name in line and "\tdevice" in line:
+                    Drivers_list_opened.append(driver_name)
+        return Drivers_list_opened
+
     def Random_Name(self):
-        NAME = ["Tina","Roth", "Thida","Jonh" , "Nher"]
-        Name = random.choice(NAME)
-        return Name
-    
+        NAME = names.get_last_name()
+        return NAME
+
     def Random_Gender(self):
         GENDER = ["Female","Male"]
         Gender = random.choice(GENDER)
