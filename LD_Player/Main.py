@@ -2,15 +2,12 @@ import time
 from selenium.webdriver.common.by import By
 import os
 from .Option import option as Get
-
 class LDPlayer():
-    
-    def run(self,number):
-        Number = number #input("LDPlayer Count: ")
+    def run(self,number:int):
+        Number = number
         if Number > 10 :
             print("Limit only 10 LD ;(")
             return 0
-        
         os.system("cls")
         print("Starting...\n")
 
@@ -22,7 +19,5 @@ class LDPlayer():
 
 
 
-# if __name__ == "__main__":
-#     ld = LDPlayer()
-#     ld.run()
+
 
