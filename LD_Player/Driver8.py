@@ -27,7 +27,7 @@ try:
         EC.presence_of_element_located((By.XPATH, """//android.widget.ImageView[@content-desc="Cancel"]"""))
     ).click()
 except Exception as e:
-    print("Cancel err",e)
+    print(f"Cancel N0t F0und In LD-name : {driver_number} or emulator-55{(driver_number-1)*2+54} Try Passing")
 
 time.sleep(4)
 WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, """//android.widget.Button[@content-desc="Create new account"]/android.view.ViewGroup"""))).click()
@@ -52,14 +52,14 @@ time.sleep(4)
 WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, """//androidx.recyclerview.widget.RecyclerView/android.view.ViewGroup[2]/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup[1]/android.view.ViewGroup/android.view.ViewGroup/android.widget.EditText"""))).click()
 
 time.sleep(4)
-First_Name = Get().__Random_Name()
+First_Name = Get().Random_Name()
 WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, """//androidx.recyclerview.widget.RecyclerView/android.view.ViewGroup[2]/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup[1]/android.view.ViewGroup/android.view.ViewGroup/android.widget.EditText"""))).send_keys(First_Name)
 
 time.sleep(4)
 WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, """//androidx.recyclerview.widget.RecyclerView/android.view.ViewGroup[2]/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup[2]/android.view.ViewGroup/android.view.ViewGroup/android.widget.EditText"""))).click()
 
 time.sleep(4)
-Last_Name = Get().__Random_Name()
+Last_Name = Get().Random_Name()
 WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, """//androidx.recyclerview.widget.RecyclerView/android.view.ViewGroup[2]/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup[2]/android.view.ViewGroup/android.view.ViewGroup/android.widget.EditText"""))).send_keys(Last_Name)
 
 time.sleep(4)
@@ -72,21 +72,21 @@ WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, """//a
 time.sleep(4)
 months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 Month_now= datetime.now().month
-month= Get().__Random_Month()
+month= Get().Random_Month()
 Year_Back = 0
 i = 2
 
 try:
     while months[Month_now- i] != month:
         WebDriverWait(Driver, 5).until(EC.presence_of_element_located((By.XPATH, f"""//android.widget.Button[@text="{months[Month_now- i]}"]"""))).click()
-        if months[Month_now- i] == month:
+        if months[Month_now- i] == "Dec":
             Year_Back += 1
         i += 1
         time.sleep(1)
 except Exception:
 
     WebDriverWait(Driver, 5).until(EC.presence_of_element_located((By.XPATH, f"""//android.widget.Button[@text="{months[Month_now- i+1]}"]"""))).click()
-    if months[Month_now- i] == month:
+    if months[Month_now- i] == "Dec":
         Year_Back += 1
     time.sleep(1)
 
@@ -94,7 +94,7 @@ except Exception:
 #Day
 time.sleep(4)
 
-Day = Get().__Random_Day()
+Day = Get().Random_Day()
 TodayDay = datetime.now().day
 try:
     if (Day<TodayDay):
@@ -120,7 +120,7 @@ except Exception:
 
 #Year
 time.sleep(4)
-Year = Get().__Random_Year()
+Year = Get().Random_Year()
 Year_Now = 2024 - Year_Back
 
 try:
@@ -140,9 +140,9 @@ WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, """//a
 time.sleep(4)
 WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, """//android.view.View[@content-desc="Next"]"""))).click()
 
-Gender = Get().__Random_Gender()
+Gender = Get().Random_Gender()
 time.sleep(4)
-WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, f"""//android.widget.Button[@content-desc="{Gender}"]/android.view.ViewGroup/android.view.ViewGroup/android.widget.ImageView"""))).click()
+WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, f"""//android.widget.RadioButton[@content-desc="{Gender}"]/android.view.ViewGroup/android.view.ViewGroup/android.widget.ImageView"""))).click()
 
 time.sleep(4)
 WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, """//android.view.View[@content-desc="Next"]"""))).click()
@@ -162,6 +162,6 @@ time.sleep(4)
 WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, """//android.view.View[@content-desc="Next"]
 """))).click()
 
-with open(f"/.git/Data{driver_number}.txt", "w") as file:
+with open(f"Data{driver_number}.txt", "w") as file:
     file.write("First Name: {First_Name}, Last Name: {Last_Name} Email: {Mail}\nDate of Birth: {Day}/{month}/{Year}\nGender: {Gender}".format(First_Name=First_Name,Last_Name=Last_Name,Mail=Mail,Day=Day,month=month,Year=Year,Gender=Gender))
 
