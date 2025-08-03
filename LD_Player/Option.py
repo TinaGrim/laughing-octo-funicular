@@ -62,10 +62,12 @@ class option:
                     w.moveTo(index * 215,0)
                     break
                 print(f"LDPlayer {index + 1} Arranged successfully")
+                return 
             else:
                 print(f"LDPlayer {index + 1} launched (window positioning unavailable in headless mode)")
         except Exception as e:
             print(f"Error moving window: {e}")
+
 
     def cap(self,port,choose):
         
