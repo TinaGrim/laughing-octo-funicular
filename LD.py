@@ -20,17 +20,6 @@ class BobPrimeApp(QMainWindow):
         super().__init__()
         self.setWindowTitle("Girm Prime App")
         self.setGeometry(100, 100, 1500, 800)
-        self.logo = "Logo/logo_icon_big.png"
-
-        if os.path.exists(self.logo):
-            print("Logo found")
-            pixmap = QPixmap(self.logo).scaled(128, 128)
-            icon = QIcon(pixmap)
-            self.setWindowIcon(icon)
-        else:
-            print("Some logo not found")
-            sys.exit(1)
-            
         self.setStyleSheet("""
             QMainWindow, QWidget{
             background-color: #292c3b;
@@ -94,18 +83,39 @@ class BobPrimeApp(QMainWindow):
                 font-size: 12px;
             }
         """)
-        # os.system("cls")
+        
+        self.logo = "Logo/logo_icon_big.png"
+
+        if os.path.exists(self.logo):
+            print("Logo found")
+            pixmap = QPixmap(self.logo).scaled(128, 128)
+            icon = QIcon(pixmap)
+            self.setWindowIcon(icon)
+        else:
+            print("Some logo not found")
+            sys.exit(1)
+            
         self.qrbutton = QPushButton("💡")
-        self.starttime = time.time()
         self.time_label = QLabel()
         self.timer = QTimer()
+        self.Activitys = QTimer()
+        
+        self.starttime = time.time()
         self.timer.timeout.connect(self.update_time)
+        self.timer.start(500)
+        
         self.qrbutton.clicked.connect(lambda: self.open_qr("Logo/qr.jpg", 500, 800))
-        self.timer.start(500)  
+        self.Activitys.timeout.connect(lambda: self.check_activity())
+        self.Activitys.start(1000)
         self.update_time()
         self.init()
         
-    
+    def check_activity(self):
+        
+        print(f"Drivers Activity: {Option().opened_drivers()}")
+
+
+
     def update_time(self) -> None:
         """Update the time label with current time using replace"""
         elapsed = int(time.time() - self.starttime)
@@ -221,7 +231,7 @@ class BobPrimeApp(QMainWindow):
 
         page_setup_layout_Header = QHBoxLayout()
         Open_ld = QPushButton("➕")
-        Open_ld.clicked.connect(lambda: self.start_thread(LDPlayer().run,2))
+        Open_ld.clicked.connect(lambda: self.start_thread(LDPlayer().run,1))
         page_setup_layout_Header.addWidget(Open_ld)
         page_setup_layout_Header.addWidget(QPushButton("🗑️"))
         page_setup_layout_Header.addWidget(QPushButton("✒️"))

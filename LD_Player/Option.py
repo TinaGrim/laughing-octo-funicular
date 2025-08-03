@@ -6,7 +6,7 @@ from appium.options.android.uiautomator2.base import UiAutomator2Options
 import random 
 import requests
 import os
-
+import pygetwindow as gw
 
 
 def timer(func):
@@ -21,15 +21,18 @@ def timer(func):
         return result
     return wrapper
         
-class option():
+class option:
+    def __init__(self):
+        self.drivers = []
     @timer
-    def __Open_Appium(self, port):
+    def Open_Appium(self, port):
         """Opening Cmd of Appium"""
         startupinfo = self.info(2)
         
         subprocess.Popen(f'start /MIN cmd /c appium --port {port}', shell=True, startupinfo=startupinfo)
 
         time.sleep(1)
+        
     @timer
     def LDPlayer(self, startupinfo, index):
         """Opening LDPlayer by cmd"""
@@ -52,33 +55,33 @@ class option():
             print("Not supported for this OS")
         time.sleep(1)
 
-        # try:
-        #     if HAS_PYGETWINDOW and gw:
-        #         for w in gw.getAllWindows():
-        #             if w.title == LD_Name:
-        #                 w.moveTo(index * 215,0)
-        #                 break
-        #         print(f"LDPlayer {index + 1} Arranged successfully")
-        #     else:
-        #         print(f"LDPlayer {index + 1} launched (window positioning unavailable in headless mode)")
-        # except Exception as e:
-        #     print(f"Error moving window: {e}")
+        try:
+            
+            for w in gw.getAllWindows():
+                if w.title == LD_Name:
+                    w.moveTo(index * 215,0)
+                    break
+                print(f"LDPlayer {index + 1} Arranged successfully")
+            else:
+                print(f"LDPlayer {index + 1} launched (window positioning unavailable in headless mode)")
+        except Exception as e:
+            print(f"Error moving window: {e}")
 
     def cap(self,port,choose):
         
-        desired_caps = self.__get_des_cap(choose)
+        desired_caps = self.get_des_cap(choose)
         options = UiAutomator2Options()
         
         
         for k, v in desired_caps.items():
             options.set_capability(k, v)
             
-        self.__Open_Appium(port=port)
+        self.Open_Appium(port=port)
         self.driver = webdriver.Remote(f"http://localhost:{port}", options=options) # type: ignore
 
         return self.driver
 
-    def __get_des_cap(self, ID):
+    def get_des_cap(self, ID):
         ID = (ID-1)*2 + 54
         des_cap = {
             "automationName": "UiAutomator2",
@@ -102,7 +105,7 @@ class option():
             # On macOS/Linux, return None since STARTUPINFO doesn't exist
             return None
     
-    def __wait_for_ldplayer_device(self, device_name, timeout=60):
+    def wait_for_ldplayer_device(self, device_name, timeout=60):
         """check if LDPlayer fully opened"""
         start_time = time.time()
         while time.time() - start_time < timeout:
@@ -129,9 +132,9 @@ class option():
                     )
                     if shell_result.returncode == 0 and "ok" in shell_result.stdout:
                         print(f"{device_name} is fully ready.")
-                        return True
-                    else:
-                        print(f"{device_name} shell not ready, waiting...")
+                        self.drivers.append(device_name)
+                        
+            
 
             
         print(f"Timeout: {device_name} did not appear in adb devices.")
@@ -151,35 +154,41 @@ class option():
             subprocess.Popen(["python",Driver_path])
     
     def Full_setup(self,Number):
+        
         for i in range(0, Number):
             #Get().Open_LDPlayer(startupinfo, index = i)
             device_name = f"emulator-555{(i*2)+4}"
-            self.__wait_for_ldplayer_device(device_name)
-            self.__clear_app_data(device_name)
 
-    def __Random_Name(self):
+            self.name = self.wait_for_ldplayer_device(device_name)
+            self.__clear_app_data(device_name)
+            
+    def opened_drivers(self):
+        """Get all opened drivers"""
+        return self.drivers
+    
+    def Random_Name(self):
         NAME = ["Tina","Roth", "Thida","Jonh" , "Nher"]
         Name = random.choice(NAME)
         return Name
     
-    def __Random_Gender(self):
+    def Random_Gender(self):
         GENDER = ["Female","Male"]
         Gender = random.choice(GENDER)
         return Gender
     
-    def __Get_Temp_Mail(self):
+    def Get_Temp_Mail(self):
 
         Mail = requests.get("https://www.1secmail.com/api/v1/?action=genRandomMailbox&count=1")
         email = Mail.json()[0]
         return email
     
-    def __Random_Year(self):
+    def Random_Year(self):
         YEAR = random.randint(2000, 2005)
         return YEAR
-    def __Random_Day(self):
+    def Random_Day(self):
         Day = random.randint(15,30)
         return Day
-    def __Random_Month(self):
+    def Random_Month(self):
         months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
         MONTH = random.choice(months)
         return MONTH
