@@ -1,11 +1,12 @@
 import os
+from flask import Flask, jsonify
 from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QFrame, QLabel, QMainWindow, QHBoxLayout, QListWidget,QGroupBox,QMenuBar,QMenu,QTabWidget,QLineEdit,QTableWidget,QTableWidgetItem,QBoxLayout,QCheckBox,QHeaderView,QPushButton
 from PySide6.QtGui import QColor, QFont, QPixmap,QIcon
 from PySide6.QtCore import Qt, QTimer,QSize,QThread
 import sys
 import time
 import webbrowser
-import threading
+from threading import Thread
 import dotenv
 
 import signal
@@ -14,10 +15,22 @@ import cv2
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 dotenv.load_dotenv(dotenv_path=".git/.env")
 from LD_Player import *
+import threading
+
+
+server = Flask(__name__)
+Thread(target=lambda: server.run(port=5000),daemon=True).start()
+
+
+@server.route("/schedule")
+def scheduleFunc():
+    return jsonify(scheduleClose=GUI.scheduleCheck())
 
 class BobPrimeApp(QMainWindow):
     def __init__(self):
         super().__init__()
+        global GUI
+        GUI = self
         
         self.setWindowTitle("Girm Prime App")
         self.setGeometry(100, 100, 1500, 800)
@@ -96,10 +109,14 @@ class BobPrimeApp(QMainWindow):
             print("Some logo not found")
             sys.exit(1)
             
-        self.qrbutton = QPushButton("💡")
         self.time_label = QLabel()
         self.timer = QTimer()
         self.activityTimer = QTimer()
+        self.scheduleClose = False
+        
+        self.Open_ld = QPushButton("➕")
+        self.qrbutton = QPushButton("💡")
+        self.closeAppium = QCheckBox("Auto Close Appium")
         
         self.starttime = time.time()
         self.timer.timeout.connect(self.update_time)
@@ -107,11 +124,18 @@ class BobPrimeApp(QMainWindow):
 
         self.activityTimer.timeout.connect(lambda: self.update_activity_table)
         self.activityTimer.start(3000)
+        
+        self.Open_ld.clicked.connect(lambda: self.start_thread(LDPlayer().run,4))
         self.qrbutton.clicked.connect(lambda: self.open_qr("Logo/qr.jpg", 500, 800))
-
+        self.closeAppium.stateChanged.connect(lambda: self.scheduleCheck())
         self.update_time()
         self.init()
-        
+
+    
+    def scheduleCheck(self) -> bool:
+        self.scheduleClose = self.closeAppium.isChecked()
+        return self.scheduleClose
+
     def check_activity(self):
         try:
             self.drivers = Option().opened_drivers()
@@ -120,6 +144,8 @@ class BobPrimeApp(QMainWindow):
             print(f"Error checking activity: {e}")
             return []
 
+
+        
 
     def update_activity_table(self)->QTableWidget:
         driver_list = self.check_activity()
@@ -152,7 +178,7 @@ class BobPrimeApp(QMainWindow):
         if not self.table:
             return 
 
-        self.table.setRowCount(len(driver_list) if driver_list else 1)
+        
 
         print("Update exist Table")
         for i, driver_name in enumerate(driver_list):
@@ -229,9 +255,12 @@ class BobPrimeApp(QMainWindow):
         """Schedule"""
         Group_Box_Schedule = QGroupBox()
         Group_schedule = QVBoxLayout()
+        
+        
         Group_schedule.addWidget(QCheckBox("Enable Schedule Post"))
         Group_schedule.addWidget(QCheckBox("Enable Post When Run"))
         Group_schedule.addWidget(QCheckBox("Shutdown PC"))
+        Group_schedule.addWidget(self.closeAppium)
         Group_Box_Schedule.setLayout(Group_schedule)
         
         """End Schedule"""
@@ -276,9 +305,8 @@ class BobPrimeApp(QMainWindow):
         """"Header"""
 
         page_setup_layout_Header = QHBoxLayout()
-        Open_ld = QPushButton("➕")
-        Open_ld.clicked.connect(lambda: self.start_thread(LDPlayer().run,1))
-        page_setup_layout_Header.addWidget(Open_ld)
+
+        page_setup_layout_Header.addWidget(self.Open_ld)
         page_setup_layout_Header.addWidget(QPushButton("🗑️"))
         page_setup_layout_Header.addWidget(QPushButton("✒️"))
   
@@ -355,7 +383,7 @@ class BobPrimeApp(QMainWindow):
         left_widget.setLayout(Left_Panel)
         return left_widget
     
-    def open_qr(self, path,width,height):
+    def open_qr(self, path: str ,width: int,height: int) -> None:
         """Open QR code in browser"""
         qr_path = path
 
@@ -373,9 +401,9 @@ class BobPrimeApp(QMainWindow):
 
         except Exception as e:
             print(f"Error opening QR code: {e}")
-            
+
     def start_thread(self, func, *args, **kwargs) -> None:
-        self.My_thread = Threader(func,*args,**kwargs)
+        self.My_thread = Threader(func, *args, **kwargs)
         self.My_thread.start()
         
 if __name__ == "__main__":
