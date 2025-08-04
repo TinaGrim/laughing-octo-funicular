@@ -10,74 +10,127 @@ from Option import option as Get #type: ignore
 from datetime import datetime 
 import os
 import re
+import requests
 
+GET = Get()
 current_file = os.path.basename(__file__)
 number_match = re.search(r'Driver(\d+)\.py', current_file)\
     
 if number_match:
     driver_number = int(number_match.group(1))
 
-Driver = Get().cap(4722 + driver_number, driver_number)
+Driver = GET.cap(4722 + driver_number, driver_number)
+
+IMFORMATION = {
+    "firstName":GET.Random_Name(),
+    "lastName":GET.Random_Name(),
+    "month": GET.Random_Month(),
+    "day": GET.Random_Day(),
+    "year": GET.Random_Year(),
+    "gender": GET.Random_Gender(),
+    "email": "Not_Used@email.com"
+}
+
+
+
+
+
+
+SELECTOR = {
+    "Messenger": """//android.widget.TextView[@content-desc="Messenger"]""",
+    "cancelAuth": """//android.widget.ImageView[@content-desc="Cancel"]""",
+    "createAccount": """//android.widget.Button[@content-desc="Create new account"]/android.view.ViewGroup""",
+    "getStarted": """//android.view.View[@content-desc="Get started"]""",
+    "getStarted2": """//android.view.View[@content-desc="Create new account"]""",
+    "permissionDeny": """//android.widget.Button[@resource-id="com.android.packageinstaller:id/permission_deny_button"]""",
+    "startAfterDeny": """//androidx.recyclerview.widget.RecyclerView/android.view.ViewGroup[2]/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup[1]/android.view.ViewGroup/android.view.ViewGroup/android.widget.EditText""",
+    "firstNameWidget": """//androidx.recyclerview.widget.RecyclerView/android.view.ViewGroup[2]/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup[1]/android.view.ViewGroup/android.view.ViewGroup/android.widget.EditText""",
+    "lastNameWidget": """//androidx.recyclerview.widget.RecyclerView/android.view.ViewGroup[2]/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup[2]/android.view.ViewGroup/android.view.ViewGroup/android.widget.EditText""",
+    "afterNameFill": """//android.view.View[@content-desc="Next"]""",
+    "setDate": """//android.widget.Button[@resource-id="android:id/button1"]""",
+    "afterDate": """//android.view.View[@content-desc="Next"]""",
+    "afterGender": """//android.view.View[@content-desc="Next"]""",
+    "signUpEmail": """//android.view.View[@content-desc="Sign up with email"]""",
+    "emailWidget": """//android.widget.EditText""",
+    "confirmEmail": """//android.view.View[@content-desc="Next"]
+"""
+
+    
+    
+}
 time.sleep(5)
-WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, """//android.widget.TextView[@content-desc="Messenger"]"""))).click()
+WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH,SELECTOR["Messenger"] ))).click()
 time.sleep(8)
 
 try:
-    WebDriverWait(Driver, 10).until(
-        EC.presence_of_element_located((By.XPATH, """//android.widget.ImageView[@content-desc="Cancel"]"""))
-    ).click()
-except Exception as e:
-    print(f"Cancel N0t F0und In LD-name : {driver_number} or emulator-55{(driver_number-1)*2+54} Try Passing")
+    output = currentActivity = subprocess.check_output(f'adb -s emulator-55{(driver_number-1)*2+54} shell dumpsys activity activities', shell=True).decode('utf-8')
+    Attempt = 0
+    passing = False
+    while ".auth.api.credentials.assistedsignin.ui.AssistedSignInActivity" not in output:
+        if Attempt < 5:
+            time.sleep(3)
+            Attempt += 1
+            output = subprocess.check_output(f'adb -s emulator-55{(driver_number-1)*2+54} shell dumpsys activity activities', shell=True).decode('utf-8')
+        else:
+            print("Not found try pass")
+            passing = True
+            break
+    if not passing:
+        print("Found")
+        WebDriverWait(Driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, SELECTOR["cancelAuth"]))
+        ).click()
+
+except subprocess.CalledProcessError as e:
+    print(f"Error executing adb command: {e}")
+    
+
+        
+
 
 time.sleep(4)
-WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, """//android.widget.Button[@content-desc="Create new account"]/android.view.ViewGroup"""))).click()
+WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, SELECTOR["createAccount"]))).click()
 
 
-#//android.view.View[@content-desc="Create new account"]
+
 time.sleep(4)
 
 try:
-    WebDriverWait(Driver, 1).until(EC.presence_of_element_located((By.XPATH, """//android.view.View[@content-desc="Get started"]"""))).click()
+    WebDriverWait(Driver, 1).until(EC.presence_of_element_located((By.XPATH, SELECTOR["getStarted"]))).click()
 except Exception:
-    WebDriverWait(Driver, 1).until(EC.presence_of_element_located((By.XPATH, """//android.view.View[@content-desc="Create new account"]"""))).click()
+    WebDriverWait(Driver, 1).until(EC.presence_of_element_located((By.XPATH, SELECTOR["getStarted2"]))).click()
 time.sleep(4)
 
    
 try:
-    WebDriverWait(Driver, 10).until(EC.presence_of_element_located((By.XPATH, """//android.widget.Button[@resource-id="com.android.packageinstaller:id/permission_deny_button"]"""))).click()
+    WebDriverWait(Driver, 10).until(EC.presence_of_element_located((By.XPATH, SELECTOR["permissionDeny"]))).click()
 except Exception:
     pass
 time.sleep(4)
 
-WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, """//androidx.recyclerview.widget.RecyclerView/android.view.ViewGroup[2]/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup[1]/android.view.ViewGroup/android.view.ViewGroup/android.widget.EditText"""))).click()
 
-time.sleep(4)
-First_Name = Get().Random_Name()
-WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, """//androidx.recyclerview.widget.RecyclerView/android.view.ViewGroup[2]/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup[1]/android.view.ViewGroup/android.view.ViewGroup/android.widget.EditText"""))).send_keys(First_Name)
 
+WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, SELECTOR["firstNameWidget"]))).send_keys(IMFORMATION["firstName"])
 time.sleep(4)
-WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, """//androidx.recyclerview.widget.RecyclerView/android.view.ViewGroup[2]/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup[2]/android.view.ViewGroup/android.view.ViewGroup/android.widget.EditText"""))).click()
 
-time.sleep(4)
-Last_Name = Get().Random_Name()
-WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, """//androidx.recyclerview.widget.RecyclerView/android.view.ViewGroup[2]/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup[2]/android.view.ViewGroup/android.view.ViewGroup/android.widget.EditText"""))).send_keys(Last_Name)
 
+
+WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, SELECTOR["lastNameWidget"]))).send_keys(IMFORMATION["lastName"])
 time.sleep(4)
-WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, """//android.view.View[@content-desc="Next"]"""))).click()
+
+WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, SELECTOR["afterNameFill"]))).click()
+time.sleep(4)
 
 
 #Month
-
-
-time.sleep(4)
 months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 Month_now= datetime.now().month
-month= Get().Random_Month()
+
 Year_Back = 0
 i = 2
 
 try:
-    while months[Month_now- i] != month:
+    while months[Month_now- i] != IMFORMATION["month"]:
         WebDriverWait(Driver, 5).until(EC.presence_of_element_located((By.XPATH, f"""//android.widget.Button[@text="{months[Month_now- i]}"]"""))).click()
         if months[Month_now- i] == "Dec":
             Year_Back += 1
@@ -94,8 +147,10 @@ except Exception:
 #Day
 time.sleep(4)
 
-Day = Get().Random_Day()
+
 TodayDay = datetime.now().day
+Day = IMFORMATION["day"]
+
 try:
     if (Day<TodayDay):
         for day in range(TodayDay -1 , Day-1,-1):
@@ -120,7 +175,7 @@ except Exception:
 
 #Year
 time.sleep(4)
-Year = Get().Random_Year()
+Year = IMFORMATION["year"]
 Year_Now = 2024 - Year_Back
 
 try:
@@ -135,33 +190,50 @@ except Exception:
 
 
 time.sleep(4)
-WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, """//android.widget.Button[@resource-id="android:id/button1"]"""))).click()
+WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, SELECTOR["setDate"]))).click()
 
 time.sleep(4)
-WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, """//android.view.View[@content-desc="Next"]"""))).click()
+WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, SELECTOR["afterDate"]))).click()
 
-Gender = Get().Random_Gender()
+Gender = IMFORMATION["gender"]
 time.sleep(4)
 WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, f"""//android.widget.RadioButton[@content-desc="{Gender}"]/android.view.ViewGroup/android.view.ViewGroup/android.widget.ImageView"""))).click()
 
 time.sleep(4)
-WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, """//android.view.View[@content-desc="Next"]"""))).click()
+WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, SELECTOR["afterGender"]))).click()
 
 time.sleep(4)
-WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, """//android.view.View[@content-desc="Sign up with email"]"""))).click()
+WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, SELECTOR["signUpEmail"]))).click()
 
 time.sleep(4)
-Email = WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, """//android.widget.EditText""")))
+Email = WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, SELECTOR["emailWidget"])))
 Email.click()
 
-Mail = "Not_Used@email.com"
+Mail = IMFORMATION["email"]
 Email.send_keys(Mail)
 
 
 time.sleep(4)
-WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, """//android.view.View[@content-desc="Next"]
-"""))).click()
+WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, SELECTOR["confirmEmail"]))).click()
 
 with open(f"Data{driver_number}.txt", "w") as file:
-    file.write("First Name: {First_Name} \nLast Name: {Last_Name} \nEmail: {Mail}\nDate of Birth: {Day}/{month}/{Year}\nGender: {Gender}".format(First_Name=First_Name,Last_Name=Last_Name,Mail=Mail,Day=Day,month=month,Year=Year,Gender=Gender))
+    file.write("First Name: {First_Name} \nLast Name: {Last_Name} \nEmail: {Mail}\nDate of Birth: {Day}/{month}/{Year}\nGender: {Gender}".format(First_Name=IMFORMATION["firstName"],Last_Name=IMFORMATION["lastName"],Mail=Mail,Day=Day,month=IMFORMATION["month"],Year=Year,Gender=Gender))
+    
+try:
+    r = requests.get("http://127.0.0.1:5000/schedule")
+    response = r.json().get("scheduleClose",False) 
+except Exception as e:
+    print(f"Server Can Not Get Schedule status: {e}")
 
+port = 4722 + driver_number
+find_pid_cmd = f'netstat -aon | findstr :{port}'
+result = subprocess.check_output(find_pid_cmd, shell=True, text=True)
+line = result.strip().splitlines()
+if response:
+    if line:
+        pid = line[0].split()[-1]
+        kill_cmd = f'taskkill /PID {pid} /F'
+        subprocess.run(kill_cmd, shell=True)
+        print("Kill LD: ",driver_number)
+    else:
+        print(f"Not found {port}")
