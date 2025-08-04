@@ -28,9 +28,7 @@ class option:
     def Open_Appium(self, port):
         """Opening Cmd of Appium"""
         startupinfo = self.info(2)
-        
         subprocess.Popen(f'start /MIN cmd /c appium --port {port}', shell=True, startupinfo=startupinfo)
-
         time.sleep(1)
         
     @timer
@@ -154,8 +152,8 @@ class option:
     
     def Full_setup(self,Number):
         for i in range(0, Number):
-            #Get().Open_LDPlayer(startupinfo, index = i)
-            device_name = f"emulator-555{(i*2)+4}"
+            
+            device_name = f"emulator-55{(i*2+54)}"
 
             self.name = self.wait_for_ldplayer_device(device_name)
             self.__clear_app_data(device_name)
@@ -176,7 +174,7 @@ class option:
         """Activity Check"""
         for line in result.stdout.splitlines():
             for driver_name in Drivers_list:
-                if driver_name in line and "\tdevice" in line:
+                if driver_name in line:
                     Drivers_list_opened.append(driver_name)
         return Drivers_list_opened
 

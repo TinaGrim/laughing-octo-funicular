@@ -2,6 +2,7 @@ import time
 from selenium.webdriver.common.by import By
 import os
 from .Option import option as Get
+
 class LDPlayer():
     def run(self,number:int):
         Number = number
