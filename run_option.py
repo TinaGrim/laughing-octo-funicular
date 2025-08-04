@@ -8,10 +8,7 @@ import sys
 import os
 import json
 
-# Add the LD-Player directory to path
-LD_Function = os.path.abspath(os.path.join(os.path.dirname(__file__), "LD-Player"))
-if LD_Function not in sys.path:
-    sys.path.append(LD_Function)
+from LD_Player import Option 
 
 def main():
     if len(sys.argv) < 2:
@@ -30,9 +27,8 @@ def main():
     command = sys.argv[1].lower()
     
     try:
-        # Import the Option class
-        from Option import option #type: ignore
-        opt = option()
+
+        opt = Option()
         
         if command == "open_ld":
             number = int(sys.argv[2]) if len(sys.argv) > 2 else 1
