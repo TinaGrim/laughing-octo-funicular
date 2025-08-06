@@ -71,12 +71,14 @@ class BobPrimeApp(QMainWindow):
             }
             QTabBar::tab:selected {
                 background-color: #176ec3;
+                border-radius: 5px;
             }
             QTabWidget::pane {
                 top: 0px;
                 margin: 0px;
                 padding: 0px;
-                border: 1px solid #dcecf7;
+                border: 2px solid #808080;
+                border-radius: 5px;
             }
             QTabWidget > QWidget {
                 margin: 0px;
@@ -88,46 +90,59 @@ class BobPrimeApp(QMainWindow):
                 margin: 0px;
             }
             QGroupBox::title {
-                subcontrol-origin: margin;
+                subcontrol-origin: padding;
                 subcontrol-position: top left; 
-                background-color:#13599d;
+                background-color:#292c3b;
                 padding: 0px 0px;
-                margin: 0px;
+                margin: -13px 0px 20px 10px;
                 border-radius: 10px;
                 font-size: 12px;
             }
         """)
         
         self.logo = "Logo/logo_icon_big.png"
-
         if os.path.exists(self.logo):
-
-            pixmap = QPixmap(self.logo).scaled(128, 128)
-            icon = QIcon(pixmap)
+            
+            icon = QIcon(self.logo)
             self.setWindowIcon(icon)
         else:
             print("Some logo not found")
             sys.exit(1)
             
+        #setup widgets
         self.time_label = QLabel()
         self.timer = QTimer()
         self.activityTimer = QTimer()
         self.scheduleClose = False
         
+        #widgets
         self.Open_ld = QPushButton("➕")
+        self.Open_ld.setStyleSheet("margin: 0px 0px 10px 0px;")
+        self.deleteButton = QPushButton("🗑️")
+        self.deleteButton.setStyleSheet("margin: 0px 0px 10px 0px;")
+        self.createButton = QPushButton("✒️")
+        self.createButton.setStyleSheet("margin: 0px 0px 10px 0px;")
+        
         self.qrbutton = QPushButton("💡")
+        
         self.closeAppium = QCheckBox("Auto Close Appium")
         
+        #timer
         self.starttime = time.time()
         self.timer.timeout.connect(self.update_time)
         self.timer.start(500)
-
-        self.activityTimer.timeout.connect(lambda: self.update_activity_table)
+        
+        #table activity
+        self.activityTimer.timeout.connect(self.update_activity_table)
         self.activityTimer.start(3000)
         
-        self.Open_ld.clicked.connect(lambda: self.start_thread(LDPlayer().run,4))
+        
+        #trigger
+        self.Open_ld.clicked.connect(lambda: self.start_thread(LDPlayer().run,1))
         self.qrbutton.clicked.connect(lambda: self.open_qr("Logo/qr.jpg", 500, 800))
         self.closeAppium.stateChanged.connect(lambda: self.scheduleCheck())
+        #Init
+        
         self.update_time()
         self.init()
 
@@ -177,10 +192,7 @@ class BobPrimeApp(QMainWindow):
 
         if not self.table:
             return 
-
         
-
-        print("Update exist Table")
         for i, driver_name in enumerate(driver_list):
             self.table.setItem(i,0, QTableWidgetItem(str(i+1)))
             self.table.setItem(i,1, QTableWidgetItem(driver_name))
@@ -303,16 +315,16 @@ class BobPrimeApp(QMainWindow):
         auto_post_layout_right = QVBoxLayout()
         
         """"Header"""
-
         page_setup_layout_Header = QHBoxLayout()
 
         page_setup_layout_Header.addWidget(self.Open_ld)
-        page_setup_layout_Header.addWidget(QPushButton("🗑️"))
-        page_setup_layout_Header.addWidget(QPushButton("✒️"))
+        page_setup_layout_Header.addWidget(self.deleteButton)
+        page_setup_layout_Header.addWidget(self.createButton)
   
         """End Header"""
         
         """Page Setup Group"""
+        
         page_setup_layout_Group = QGroupBox("Page Setup")
         page_setup_layout_Group_Layout = QVBoxLayout()
         
@@ -325,6 +337,7 @@ class BobPrimeApp(QMainWindow):
         auto_post_layout_right.addWidget(page_setup_layout_Group)
 
         auto_post_layout_right_widget.setLayout(auto_post_layout_right)
+        auto_post_layout_right_widget.setStyleSheet("margin: 5px")
         
         auto_post_layout.addWidget(auto_post_layout_left_widget,3)
         auto_post_layout.addWidget(auto_post_layout_right_widget,7)
