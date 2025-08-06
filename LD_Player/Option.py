@@ -1,5 +1,6 @@
 import time
 
+import platform
 from appium import webdriver
 import subprocess
 from appium.options.android.uiautomator2.base import UiAutomator2Options
@@ -23,7 +24,34 @@ def timer(func):
         
 class option:
     def __init__(self):
-        self.drivers = []
+        self.SELECTOR = {
+        "Messenger": """//android.widget.TextView[@content-desc="Messenger"]""",
+        "cancelAuth": """//android.widget.ImageView[@content-desc="Cancel"]""",
+        "createAccount": """//android.widget.Button[@content-desc="Create new account"]/android.view.ViewGroup""",
+        "getStarted": """//android.view.View[@content-desc="Get started"]""",
+        "getStarted2": """//android.view.View[@content-desc="Create new account"]""",
+        "permissionDeny": """//android.widget.Button[@resource-id="com.android.packageinstaller:id/permission_deny_button"]""",
+        "startAfterDeny": """//androidx.recyclerview.widget.RecyclerView/android.view.ViewGroup[2]/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup[1]/android.view.ViewGroup/android.view.ViewGroup/android.widget.EditText""",
+        "firstNameWidget": """//androidx.recyclerview.widget.RecyclerView/android.view.ViewGroup[2]/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup[1]/android.view.ViewGroup/android.widget.EditText""",
+        "lastNameWidget": """//androidx.recyclerview.widget.RecyclerView/android.view.ViewGroup[2]/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup[2]/android.view.ViewGroup/android.widget.EditText""",
+        "afterNameFill": """//android.view.View[@content-desc="Next"]""",
+        "setDate": """//android.widget.Button[@resource-id="android:id/button1"]""",
+        "afterDate": """//android.view.View[@content-desc="Next"]""",
+        "afterGender": """//android.view.View[@content-desc="Next"]""",
+        "signUpEmail": """//android.view.View[@content-desc="Sign up with email"]""",
+        "emailWidget": """//android.widget.EditText""",
+        "confirmEmail": """//android.view.View[@content-desc="Next"]"""
+        }
+        self.IMFORMATION = {
+        "firstName":self.Random_Name(),
+        "lastName":self.Random_Name(),
+        "month": self.Random_Month(),
+        "day": self.Random_Day(),
+        "year": self.Random_Year(),
+        "gender": self.Random_Gender(),
+        "email": "Not_Used@email.com"
+        }
+        
     @timer
     def Open_Appium(self, port):
         """Opening Cmd of Appium"""
@@ -40,45 +68,49 @@ class option:
         system = platform.system()
         
         if system == "Windows":
-
-            LDPlayer_launcher_path = f'"D:\\LDPlayer\\LDPlayer9\\ldconsole.exe" launch --index {index}'
-            LDPlayer_setup_path = f'"D:\\LDPlayer\\LDPlayer9\\ldconsole.exe" modify --index {index} --resolution 300,600,160 '
-            print("LDPlayer count:", index + 1)
-            
-            LD_Name = f"LDPlayer" if index == 0 else f"LDPlayer-{index}"
-            
-            subprocess.run(LDPlayer_setup_path, shell=True, startupinfo=startupinfo) 
-            subprocess.run(LDPlayer_launcher_path, shell=True, startupinfo=startupinfo)
+            try:
+                LDPlayer_launcher_path = f'"D:\\LDPlayer\\LDPlayer9\\ldconsole.exe" launch --index {index}'
+                LDPlayer_setup_path = f'"D:\\LDPlayer\\LDPlayer9\\ldconsole.exe" modify --index {index} --resolution 300,600,160 '
+                print("LDPlayer count:", index + 1)
+                
+                LD_Name = f"LDPlayer" if index == 0 else f"LDPlayer-{index}"
+                
+                subprocess.run(LDPlayer_setup_path, shell=True, startupinfo=startupinfo) 
+                subprocess.run(LDPlayer_launcher_path, shell=True, startupinfo=startupinfo)
+            except Exception as e:
+                traceback.print_exc()
+                print(f"Error launching LDPlayer: {e}")
+                return
         else:
             print("Not supported for this OS")
         time.sleep(1)
+        self.Arrangment(index)
 
+
+    def Arrangment(self, index):
+        """Arranging LDPlayer windows"""
         try:
-            
+            LD_Name = f"LDPlayer" if index == 0 else f"LDPlayer-{index}"
             for w in gw.getAllWindows():
                 if w.title == LD_Name:
                     w.moveTo(index * 215,0)
+                    print(f"LDPlayer {index + 1} Arranged successfully")
                     break
-                print(f"LDPlayer {index + 1} Arranged successfully")
-                return 
-            else:
-                print(f"LDPlayer {index + 1} launched (window positioning unavailable in headless mode)")
         except Exception as e:
             print(f"Error moving window: {e}")
-
-
     def cap(self,port,choose):
-        
-        desired_caps = self.get_des_cap(choose)
-        options = UiAutomator2Options()
-        
-        
-        for k, v in desired_caps.items():
-            options.set_capability(k, v)
-            
-        self.Open_Appium(port=port)
-        self.driver = webdriver.Remote(f"http://localhost:{port}", options=options) # type: ignore
-
+        try:
+            desired_caps = self.get_des_cap(choose)
+            options = UiAutomator2Options()
+            for k, v in desired_caps.items():
+                options.set_capability(k, v)
+                
+            self.Open_Appium(port=port)
+            self.driver = webdriver.Remote(f"http://localhost:{port}", options=options) # type: ignore
+        except Exception as e:
+            print(f"Error initializing Appium driver: {e}")
+            traceback.print_exc()
+            return None
         return self.driver
 
     def get_des_cap(self, ID):
@@ -95,7 +127,6 @@ class option:
     
     def info(self, Show):
         """Just for hide window - Windows only"""
-        import platform
         if platform.system() == "Windows":
             startupinfo = subprocess.STARTUPINFO()
             startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
@@ -158,9 +189,10 @@ class option:
             self.name = self.wait_for_ldplayer_device(device_name)
             self.__clear_app_data(device_name)
             
-    def opened_drivers(self):
+    def opened_drivers(self)-> list[str]:
         Drivers_list = ["emulator-5554", "emulator-5556", "emulator-5558", "emulator-5560", "emulator-5562", "emulator-5564", "emulator-5566", "emulator-5568", "emulator-5570", "emulator-5572"]
         Drivers_list_opened = []
+        
         try:
             result = subprocess.run(
                 ['adb', 'devices'],
@@ -169,7 +201,8 @@ class option:
                 text=True
             )
         except Exception as e:
-            print(f"Error running adb.exe: {e}")
+            print(f"not found adb.exe: {e}")
+            return Drivers_list_opened
             
         """Activity Check"""
         for line in result.stdout.splitlines():
@@ -178,11 +211,11 @@ class option:
                     Drivers_list_opened.append(driver_name)
         return Drivers_list_opened
 
-    def Random_Name(self):
+    def Random_Name(self)-> str:
         NAME = names.get_last_name()
         return NAME
 
-    def Random_Gender(self):
+    def Random_Gender(self)-> str:
         GENDER = ["Female","Male"]
         Gender = random.choice(GENDER)
         return Gender
@@ -193,17 +226,18 @@ class option:
         email = Mail.json()[0]
         return email
     
-    def Random_Year(self):
+    def Random_Year(self)-> int:
         YEAR = random.randint(2000, 2005)
         return YEAR
-    def Random_Day(self):
+
+    def Random_Day(self)-> int:
         Day = random.randint(15,30)
         return Day
-    def Random_Month(self):
+    def Random_Month(self)-> str:
         months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
         MONTH = random.choice(months)
         return MONTH
     
-    def __clear_app_data(self, device_name, package_name = "com.facebook.orca"):
+    def __clear_app_data(self, device_name, package_name = "com.facebook.orca")-> None:
         Clear = subprocess.run(["adb", "-s", device_name, "shell", "pm", "clear", package_name])
         print("Clear out: ",Clear)
