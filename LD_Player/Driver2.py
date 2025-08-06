@@ -11,53 +11,27 @@ from datetime import datetime
 import os
 import re
 import requests
-
 GET = Get()
+SELECTOR = GET.SELECTOR
+IMFORMATION = GET.IMFORMATION
 current_file = os.path.basename(__file__)
-number_match = re.search(r'Driver(\d+)\.py', current_file)\
-    
+number_match = re.search(r'Driver(\d+)\.py', current_file)
+
 if number_match:
     driver_number = int(number_match.group(1))
 
 Driver = GET.cap(4722 + driver_number, driver_number)
 
-IMFORMATION = {
-    "firstName":GET.Random_Name(),
-    "lastName":GET.Random_Name(),
-    "month": GET.Random_Month(),
-    "day": GET.Random_Day(),
-    "year": GET.Random_Year(),
-    "gender": GET.Random_Gender(),
-    "email": "Not_Used@email.com"
-}
 
 
 
+#//androidx.recyclerview.widget.RecyclerView/android.view.ViewGroup[2]/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup[1]/android.view.ViewGroup/android.widget.EditText
 
 
-
-SELECTOR = {
-    "Messenger": """//android.widget.TextView[@content-desc="Messenger"]""",
-    "cancelAuth": """//android.widget.ImageView[@content-desc="Cancel"]""",
-    "createAccount": """//android.widget.Button[@content-desc="Create new account"]/android.view.ViewGroup""",
-    "getStarted": """//android.view.View[@content-desc="Get started"]""",
-    "getStarted2": """//android.view.View[@content-desc="Create new account"]""",
-    "permissionDeny": """//android.widget.Button[@resource-id="com.android.packageinstaller:id/permission_deny_button"]""",
-    "startAfterDeny": """//androidx.recyclerview.widget.RecyclerView/android.view.ViewGroup[2]/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup[1]/android.view.ViewGroup/android.view.ViewGroup/android.widget.EditText""",
-    "firstNameWidget": """//androidx.recyclerview.widget.RecyclerView/android.view.ViewGroup[2]/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup[1]/android.view.ViewGroup/android.view.ViewGroup/android.widget.EditText""",
-    "lastNameWidget": """//androidx.recyclerview.widget.RecyclerView/android.view.ViewGroup[2]/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup[2]/android.view.ViewGroup/android.view.ViewGroup/android.widget.EditText""",
-    "afterNameFill": """//android.view.View[@content-desc="Next"]""",
-    "setDate": """//android.widget.Button[@resource-id="android:id/button1"]""",
-    "afterDate": """//android.view.View[@content-desc="Next"]""",
-    "afterGender": """//android.view.View[@content-desc="Next"]""",
-    "signUpEmail": """//android.view.View[@content-desc="Sign up with email"]""",
-    "emailWidget": """//android.widget.EditText""",
-    "confirmEmail": """//android.view.View[@content-desc="Next"]
-"""
-
+if Driver is None:
+    print("Driver did not exist...")
+    exit(1)
     
-    
-}
 time.sleep(5)
 WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH,SELECTOR["Messenger"] ))).click()
 time.sleep(8)
@@ -109,6 +83,7 @@ except Exception:
 time.sleep(4)
 
 
+#WebDriverWait(Driver, 10).until(EC.presence_of_element_located((By.XPATH, SELECTOR["startAfterDeny"]))).click()
 
 WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, SELECTOR["firstNameWidget"]))).send_keys(IMFORMATION["firstName"])
 time.sleep(4)
@@ -122,61 +97,61 @@ WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, SELECT
 time.sleep(4)
 
 
-#Month
-months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-Month_now= datetime.now().month
+# #Month
+# months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+# Month_now= datetime.now().month
+Month = IMFORMATION["month"]
+# Year_Back = 0
+# i = 2
 
-Year_Back = 0
-i = 2
+# try:
+#     while months[Month_now- i] != IMFORMATION["month"]:
+#         WebDriverWait(Driver, 5).until(EC.presence_of_element_located((By.XPATH, f"""//android.widget.Button[@text="{months[Month_now- i]}"]"""))).click()
+#         if months[Month_now- i] == "Dec":
+#             Year_Back += 1
+#         i += 1
+#         time.sleep(1)
+# except Exception:
 
-try:
-    while months[Month_now- i] != IMFORMATION["month"]:
-        WebDriverWait(Driver, 5).until(EC.presence_of_element_located((By.XPATH, f"""//android.widget.Button[@text="{months[Month_now- i]}"]"""))).click()
-        if months[Month_now- i] == "Dec":
-            Year_Back += 1
-        i += 1
-        time.sleep(1)
-except Exception:
-
-    WebDriverWait(Driver, 5).until(EC.presence_of_element_located((By.XPATH, f"""//android.widget.Button[@text="{months[Month_now- i+1]}"]"""))).click()
-    if months[Month_now- i] == "Dec":
-        Year_Back += 1
-    time.sleep(1)
-
-
-#Day
-time.sleep(4)
+#     WebDriverWait(Driver, 5).until(EC.presence_of_element_located((By.XPATH, f"""//android.widget.Button[@text="{months[Month_now- i+1]}"]"""))).click()
+#     if months[Month_now- i] == "Dec":
+#         Year_Back += 1
+#     time.sleep(1)
 
 
-TodayDay = datetime.now().day
+# #Day
+# time.sleep(4)
+
+
+# TodayDay = datetime.now().day
 Day = IMFORMATION["day"]
 
-try:
-    if (Day<TodayDay):
-        for day in range(TodayDay -1 , Day-1,-1):
-            WebDriverWait(Driver, 5).until(EC.presence_of_element_located((By.XPATH, f"""//android.widget.Button[@text="{day:02d}"]"""))).click()
+# try:
+#     if (Day<TodayDay):
+#         for day in range(TodayDay -1 , Day-1,-1):
+#             WebDriverWait(Driver, 5).until(EC.presence_of_element_located((By.XPATH, f"""//android.widget.Button[@text="{day:02d}"]"""))).click()
 
-            time.sleep(1)
-    elif (TodayDay<Day):
-        for day in range(TodayDay +1 , Day+1):
-            WebDriverWait(Driver, 5).until(EC.presence_of_element_located((By.XPATH, f"""//android.widget.Button[@text="{day:02d}"]"""))).click()
+#             time.sleep(1)
+#     elif (TodayDay<Day):
+#         for day in range(TodayDay +1 , Day+1):
+#             WebDriverWait(Driver, 5).until(EC.presence_of_element_located((By.XPATH, f"""//android.widget.Button[@text="{day:02d}"]"""))).click()
 
-            time.sleep(1)
-except Exception:
-    if (Day<TodayDay):
+#             time.sleep(1)
+# except Exception:
+#     if (Day<TodayDay):
         
-        WebDriverWait(Driver, 5).until(EC.presence_of_element_located((By.XPATH, f"""//android.widget.Button[@text="{day+1:02d}"]"""))).click()
+#         WebDriverWait(Driver, 5).until(EC.presence_of_element_located((By.XPATH, f"""//android.widget.Button[@text="{day+1:02d}"]"""))).click()
 
-        time.sleep(1)
-    elif (TodayDay<Day):
-        WebDriverWait(Driver, 5).until(EC.presence_of_element_located((By.XPATH, f"""//android.widget.Button[@text="{day-1:02d}"]"""))).click()
+#         time.sleep(1)
+#     elif (TodayDay<Day):
+#         WebDriverWait(Driver, 5).until(EC.presence_of_element_located((By.XPATH, f"""//android.widget.Button[@text="{day-1:02d}"]"""))).click()
 
-        time.sleep(1)
+#         time.sleep(1)
 
 #Year
 time.sleep(4)
 Year = IMFORMATION["year"]
-Year_Now = 2024 - Year_Back
+Year_Now = 2024 #- Year_Back
 
 try:
     for Year in range(Year_Now,Year-1,-1):
@@ -197,7 +172,7 @@ WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, SELECT
 
 Gender = IMFORMATION["gender"]
 time.sleep(4)
-WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, f"""//android.widget.RadioButton[@content-desc="{Gender}"]/android.view.ViewGroup/android.view.ViewGroup/android.widget.ImageView"""))).click()
+WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, f"""//android.widget.RadioButton[@content-desc="{Gender}"]/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup/android.widget.ImageView"""))).click()
 
 time.sleep(4)
 WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, SELECTOR["afterGender"]))).click()
@@ -217,7 +192,7 @@ time.sleep(4)
 WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, SELECTOR["confirmEmail"]))).click()
 
 with open(f"Data{driver_number}.txt", "w") as file:
-    file.write("First Name: {First_Name} \nLast Name: {Last_Name} \nEmail: {Mail}\nDate of Birth: {Day}/{month}/{Year}\nGender: {Gender}".format(First_Name=IMFORMATION["firstName"],Last_Name=IMFORMATION["lastName"],Mail=Mail,Day=Day,month=IMFORMATION["month"],Year=Year,Gender=Gender))
+    file.write("First Name: {First_Name} \nLast Name: {Last_Name} \nEmail: {Mail}\nDate of Birth: {Day}/{month}/{Year}\nGender: {Gender}".format(First_Name=IMFORMATION["firstName"],Last_Name=IMFORMATION["lastName"],Mail=Mail,Day=Day,month=Month,Year=Year,Gender=Gender))
     
 try:
     r = requests.get("http://127.0.0.1:5000/schedule")
