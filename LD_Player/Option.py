@@ -65,24 +65,20 @@ class option:
         import platform
         startupinfo = self.info(1)
         
-        system = platform.system()
-        
-        if system == "Windows":
-            try:
-                LDPlayer_launcher_path = f'"D:\\LDPlayer\\LDPlayer9\\ldconsole.exe" launch --index {index}'
-                LDPlayer_setup_path = f'"D:\\LDPlayer\\LDPlayer9\\ldconsole.exe" modify --index {index} --resolution 300,600,160 '
-                print("LDPlayer count:", index + 1)
-                
-                LD_Name = f"LDPlayer" if index == 0 else f"LDPlayer-{index}"
-                
-                subprocess.run(LDPlayer_setup_path, shell=True, startupinfo=startupinfo) 
-                subprocess.run(LDPlayer_launcher_path, shell=True, startupinfo=startupinfo)
-            except Exception as e:
-                traceback.print_exc()
-                print(f"Error launching LDPlayer: {e}")
-                return
-        else:
-            print("Not supported for this OS")
+
+        try:
+            LDPlayer_launcher_path = f'"D:\\LDPlayer\\LDPlayer9\\ldconsole.exe" launch --index {index}'
+            LDPlayer_setup_path = f'"D:\\LDPlayer\\LDPlayer9\\ldconsole.exe" modify --index {index} --resolution 300,600,160 '
+            print("LDPlayer count:", index + 1)
+            
+            
+            
+            subprocess.run(LDPlayer_setup_path, shell=True, startupinfo=startupinfo) 
+            subprocess.run(LDPlayer_launcher_path, shell=True, startupinfo=startupinfo)
+        except Exception as e:
+            traceback.print_exc()
+            print(f"Error launching LDPlayer: {e}")
+            return
         time.sleep(1)
         self.Arrangment(index)
 
