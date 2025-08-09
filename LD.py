@@ -26,6 +26,12 @@ Thread(target=lambda: server.run(port=5000),daemon=True).start()
 def scheduleFunc():
     return jsonify(scheduleClose=GUI.scheduleCheck())
 
+@server.route("/LDcount")
+def LDcount():
+    count = GUI.LDcount
+    List = [i for i in range(1, count+1)]
+    return jsonify(LDcount=List)
+
 class BobPrimeApp(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -138,7 +144,7 @@ class BobPrimeApp(QMainWindow):
         
         
         #trigger
-        self.Open_ld.clicked.connect(lambda: self.start_thread(LDPlayer().run,1))
+        self.Open_ld.clicked.connect(lambda: self.startLD(2))
         self.qrbutton.clicked.connect(lambda: self.open_qr("Logo/qr.jpg", 500, 800))
         self.closeAppium.stateChanged.connect(lambda: self.scheduleCheck())
         #Init
@@ -150,6 +156,12 @@ class BobPrimeApp(QMainWindow):
     def scheduleCheck(self) -> bool:
         self.scheduleClose = self.closeAppium.isChecked()
         return self.scheduleClose
+    
+    def startLD(self, number: int)-> int:
+        """Start LD Player"""
+        self.start_thread(LDPlayer().run, number)
+        self.LDcount = number
+        return self.LDcount
 
     def check_activity(self):
         try:
@@ -191,9 +203,12 @@ class BobPrimeApp(QMainWindow):
     def update_exist_table(self, driver_list: list[str]):
 
         if not self.table:
-            return 
-        
+            return
+        if not driver_list:
+            self.table.setRowCount(0)
+            return
         for i, driver_name in enumerate(driver_list):
+            self.table.setRowCount(len(driver_list))
             self.table.setItem(i,0, QTableWidgetItem(str(i+1)))
             self.table.setItem(i,1, QTableWidgetItem(driver_name))
             self.table.setItem(i,2, QTableWidgetItem(str(i+1)))
@@ -422,7 +437,7 @@ class BobPrimeApp(QMainWindow):
 if __name__ == "__main__":
     
     QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
-    
+    LD = LDPlayer()
     app = QApplication(sys.argv)
     window = BobPrimeApp()  
     window.show()
