@@ -119,6 +119,7 @@ class BobPrimeApp(QMainWindow):
         self.time_label = QLabel()
         self.timer = QTimer()
         self.activityTimer = QTimer()
+        self.LDNameTimer = QTimer()
         self.scheduleClose = False
         
         #widgets
@@ -142,6 +143,9 @@ class BobPrimeApp(QMainWindow):
         self.activityTimer.timeout.connect(self.update_activity_table)
         self.activityTimer.start(3000)
         
+        #table LDName
+        self.LDNameTimer.timeout.connect(self.update_LDName_table)
+        self.LDNameTimer.start(3000)
         
         #trigger
         self.Open_ld.clicked.connect(lambda: self.startLD(2))
@@ -195,12 +199,10 @@ class BobPrimeApp(QMainWindow):
             self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)  
             self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)  
             self.table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch) 
-        self.update_exist_table(driver_list)
+        self.update_exist_activity_table(driver_list)
         return self.table
-    
-    
 
-    def update_exist_table(self, driver_list: list[str]):
+    def update_exist_activity_table(self, driver_list: list[str]):
 
         if not self.table:
             return
@@ -222,6 +224,33 @@ class BobPrimeApp(QMainWindow):
         minutes = (elapsed % 3600) // 60
         seconds = elapsed % 60
         self.time_label.setText(f'<div style="font-size: 50px;">{hours:02}:{minutes:02}:{seconds:02}</div>')
+        
+    def update_LDName_table(self) -> QTableWidget:
+        driver_list = self.check_activity()
+        if not hasattr(self, 'LDName_table') or self.LDName_table is None:
+            self.LDName_table = QTableWidget(0, 2)
+            self.LDName_table.setHorizontalHeaderLabels(["No.", "LD Name"])
+            self.LDName_table.verticalHeader().setVisible(False)
+            self.LDName_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+            self.LDName_table.setAutoFillBackground(False)
+            self.LDName_table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+            self.LDName_table.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+            self.LDName_table.resizeColumnsToContents()
+            self.LDName_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)  
+            self.LDName_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        self.update_exist_LDName_table(driver_list)
+        return self.LDName_table
+    
+    def update_exist_LDName_table(self, driver_list: list[str]) -> None:
+        if not self.LDName_table:
+            return
+        if not driver_list:
+            self.LDName_table.setRowCount(0)
+            return
+        for i, driver_name in enumerate(driver_list):
+            self.LDName_table.setRowCount(len(driver_list))
+            self.LDName_table.setItem(i, 0, QTableWidgetItem(str(i + 1)))
+            self.LDName_table.setItem(i, 1, QTableWidgetItem(driver_name))
 
     def init(self) -> None:
         main_widget = QWidget()
@@ -293,7 +322,6 @@ class BobPrimeApp(QMainWindow):
         """End Schedule"""
         
         """"Table"""
-        
         LD_Table = QTableWidget(2,2)
         LD_Table.setHorizontalHeaderLabels(["No.", "LD Name"])
         LD_Table.verticalHeader().setVisible(False)
@@ -313,7 +341,6 @@ class BobPrimeApp(QMainWindow):
         LD_Table.setCellWidget(1, 0, QCheckBox("2"))
         LD_Table.setItem(0, 1, QTableWidgetItem("LD 1"))
         LD_Table.setItem(1, 1, QTableWidgetItem("LD 2"))
-
         """End Table"""
 
         
@@ -321,7 +348,7 @@ class BobPrimeApp(QMainWindow):
         auto_post_layout_left = QVBoxLayout()
         
         auto_post_layout_left.addWidget(Group_Box_Schedule)
-        auto_post_layout_left.addWidget(LD_Table)
+        auto_post_layout_left.addWidget(self.update_LDName_table())
         
         auto_post_layout_left_widget.setLayout(auto_post_layout_left)
         
