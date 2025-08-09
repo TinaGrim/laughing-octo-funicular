@@ -170,12 +170,11 @@ class option:
                 self.LDPlayer(startupinfo, index = i)
                 
     def Remote_Driver(self,Number):
-        for i in range(1, Number +1):
-            
-            Driver_path = os.path.abspath(__file__)
-            Driver_path = os.path.dirname(Driver_path) + f"\\Driver{i}.py"
-            print("Remote Driver Path: ", Driver_path)
-            subprocess.Popen(["python",Driver_path])
+        """Start Remote Driver"""   
+        Driver_path = os.path.abspath(__file__)
+        Driver_path = os.path.dirname(Driver_path) + f"\\Drivers.py"
+        print("Remote Driver Path: ", Driver_path)
+        subprocess.Popen(["python",Driver_path])
     
     def Full_setup(self,Number):
         for i in range(0, Number):
