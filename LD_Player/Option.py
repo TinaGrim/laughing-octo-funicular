@@ -43,8 +43,8 @@ class option:
         "confirmEmail": """//android.view.View[@content-desc="Next"]"""
         }
         self.IMFORMATION = {
-        "firstName":self.Random_Name(),
-        "lastName":self.Random_Name(),
+        "firstName":self.Random_first_Name(),
+        "lastName":self.Random_last_Name(),
         "month": self.Random_Month(),
         "day": self.Random_Day(),
         "year": self.Random_Year(),
@@ -206,10 +206,12 @@ class option:
                     Drivers_list_opened.append(driver_name)
         return Drivers_list_opened
 
-    def Random_Name(self)-> str:
+    def Random_first_Name(self)-> str:
+        NAME = names.get_first_name()
+        return NAME
+    def Random_last_Name(self)-> str:
         NAME = names.get_last_name()
         return NAME
-
     def Random_Gender(self)-> str:
         GENDER = ["Female","Male"]
         Gender = random.choice(GENDER)
