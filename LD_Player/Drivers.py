@@ -216,7 +216,7 @@ if response:
         pid = line[0].split()[-1]
         kill_cmd = f'taskkill /PID {pid} /F'
         subprocess.run(kill_cmd, shell=True)
-        print("Kill LD: ",driver_number)
+        print("Kill Appium server: ",driver_number)
     else:
         print(f"Not found {port}")
         

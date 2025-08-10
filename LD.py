@@ -109,6 +109,7 @@ class BobPrimeApp(QMainWindow):
         self.logo = "Logo/logo_icon_big.png"
         if os.path.exists(self.logo):
             
+            
             icon = QIcon(self.logo)
             self.setWindowIcon(icon)
         else:
@@ -148,7 +149,7 @@ class BobPrimeApp(QMainWindow):
         self.LDNameTimer.start(3000)
         
         #trigger
-        self.Open_ld.clicked.connect(lambda: self.startLD(2))
+        self.Open_ld.clicked.connect(lambda: self.startLD(4))
         self.qrbutton.clicked.connect(lambda: self.open_qr("Logo/qr.jpg", 500, 800))
         self.closeAppium.stateChanged.connect(lambda: self.scheduleCheck())
         #Init
