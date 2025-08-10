@@ -1,20 +1,22 @@
 import os
+
 from flask import Flask, jsonify
-from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QFrame, QLabel, QMainWindow, QHBoxLayout, QListWidget,QGroupBox,QMenuBar,QMenu,QTabWidget,QLineEdit,QTableWidget,QTableWidgetItem,QBoxLayout,QCheckBox,QHeaderView,QPushButton
+from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QFrame, QLabel, QMainWindow, QHBoxLayout, QListWidget,QGroupBox,QMenuBar,QMenu,QTabWidget,QLineEdit,QTableWidget,QTableWidgetItem,QBoxLayout,QCheckBox,QHeaderView,QPushButton, QButtonGroup,QSpinBox,QSizePolicy,QStyle,QProxyStyle,QStyleOptionComplex,QStyleOptionSpinBox,QAbstractSpinBox
 from PySide6.QtGui import QColor, QFont, QPixmap,QIcon
-from PySide6.QtCore import Qt, QTimer,QSize,QThread
+from PySide6.QtCore import Qt, QTimer,QSize,QThread, QRect
 import sys
 import time
 import webbrowser
 from threading import Thread
 import dotenv
-
+from typing import Optional
 import signal
 import cv2
 
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 dotenv.load_dotenv(dotenv_path=".git/.env")
 from LD_Player import *
+
 import threading
 
 
@@ -28,7 +30,8 @@ def scheduleFunc():
 
 @server.route("/LDcount")
 def LDcount():
-    count = GUI.LDcount
+    # Be robust if LDcount hasn't been set yet
+    count = getattr(GUI, "LDcount", 0)
     List = [i for i in range(1, count+1)]
     return jsonify(LDcount=List)
 
@@ -104,12 +107,15 @@ class BobPrimeApp(QMainWindow):
                 border-radius: 10px;
                 font-size: 12px;
             }
+            QHeaderView {
+                background-color: transparent;
+
+                border-radius: 5px;
+            }
         """)
         
         self.logo = "Logo/logo_icon_big.png"
         if os.path.exists(self.logo):
-            
-            
             icon = QIcon(self.logo)
             self.setWindowIcon(icon)
         else:
@@ -122,6 +128,10 @@ class BobPrimeApp(QMainWindow):
         self.activityTimer = QTimer()
         self.LDNameTimer = QTimer()
         self.scheduleClose = False
+        self.checkBox = QCheckBox()
+        self.checkBoxlist = []
+        self.ld_list_name_gp = QButtonGroup(self)
+        self.ld_list_name_gp.setExclusive(False)  
         
         #widgets
         self.Open_ld = QPushButton("➕")
@@ -146,18 +156,23 @@ class BobPrimeApp(QMainWindow):
         
         #table LDName
         self.LDNameTimer.timeout.connect(self.update_LDName_table)
-        self.LDNameTimer.start(3000)
+        self.LDNameTimer.start(60000)
+        self.ld_list_name_gp.idToggled.connect(self.Select_LDPlayer)
         
         #trigger
-        self.Open_ld.clicked.connect(lambda: self.startLD(4))
+        self.Open_ld.clicked.connect(lambda: self.startLD(1))
         self.qrbutton.clicked.connect(lambda: self.open_qr("Logo/qr.jpg", 500, 800))
         self.closeAppium.stateChanged.connect(lambda: self.scheduleCheck())
+        self.checkBox.stateChanged.connect(self.Select_LDPlayer)
+
         #Init
-        
         self.update_time()
         self.init()
 
-    
+    def Select_LDPlayer(self, id: int, checked: bool):
+        print(f"Selected LDPlayer {id}: {checked}")
+
+
     def scheduleCheck(self) -> bool:
         self.scheduleClose = self.closeAppium.isChecked()
         return self.scheduleClose
@@ -175,9 +190,6 @@ class BobPrimeApp(QMainWindow):
         except Exception as e:
             print(f"Error checking activity: {e}")
             return []
-
-
-        
 
     def update_activity_table(self)->QTableWidget:
         driver_list = self.check_activity()
@@ -227,18 +239,19 @@ class BobPrimeApp(QMainWindow):
         self.time_label.setText(f'<div style="font-size: 50px;">{hours:02}:{minutes:02}:{seconds:02}</div>')
         
     def update_LDName_table(self) -> QTableWidget:
-        driver_list = self.check_activity()
+        driver_list = Option().check_ld_in_list()
         if not hasattr(self, 'LDName_table') or self.LDName_table is None:
             self.LDName_table = QTableWidget(0, 2)
-            self.LDName_table.setHorizontalHeaderLabels(["No.", "LD Name"])
+            self.LDName_table.setHorizontalHeaderLabels(["ID", "LD Name"])
             self.LDName_table.verticalHeader().setVisible(False)
             self.LDName_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
             self.LDName_table.setAutoFillBackground(False)
             self.LDName_table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-            self.LDName_table.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+            
             self.LDName_table.resizeColumnsToContents()
             self.LDName_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)  
             self.LDName_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        
         self.update_exist_LDName_table(driver_list)
         return self.LDName_table
     
@@ -248,10 +261,16 @@ class BobPrimeApp(QMainWindow):
         if not driver_list:
             self.LDName_table.setRowCount(0)
             return
+        
         for i, driver_name in enumerate(driver_list):
             self.LDName_table.setRowCount(len(driver_list))
-            self.LDName_table.setItem(i, 0, QTableWidgetItem(str(i + 1)))
+            
+            self.checkBox = QCheckBox(str(i + 1))
+            self.ld_list_name_gp.addButton(self.checkBox, i + 1)
+            self.LDName_table.setCellWidget(i, 0, self.checkBox)
             self.LDName_table.setItem(i, 1, QTableWidgetItem(driver_name))
+            self.checkBoxlist.append(self.checkBox)
+
 
     def init(self) -> None:
         main_widget = QWidget()
@@ -290,7 +309,7 @@ class BobPrimeApp(QMainWindow):
         self.Tabs.addTab(QLabel("Hello"), "Active")
         self.Tabs.addTab(self.Tab_auto_post(), "Auto Post")
         self.Tabs.addTab(QLabel("Hello"), "Manage")
-        self.Tabs.setCornerWidget(cornerContainer, Qt.TopRightCorner) # type: ignore
+        self.Tabs.setCornerWidget(cornerContainer) 
         """End Tabs"""
         
         """Inside the main layout"""
@@ -319,30 +338,8 @@ class BobPrimeApp(QMainWindow):
         Group_schedule.addWidget(QCheckBox("Shutdown PC"))
         Group_schedule.addWidget(self.closeAppium)
         Group_Box_Schedule.setLayout(Group_schedule)
-        
         """End Schedule"""
         
-        """"Table"""
-        LD_Table = QTableWidget(2,2)
-        LD_Table.setHorizontalHeaderLabels(["No.", "LD Name"])
-        LD_Table.verticalHeader().setVisible(False)
-        LD_Table.setAutoFillBackground(True)
-        LD_Table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        LD_Table.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        LD_Table.resizeColumnsToContents()
-
-        LD_Table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents) 
-        LD_Table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch) 
-        LD_Table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
-        LD_Table.setSelectionMode(QTableWidget.SelectionMode.NoSelection)
-
-        LD_Table.verticalHeader().setDefaultSectionSize(35)
-        LD_Table.verticalHeader().setMinimumSectionSize(30)
-        LD_Table.setCellWidget(0, 0, QCheckBox("1"))
-        LD_Table.setCellWidget(1, 0, QCheckBox("2"))
-        LD_Table.setItem(0, 1, QTableWidgetItem("LD 1"))
-        LD_Table.setItem(1, 1, QTableWidgetItem("LD 2"))
-        """End Table"""
 
         
         auto_post_layout_left_widget = QWidget()
@@ -350,8 +347,10 @@ class BobPrimeApp(QMainWindow):
         
         auto_post_layout_left.addWidget(Group_Box_Schedule)
         auto_post_layout_left.addWidget(self.update_LDName_table())
-        
+        auto_post_layout_left.addWidget(self.selected_LD_name())
+        auto_post_layout_left.setContentsMargins(5, 20, 0, 0)
         auto_post_layout_left_widget.setLayout(auto_post_layout_left)
+        auto_post_layout_left_widget.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding)
         
         # On right side
         auto_post_layout_right_widget = QWidget()
@@ -389,7 +388,86 @@ class BobPrimeApp(QMainWindow):
         auto_post_widget.setStyleSheet("margin: 0px;")
 
         return auto_post_widget
+    
+    def selected_LD_name(self) -> QWidget:
+        select_ld_name_widget = QWidget()
+        select_ld_name_widget_layout = QVBoxLayout()
         
+        select_ld_name_layout_top = QHBoxLayout()
+        select_ld_name_layout_bottom = QHBoxLayout()
+        
+        #top
+        self.selected = QLabel(f"{1} Selected")
+        self.select_all = QCheckBox("Select All")
+        
+        select_ld_name_layout_top.addWidget(self.selected)
+        select_ld_name_layout_top.addStretch(1)
+        select_ld_name_layout_top.addWidget(self.select_all)
+        
+        try:
+            MAX = len(Option().check_ld_in_list())
+        except:
+            print(f"cannot get a max value for spinBox Raise")
+            
+        #bottom
+        self.spinBox_selectAll_start = QSpinBox(self)
+        
+
+        self.spinBox_selectAll_start.setRange(0, MAX)
+        self.spinBox_selectAll_start.setValue(0)
+        
+
+        toLabel = QLabel("To")
+        toLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        
+        self.spinBox_selectAll_end = QSpinBox(self)
+
+        self.spinBox_selectAll_end.setRange(0, MAX)
+        self.spinBox_selectAll_end.setValue(MAX)
+        self.spinBox_selectAll_end.valueChanged.connect(lambda v: self.selectRange("end",v))
+        self.spinBox_selectAll_start.valueChanged.connect(lambda v: self.selectRange("start",v))
+        confirm = QPushButton("☑︎")
+        confirm.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+
+        select_ld_name_layout_bottom.addWidget(self.spinBox_selectAll_start)
+        select_ld_name_layout_bottom.addWidget(toLabel)
+        select_ld_name_layout_bottom.addWidget(self.spinBox_selectAll_end)
+        select_ld_name_layout_bottom.addWidget(confirm, 0)
+        
+        select_ld_name_widget_layout.addLayout(select_ld_name_layout_top)
+        select_ld_name_widget_layout.addLayout(select_ld_name_layout_bottom)
+        select_ld_name_widget_layout.setContentsMargins(5, 0, 0, 0)  
+        select_ld_name_widget.setLayout(select_ld_name_widget_layout)
+        
+        return select_ld_name_widget
+
+    def selectRange(self, which: str, value: int) -> None:
+        try:
+            max_value = len(Option().check_ld_in_list())
+        except:
+            print("Error occurred while getting max value")
+        start = self.spinBox_selectAll_start.value()
+        end = self.spinBox_selectAll_end.value()
+        
+        if self.spinBox_selectAll_start.maximum() != max_value:
+            self.spinBox_selectAll_start.setMaximum(max_value)
+        if self.spinBox_selectAll_end.maximum() != max_value:
+            self.spinBox_selectAll_end.setMaximum(max_value)
+
+        if which == "start":
+            if value < end:
+                
+                self.spinBox_selectAll_start.setValue(value)
+            else:
+                self.spinBox_selectAll_start.setValue(value - 1)
+        elif which == "end":
+            if value > start:
+                
+                self.spinBox_selectAll_end.setValue(value)
+            else:
+                self.spinBox_selectAll_end.setValue(value + 1)
+                
+    
     def Left_view(self) -> QWidget:
         
         left_widget = QWidget()
@@ -408,8 +486,7 @@ class BobPrimeApp(QMainWindow):
         table_Box_layout = QGroupBox()
         table_layout = QVBoxLayout()
         table_Box_Bottom = QHBoxLayout()
-
-          
+        #Content in the func
         """End Table"""
 
         """"Bottom Box"""
@@ -437,7 +514,9 @@ class BobPrimeApp(QMainWindow):
         Left_Panel.addWidget(table_Box_layout)
         
         left_widget.setLayout(Left_Panel)
+        left_widget.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding)
         return left_widget
+
     
     def open_qr(self, path: str ,width: int,height: int) -> None:
         """Open QR code in browser"""
@@ -452,6 +531,7 @@ class BobPrimeApp(QMainWindow):
         
         try:
             qr = cv2.resize(qr, (width, height))  
+            
             cv2.imshow("QR Code", qr)
             cv2.waitKey(0)
 
@@ -462,11 +542,42 @@ class BobPrimeApp(QMainWindow):
         self.My_thread = Threader(func, *args, **kwargs)
         self.My_thread.start()
         
+
+
+class Proxy(QProxyStyle):
+    def subControlRect(
+        self,
+        control: QStyle.ComplexControl,
+        opt: QStyleOptionSpinBox,
+        subControl: QStyle.SubControl,
+        widget: Optional[QSpinBox] = None,
+    ) -> QRect:
+        rect = super().subControlRect(control, opt, subControl, widget)  # type: ignore[arg-type]
+        if control == QStyle.ComplexControl.CC_SpinBox:
+            total_w = widget.width() if widget is not None else rect.width()
+            total_h = rect.height()
+            if subControl == QStyle.SubControl.SC_SpinBoxUp:
+                rect.setLeft(total_w - 30)
+                rect.setRight(total_w)
+                rect.setBottom(total_h - 13)
+
+            elif subControl == QStyle.SubControl.SC_SpinBoxDown:
+                rect.setTop(total_h - 13)
+                rect.setLeft(total_w - 30)
+                rect.setRight(total_w)
+
+            elif subControl == QStyle.SubControl.SC_SpinBoxEditField:
+                rect.setLeft(32)
+                rect.setRight(total_w - 20)
+
+        return rect
+
 if __name__ == "__main__":
     
     QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
     LD = LDPlayer()
     app = QApplication(sys.argv)
+    app.setStyle(Proxy())
     window = BobPrimeApp()  
     window.show()
     app.exec()
