@@ -1,5 +1,6 @@
+import platform
 import time
-
+import sys
 import platform
 from appium import webdriver
 import subprocess
@@ -62,7 +63,6 @@ class option:
     @timer
     def LDPlayer(self, startupinfo, index):
         """Opening LDPlayer by cmd"""
-        import platform
         startupinfo = self.info(1)
         
 
@@ -74,7 +74,7 @@ class option:
             
             
             subprocess.run(LDPlayer_setup_path, shell=True, startupinfo=startupinfo) 
-            subprocess.run(LDPlayer_launcher_path, shell=True, startupinfo=startupinfo)
+            subprocess.Popen(LDPlayer_launcher_path, shell=True, startupinfo=startupinfo)
         except Exception as e:
             traceback.print_exc()
             print(f"Error launching LDPlayer: {e}")
@@ -82,18 +82,30 @@ class option:
         time.sleep(1)
         self.Arrangment(index)
 
-
-    def Arrangment(self, index):
+    def check_ld_in_list(self)->list[str]:
+        try:
+            path = "D:\\LDPlayer\\LDPlayer9\\ldconsole.exe list"
+            self.ld_list_name = subprocess.run(path, shell = True,stdout=subprocess.PIPE, text=True)
+            
+        except:
+            print("Error locating LD Folder")
+            return []
+        self.ld_list_name = (self.ld_list_name.stdout.split("\n"))
+        self.ld_list_name.pop()
+        return self.ld_list_name
+    
+    def Arrangment(self, index) -> None:
         """Arranging LDPlayer windows"""
         try:
             LD_Name = f"LDPlayer" if index == 0 else f"LDPlayer-{index}"
             for w in gw.getAllWindows():
                 if w.title == LD_Name:
-                    w.moveTo(index * 215,0)
+                    w.moveTo(index * 250,0)
                     print(f"LDPlayer {index + 1} Arranged successfully")
                     break
         except Exception as e:
             print(f"Error moving window: {e}")
+            
     def cap(self,port,choose):
         try:
             desired_caps = self.get_des_cap(choose)
@@ -109,7 +121,7 @@ class option:
             return None
         return self.driver
 
-    def get_des_cap(self, ID):
+    def get_des_cap(self, ID) -> dict:
         ID = (ID-1)*2 + 54
         des_cap = {
             "automationName": "UiAutomator2",
@@ -119,9 +131,9 @@ class option:
             "udid" : f"emulator-55{ID}",
             "noReset": True
         }
-        return des_cap 
-    
-    def info(self, Show):
+        return des_cap
+
+    def info(self, Show) -> subprocess.STARTUPINFO:
         """Just for hide window - Windows only"""
         if platform.system() == "Windows":
             startupinfo = subprocess.STARTUPINFO()
@@ -129,8 +141,8 @@ class option:
             startupinfo.wShowWindow = Show
             return startupinfo
         else:
-            # On macOS/Linux, return None 
-            return None
+            # currently not support for macOS/Linux
+            sys.exit(1)
     
     def wait_for_ldplayer_device(self, device_name, timeout=60):
         """check if LDPlayer fully opened"""
