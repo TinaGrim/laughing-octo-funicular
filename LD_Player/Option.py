@@ -71,8 +71,6 @@ class option:
             LDPlayer_setup_path = f'"D:\\LDPlayer\\LDPlayer9\\ldconsole.exe" modify --index {index} --resolution 300,600,160 '
             print("LDPlayer count:", index + 1)
             
-            
-            
             subprocess.run(LDPlayer_setup_path, shell=True, startupinfo=startupinfo) 
             subprocess.Popen(LDPlayer_launcher_path, shell=True, startupinfo=startupinfo)
         except Exception as e:
@@ -86,7 +84,7 @@ class option:
         try:
             path = "D:\\LDPlayer\\LDPlayer9\\ldconsole.exe list"
             self.ld_list_name = subprocess.run(path, shell = True,stdout=subprocess.PIPE, text=True)
-            
+
         except:
             print("Error locating LD Folder")
             return []
@@ -175,13 +173,13 @@ class option:
                         return True
         print(f"Timeout: {device_name} did not appear in adb devices.")
         return False
-    
-    def Open_LD(self, Number):
-            startupinfo = self.info(1)
-            for i in range(0, Number):
-                self.LDPlayer(startupinfo, index = i)
-                
-    def Remote_Driver(self,Number):
+
+    def Open_LD(self, Number: list[int]):
+        startupinfo = self.info(1)
+        for i in Number:
+            self.LDPlayer(startupinfo, index=i-1)
+
+    def Remote_Driver(self) -> None:
         """Start Remote Driver"""   
         Driver_path = os.path.abspath(__file__)
         Driver_path = os.path.dirname(Driver_path) + f"\\Drivers.py"
@@ -189,10 +187,9 @@ class option:
         subprocess.Popen(["python",Driver_path])
     
     def Full_setup(self,Number):
-        for i in range(0, Number):
-            
-            device_name = f"emulator-55{(i*2+54)}"
+        for i in Number:
 
+            device_name = f"emulator-55{((i-1)*2+54)}"
             self.name = self.wait_for_ldplayer_device(device_name)
             self.__clear_app_data(device_name)
             
