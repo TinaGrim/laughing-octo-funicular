@@ -6,7 +6,7 @@ import requests
 from urllib3.exceptions import MaxRetryError
 from requests.exceptions import ConnectionError
 
-driver = r'''
+drivername = r'''
 from urllib3.exceptions import MaxRetryError
 from requests.exceptions import ConnectionError
 from selenium.common.exceptions import InvalidSessionIdException
@@ -194,40 +194,47 @@ try:
 
     time.sleep(4)
     WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, SELECTOR["confirmEmail"]))).click()
+    
+    with open(f"Data{driver_number}.txt", "w") as file:
+        file.write("First Name: {First_Name} \nLast Name: {Last_Name} \nEmail: {Mail}\nDate of Birth: {Day}/{month}/{Year}\nGender: {Gender}".format(First_Name=IMFORMATION["firstName"],Last_Name=IMFORMATION["lastName"],Mail=Mail,Day=Day,month=Month,Year=Year,Gender=Gender))
+        
+    try:
+        r = requests.get("http://127.0.0.1:5000/schedule")
+        response = r.json().get("scheduleClose",False) 
+    except Exception as e:
+        print(f"Server Can Not Get Schedule status: {e}")
+        
+    Driver.quit()
+    
+    port = 4722 + driver_number
+    find_pid_cmd = f'netstat -aon | findstr :{port}'
+    result = subprocess.check_output(find_pid_cmd, shell=True, text=True)
+    line = result.strip().splitlines()
+    if response:
+        if line:
+            pid = line[0].split()[-1]
+            kill_cmd = f'taskkill /PID {pid} /F'
+            subprocess.run(kill_cmd, shell=True)
+            print("Kill Appium server: ",driver_number)
+        else:
+            print(f"Not found {port}")
+            
 except (InvalidSessionIdException, MaxRetryError, ConnectionError):
     print("Closing Appium server During Remote Driver")
     sys.exit(1)
     
-with open(f"Data{driver_number}.txt", "w") as file:
-    file.write("First Name: {First_Name} \nLast Name: {Last_Name} \nEmail: {Mail}\nDate of Birth: {Day}/{month}/{Year}\nGender: {Gender}".format(First_Name=IMFORMATION["firstName"],Last_Name=IMFORMATION["lastName"],Mail=Mail,Day=Day,month=Month,Year=Year,Gender=Gender))
-    
-try:
-    r = requests.get("http://127.0.0.1:5000/schedule")
-    response = r.json().get("scheduleClose",False) 
-except Exception as e:
-    print(f"Server Can Not Get Schedule status: {e}")
 
-port = 4722 + driver_number
-find_pid_cmd = f'netstat -aon | findstr :{port}'
-result = subprocess.check_output(find_pid_cmd, shell=True, text=True)
-line = result.strip().splitlines()
-if response:
-    if line:
-        pid = line[0].split()[-1]
-        kill_cmd = f'taskkill /PID {pid} /F'
-        subprocess.run(kill_cmd, shell=True)
-        print("Kill Appium server: ",driver_number)
-    else:
-        print(f"Not found {port}")
+
         
 '''
+
 r = requests.get("http://127.0.0.1:5000/LDcount")
 response = r.json()
-LD:list[int] = response.get("LDcount", False)
-count = len(LD)
-
-for i in range(1,count + 1):
-    changeNum  = driver.replace("driver_number = None", f"driver_number = {LD[i-1]}")
-
-    Mythread = threading.Thread(target=lambda ch = changeNum: exec(ch))
-    Mythread.start()
+LDId: list[int] = response.get("LDcount", False)
+print(LDId)
+if LDId:
+    for i in LDId:
+        changeNum  = drivername.replace("driver_number = None", f"driver_number = {i}")
+        Mythread = threading.Thread(
+            target=lambda n=changeNum: exec(n))
+        Mythread.start()
