@@ -18,7 +18,7 @@ def timer(func):
         end = time.time()
         time_get = end - start
         time_get = round(time_get, 1) 
-        time_get =  f"Open {func.__name__} Time : {time_get-1} seconde"
+        time_get =  f"Open {func.__name__} Time : {time_get} seconde"
         print(time_get)
         return result
     return wrapper
@@ -65,7 +65,6 @@ class option:
         """Opening LDPlayer by cmd"""
         startupinfo = self.info(1)
         
-
         try:
             LDPlayer_launcher_path = f'"D:\\LDPlayer\\LDPlayer9\\ldconsole.exe" launch --index {index}'
             LDPlayer_setup_path = f'"D:\\LDPlayer\\LDPlayer9\\ldconsole.exe" modify --index {index} --resolution 300,600,160 '
@@ -78,6 +77,7 @@ class option:
             print(f"Error launching LDPlayer: {e}")
             return
         time.sleep(1)
+        
         self.Arrangment(index)
 
     def check_ld_in_list(self)->list[str]:
@@ -96,15 +96,19 @@ class option:
         """Arranging LDPlayer windows"""
         try:
             LD_Name = f"LDPlayer" if index == 0 else f"LDPlayer-{index}"
-            for w in gw.getAllWindows():
-                if w.title == LD_Name:
-                    w.moveTo(index * 250,0)
-                    print(f"LDPlayer {index + 1} Arranged successfully")
-                    break
+            found = False
+            while not found:
+                for w in gw.getAllWindows():
+                    if w.title == LD_Name:
+                        w.moveTo(index * 250,0)
+                        print(f"LDPlayer {index + 1} Arranged successfully")
+                        found = True
+                        break
+                time.sleep(1)
         except Exception as e:
             print(f"Error moving window: {e}")
-            
-    def cap(self,port,choose):
+
+    def cap(self,port,choose)->webdriver.Remote:#type: ignore
         try:
             desired_caps = self.get_des_cap(choose)
             options = UiAutomator2Options()
@@ -116,17 +120,17 @@ class option:
         except Exception as e:
             print(f"Error initializing Appium driver: {e}")
             traceback.print_exc()
-            return None
+            
         return self.driver
 
     def get_des_cap(self, ID) -> dict:
-        ID = (ID-1)*2 + 54
+        
         des_cap = {
             "automationName": "UiAutomator2",
             "platformName": "Android",
             "platformVersion": "9",
-            "deviceName": f"emulator-55{ID}",
-            "udid" : f"emulator-55{ID}",
+            "deviceName": f"emulator-55{(ID-1)*2 + 54}",
+            "udid" : f"emulator-55{(ID-1)*2 + 54}",
             "noReset": True
         }
         return des_cap
@@ -139,7 +143,7 @@ class option:
             startupinfo.wShowWindow = Show
             return startupinfo
         else:
-            # currently not support for macOS/Linux
+            # currently only support Windows
             sys.exit(1)
     
     def wait_for_ldplayer_device(self, device_name, timeout=60):
@@ -190,11 +194,13 @@ class option:
         for i in Number:
 
             device_name = f"emulator-55{((i-1)*2+54)}"
-            self.name = self.wait_for_ldplayer_device(device_name)
-            self.__clear_app_data(device_name)
             
+            openLD = self.name = self.wait_for_ldplayer_device(device_name)
+            if openLD:
+                self.__clear_app_data(device_name)
+
     def opened_drivers(self)-> list[str]:
-        Drivers_list = ["emulator-5554", "emulator-5556", "emulator-5558", "emulator-5560", "emulator-5562", "emulator-5564", "emulator-5566", "emulator-5568", "emulator-5570", "emulator-5572"]
+        Drivers_list = [f"emulator-55{(i-1)*2+54}" for i in range(1, 21)]
         Drivers_list_opened = []
         
         try:
