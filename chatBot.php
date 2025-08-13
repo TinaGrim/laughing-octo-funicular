@@ -1,17 +1,17 @@
 <?php
 
-$API_KEY = "FGozK73OKtwrDtjjgzxxnI3wFOwzBFPy"; 
+$API_KEY = "TOKEN"; 
 $API_URL = "https://api.mistral.ai/v1/chat/completions";
 
 
-// Get input from different sources
+
 $input = "";
 if (isset($_GET['prompt'])) {
-    $input = trim($_GET['prompt']);  // From GET request
+    $input = trim($_GET['prompt']);  
 } elseif (isset($_POST['prompt'])) {
-    $input = trim($_POST['prompt']); // From POST form data
+    $input = trim($_POST['prompt']);
 } else {
-    // From JSON POST data
+    
     $json_input = json_decode(file_get_contents('php://input'), true);
     if (isset($json_input['prompt'])) {
         $input = trim($json_input['prompt']);
@@ -79,9 +79,5 @@ $ai_response = isset($data["choices"][0]["message"]["content"]) ? trim($data["ch
 
 header("Content-Type: application/json");
 echo $ai_response;
-// echo json_encode([
-//     "response" => $ai_response,
-//     "developer" => "@a_telegram_user"
-// ], JSON_PRETTY_PRINT);
 
 ?>
