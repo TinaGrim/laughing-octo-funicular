@@ -75,9 +75,9 @@ try:
 
     time.sleep(4)
     try:
-        WebDriverWait(Driver, 1).until(EC.presence_of_element_located((By.XPATH, SELECTOR["getStarted"]))).click()
+        WebDriverWait(Driver, 10).until(EC.presence_of_element_located((By.XPATH, SELECTOR["getStarted"]))).click()
     except Exception:
-        WebDriverWait(Driver, 1).until(EC.presence_of_element_located((By.XPATH, SELECTOR["getStarted2"]))).click()
+        WebDriverWait(Driver, 10).until(EC.presence_of_element_located((By.XPATH, SELECTOR["getStarted2"]))).click()
         
     time.sleep(4)
     try:
@@ -200,7 +200,7 @@ try:
         
     try:
         r = requests.get("http://127.0.0.1:5000/schedule")
-        response = r.json().get("scheduleClose",False) 
+        response = r.json().get("scheduleClose",True) 
     except Exception as e:
         print(f"Server Can Not Get Schedule status: {e}")
         
@@ -238,3 +238,4 @@ if LDId:
         Mythread = threading.Thread(
             target=lambda n=changeNum: exec(n))
         Mythread.start()
+
