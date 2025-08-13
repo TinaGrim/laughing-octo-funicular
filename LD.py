@@ -130,7 +130,8 @@ class BobPrimeApp(QMainWindow):
         self.checkBox = QCheckBox()
         self.checkBoxlist = []
         self.ld_list_name_gp = QButtonGroup(self)
-        self.ld_list_name_gp.setExclusive(False)  
+        self.ld_list_name_gp.setExclusive(False)
+        self.specificId = []
         
         
         #widgets
@@ -181,6 +182,18 @@ class BobPrimeApp(QMainWindow):
         self.selected.setText(f"{self.count} Selected")
         self.specificId = [self.ld_list_name_gp.id(b) for b in self.ld_list_name_gp.buttons() if b.isChecked()]
 
+    
+        if checked:
+            if self.LDName_table.item(id-1, 1):
+                item = self.LDName_table.item(id-1, 1)
+                if item is not None:
+                    item.setBackground(QColor("#07417a"))
+        else:
+            if self.LDName_table.item(id-1, 1):
+                item = self.LDName_table.item(id-1, 1)
+                if item is not None:
+                    item.setBackground(QColor("#292c3b"))
+                        
     def scheduleCheck(self) -> bool:
         self.scheduleClose = self.closeAppium.isChecked()
         return self.scheduleClose
@@ -225,9 +238,7 @@ class BobPrimeApp(QMainWindow):
 
     def update_exist_activity_table(self, driver_list: list[str]):
 
-        if not self.table:
-            return
-        if not driver_list:
+        if not self.table and not driver_list:
             self.table.setRowCount(0)
             return
         for i, driverName in enumerate(driver_list):
