@@ -1,6 +1,7 @@
 import platform
 import time
 import sys
+import string
 import platform
 from appium import webdriver
 import subprocess
@@ -11,6 +12,9 @@ import os
 import pygetwindow as gw
 import names
 import traceback
+import imaplib
+import email
+from email.header import decode_header
 def timer(func):
     def wrapper(*args, **kwargs):
         start = time.time()
@@ -50,7 +54,7 @@ class option:
         "day": self.Random_Day(),
         "year": self.Random_Year(),
         "gender": self.Random_Gender(),
-        "email": "Not_Used@email.com"
+        "email": self.Get_Temp_Mail()
         }
         
     @timer
@@ -58,7 +62,7 @@ class option:
         """Opening Cmd of Appium"""
         startupinfo = self.info(2)
         subprocess.Popen(f'start /MIN cmd /c appium --port {port}', shell=True, startupinfo=startupinfo)
-        time.sleep(1)
+        time.sleep(0.5)
         
     @timer
     def LDPlayer(self, startupinfo, index):
@@ -76,7 +80,7 @@ class option:
             traceback.print_exc()
             print(f"Error launching LDPlayer: {e}")
             return
-        time.sleep(1)
+        time.sleep(0.5)
         
         self.Arrangment(index)
 
@@ -199,6 +203,48 @@ class option:
             if openLD:
                 self.__clear_app_data(device_name)
 
+
+    def GetCode(self, username, password, email):
+        imap_server = "imap.yandex.ru"
+        port = 993
+        try:
+            mail = imaplib.IMAP4_SSL(imap_server, port)
+            mail.login(username, password)
+            mail.select("INBOX")
+
+            status, messages = mail.search(None, 'ALL')
+            email_ids = messages[0].split()
+            found_match = False
+            latest_email_id = email_ids[-1]
+            if not email_ids:
+                print("No emails found.")
+            else:
+                status, msg_data = mail.fetch(latest_email_id, "(RFC822)")
+                for response_part in msg_data:
+                    if isinstance(response_part, tuple):
+                        msg = email.message_from_bytes(response_part[1])
+                        subject, encoding = decode_header(msg["Subject"])[0]
+                        if isinstance(subject, bytes):
+                            subject = subject.decode(encoding if encoding else "utf-8")
+                        to_ = msg.get("To", "")
+
+                        recipients = f"{to_}".replace(" ", "").lower()
+                        if email.lower() in recipients and "is your" in subject:
+                            return subject.split(' ')[0]
+                            found_match = True
+            if not found_match:
+                print(f"No emails found with {email} in any recipient field.")
+
+            mail.close()
+            mail.logout()
+        except Exception as e:
+            print(f"Error: {e}")
+
+
+    # username = "tinagrim@yandex.com"
+    # password = "frshsghyvjqeiayv"  # Use app password if 2FA is enabled
+    # filter_email = "tinagrim+001kh@yandex.com"
+
     def opened_drivers(self)-> list[str]:
         Drivers_list = [f"emulator-55{(i-1)*2+54}" for i in range(1, 21)]
         Drivers_list_opened = []
@@ -234,10 +280,9 @@ class option:
     
     def Get_Temp_Mail(self):
 
-        Mail = requests.get("https://www.1secmail.com/api/v1/?action=genRandomMailbox&count=1")
-        email = Mail.json()[0]
-        return email
-    
+        Mail = "tinagrim+"+ ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(6)) + "@yandex.com"
+        return Mail
+
     def Random_Year(self)-> int:
         YEAR = random.randint(2000, 2005)
         return YEAR
