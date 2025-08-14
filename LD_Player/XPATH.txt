@@ -85,3 +85,31 @@ Example.com
 
 //android.view.View[@content-desc="Next"]
 
+# pass
+
+//android.widget.EditText[@content-desc="Password,"]
+
+# Next
+
+//android.view.View[@content-desc="Next"]
+
+# Save info 
+
+//android.view.View[@content-desc="Not now"]
+
+# I Agree
+
+//android.view.View[@content-desc="I agree"]
+
+# New account
+
+//android.view.View[@content-desc="No, create new account"]
+
+# code
+
+//android.widget.EditText[@content-desc="Confirmation code,"]
+
+# Next
+
+//android.view.View[@content-desc="Next"]
+
