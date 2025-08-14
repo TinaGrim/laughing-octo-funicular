@@ -1,20 +1,21 @@
-import platform
-import time
-import sys
-import string
-import platform
-from appium import webdriver
-import subprocess
-from appium.options.android.uiautomator2.base import UiAutomator2Options
-import random 
-import requests
 import os
-import pygetwindow as gw
-import names
-import traceback
-import imaplib
+import sys
+import time
 import email
+import names
+import string
+import random 
+import imaplib
+import requests
+import platform
+import platform
+import traceback
+import subprocess
+import pygetwindow as gw
+from appium import webdriver
 from email.header import decode_header
+from appium.options.android.uiautomator2.base import UiAutomator2Options
+
 def timer(func):
     def wrapper(*args, **kwargs):
         start = time.time()
@@ -95,8 +96,8 @@ class option:
         self.ld_list_name = (self.ld_list_name.stdout.split("\n"))
         self.ld_list_name.pop()
         return self.ld_list_name
-    
-    def Arrangment(self, index) -> None:
+
+    def Arrangment(self, index: int) -> None:
         """Arranging LDPlayer windows"""
         try:
             LD_Name = f"LDPlayer" if index == 0 else f"LDPlayer-{index}"
@@ -112,7 +113,7 @@ class option:
         except Exception as e:
             print(f"Error moving window: {e}")
 
-    def cap(self,port,choose)->webdriver.Remote:#type: ignore
+    def cap(self,port: int,choose: int)->webdriver.Remote:#type: ignore
         try:
             desired_caps = self.get_des_cap(choose)
             options = UiAutomator2Options()
@@ -139,7 +140,7 @@ class option:
         }
         return des_cap
 
-    def info(self, Show) -> subprocess.STARTUPINFO:
+    def info(self, Show):
         """Just for hide window - Windows only"""
         if platform.system() == "Windows":
             startupinfo = subprocess.STARTUPINFO()

@@ -1,29 +1,29 @@
-from asyncio import subprocess
-import sys
 import os
-import threading
+import sys
 import requests
+import threading
+from asyncio import subprocess
 from urllib3.exceptions import MaxRetryError
 from requests.exceptions import ConnectionError
 
 drivername = r'''
-from urllib3.exceptions import MaxRetryError
-from requests.exceptions import ConnectionError
-from selenium.common.exceptions import InvalidSessionIdException
-import time
-from appium import webdriver
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.common.exceptions import WebDriverException
-from selenium.webdriver.support import expected_conditions as EC
-from appium.options.android.uiautomator2.base import UiAutomator2Options
-from selenium.webdriver.common.by import By
-import subprocess
-import os
-from Option import option as Get #type: ignore
-from datetime import datetime 
 import os
 import re
+import time
 import requests
+import subprocess
+from appium import webdriver
+from datetime import datetime 
+from Option import option as Get #type: ignore
+from selenium.webdriver.common.by import By
+from urllib3.exceptions import MaxRetryError
+from requests.exceptions import ConnectionError
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.common.exceptions import WebDriverException
+from selenium.common.exceptions import InvalidSessionIdException
+from selenium.webdriver.support import expected_conditions as EC
+from appium.options.android.uiautomator2.base import UiAutomator2Options
+
 GET = Get()
 SELECTOR = GET.SELECTOR
 IMFORMATION = GET.IMFORMATION

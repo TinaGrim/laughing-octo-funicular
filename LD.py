@@ -1,22 +1,23 @@
 import os
+import sys
+import cv2
+import time
+import dotenv
+import signal
+import platform
+import threading
+import webbrowser
+from LD_Player import *
+from typing import Optional
+from threading import Thread
 from flask import Flask, jsonify
-from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QFrame, QLabel, QMainWindow, QHBoxLayout, QListWidget,QGroupBox,QMenuBar,QMenu,QTabWidget,QLineEdit,QTableWidget,QTableWidgetItem,QBoxLayout,QCheckBox,QHeaderView,QPushButton, QButtonGroup,QSpinBox,QSizePolicy,QStyle,QProxyStyle,QStyleOptionComplex,QStyleOptionSpinBox,QAbstractSpinBox
 from PySide6.QtGui import QColor, QFont, QPixmap,QIcon
 from PySide6.QtCore import Qt, QTimer,QSize,QThread, QRect
-import sys
-import time
-import webbrowser
-from threading import Thread
-import dotenv
-from typing import Optional
-import signal
-import cv2
+from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QFrame, QLabel, QMainWindow, QHBoxLayout, QListWidget,QGroupBox,QMenuBar,QMenu,QTabWidget,QLineEdit,QTableWidget,QTableWidgetItem,QBoxLayout,QCheckBox,QHeaderView,QPushButton, QButtonGroup,QSpinBox,QSizePolicy,QStyle,QProxyStyle,QStyleOptionComplex,QStyleOptionSpinBox,QAbstractSpinBox
 
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 dotenv.load_dotenv(dotenv_path=".git/.env")
-from LD_Player import *
 
-import threading
 
 
 server = Flask(__name__)
@@ -201,9 +202,9 @@ class BobPrimeApp(QMainWindow):
     def openLD(self):
         if not self.specificId:
             return
-        self.start_thread(LDPlayer().run, self.specificId)
         self.select_all.setChecked(False)
         self.selected.setText(f"{0} Selected")
+        self.start_thread(LDPlayer().run, self.specificId)
     def check_activity(self):
         try:
             self.drivers = Option().opened_drivers()
@@ -479,7 +480,7 @@ class BobPrimeApp(QMainWindow):
         self.specificId = [self.ld_list_name_gp.id(b) for b in self.ld_list_name_gp.buttons() if b.isChecked()]
 
     def select_all_changed(self, checked: bool) -> None:
-        self.selectAll = all(btn.isChecked() for btn in self.ld_list_name_gp.buttons())
+        self.selectAll: bool = all(btn.isChecked() for btn in self.ld_list_name_gp.buttons())
         if checked:
             self.confirmSelectedRange(1, len(Option().check_ld_in_list()))
             self.select_all.setChecked(True)
@@ -619,7 +620,8 @@ class Proxy(QProxyStyle):
         return rect
 
 if __name__ == "__main__":
-    
+    if platform.system() != "Windows":
+        sys.exit("Only Windows supported!")
     QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
     LD = LDPlayer()
     app = QApplication(sys.argv)
