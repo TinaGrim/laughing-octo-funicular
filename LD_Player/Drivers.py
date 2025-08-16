@@ -12,9 +12,10 @@ import re
 import time
 import requests
 import subprocess
+from Option import option#type: ignore
+from Option import Activity#type: ignore
 from appium import webdriver
 from datetime import datetime 
-from Option import option as Get #type: ignore
 from selenium.webdriver.common.by import By
 from urllib3.exceptions import MaxRetryError
 from requests.exceptions import ConnectionError
@@ -24,7 +25,7 @@ from selenium.common.exceptions import InvalidSessionIdException
 from selenium.webdriver.support import expected_conditions as EC
 from appium.options.android.uiautomator2.base import UiAutomator2Options
 
-GET = Get()
+GET = option()
 SELECTOR = GET.SELECTOR
 IMFORMATION = GET.IMFORMATION
 
@@ -32,31 +33,38 @@ IMFORMATION = GET.IMFORMATION
 # number_match = re.search(r"Driver(\d+)\.py", current_file)
 
 # if number_match:
-#     driver_number = int(number_match.group(1))
-
+#     driverID = int(number_match.group(1))
+driverID = None
+URL = "http://127.0.0.1:5000/"
+emu = f"emulator-55{(driverID-1)*2+54}"
 
 
 try:
-    driver_number = None
-    Driver = GET.cap(4722 + driver_number, driver_number)
+
+    activity = Activity(emu, driverID)
+    activity.setActivity("Start")
+    
+    Driver = GET.cap(4722 + driverID, driverID)
 
     if Driver is None:
         print("Driver did not exist...")
         exit(1)
-        
-    time.sleep(5)
-    WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH,SELECTOR["Messenger"] ))).click()
-    time.sleep(8)
 
+    activity.setActivity("Messenger")
+    time.sleep(3)
+    WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH,SELECTOR["Messenger"] ))).click()
+
+    activity.setActivity("Cancel  Button")
+    time.sleep(8)
     try:
-        output = subprocess.check_output(f'adb -s emulator-55{(driver_number-1)*2+54} shell dumpsys activity activities', shell=True).decode('utf-8')
+        output = subprocess.check_output(f'adb -s {emu} shell dumpsys activity activities', shell=True).decode('utf-8')
         Attempt = 0
         passing = False
         while ".auth.api.credentials.assistedsignin.ui.AssistedSignInActivity" not in output:
             if Attempt < 5:
                 time.sleep(3)
                 Attempt += 1
-                output = subprocess.check_output(f'adb -s emulator-55{(driver_number-1)*2+54} shell dumpsys activity activities', shell=True).decode('utf-8')
+                output = subprocess.check_output(f'adb -s emulator-55{(driverID-1)*2+54} shell dumpsys activity activities', shell=True).decode('utf-8')
             else:
                 print("Not found try pass")
                 passing = True
@@ -71,25 +79,29 @@ try:
         print(f"Error executing adb command: {e}")
         
 
+    activity.setActivity("Create Account")
     time.sleep(4)
     WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, SELECTOR["createAccount"]))).click()
 
+    activity.setActivity("start")
     time.sleep(4)
+    
     try:
         WebDriverWait(Driver, 10).until(EC.presence_of_element_located((By.XPATH, SELECTOR["getStarted"]))).click()
     except Exception:
         WebDriverWait(Driver, 10).until(EC.presence_of_element_located((By.XPATH, SELECTOR["getStarted2"]))).click()
         
+    activity.setActivity("permissionDeny")
     time.sleep(4)
     try:
         WebDriverWait(Driver, 10).until(EC.presence_of_element_located((By.XPATH, SELECTOR["permissionDeny"]))).click()
     except Exception:
         pass
-    time.sleep(4)
 
 
     #WebDriverWait(Driver, 10).until(EC.presence_of_element_located((By.XPATH, SELECTOR["startAfterDeny"]))).click()
-
+    activity.setActivity("Fill Name")
+    time.sleep(4)
     WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, SELECTOR["firstNameWidget"]))).send_keys(IMFORMATION["firstName"])
     time.sleep(4)
 
@@ -99,6 +111,7 @@ try:
     time.sleep(4)
 
     WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, SELECTOR["afterNameFill"]))).click()
+    activity.setActivity("Fill Birthday")
     time.sleep(4)
 
 
@@ -157,7 +170,7 @@ try:
     time.sleep(4)
     Year = IMFORMATION["year"]
     Year_Now = 2024 #- Year_Back
-
+    
     try:
         for Year in range(Year_Now,Year-1,-1):
             
@@ -169,12 +182,14 @@ try:
         
 
 
+    activity.setActivity("setDate")
     time.sleep(4)
     WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, SELECTOR["setDate"]))).click()
 
     time.sleep(4)
     WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, SELECTOR["afterDate"]))).click()
-
+    
+    activity.setActivity("Gender")
     Gender = IMFORMATION["gender"]
     time.sleep(4)
     WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, f"""//android.widget.RadioButton[@content-desc="{Gender}"]/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup/android.widget.ImageView"""))).click()
@@ -182,6 +197,7 @@ try:
     time.sleep(4)
     WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, SELECTOR["afterGender"]))).click()
 
+    activity.setActivity("sign in email")
     time.sleep(4)
     WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, SELECTOR["signUpEmail"]))).click()
 
@@ -196,18 +212,25 @@ try:
     time.sleep(4)
     WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, SELECTOR["confirmEmail"]))).click()
     
+    activity.setActivity("Save Data")
+    time.sleep(2)
     with open(f"Data.txt", "a") as file:
+    
         file.write("="*50 + "\nFirst Name: {First_Name} \nLast Name: {Last_Name} \nEmail: {Mail}\nDate of Birth: {Day}/{month}/{Year}\nGender: {Gender}\n".format(First_Name=IMFORMATION["firstName"],Last_Name=IMFORMATION["lastName"],Mail=Mail,Day=Day,month=Month,Year=Year,Gender=Gender))
-        
+
+    activity.setActivity("Close appium")
+    time.sleep(2)
     try:
+    
         r = requests.get("http://127.0.0.1:5000/schedule")
         response = r.json().get("scheduleClose",True) 
+        
     except Exception as e:
         print(f"Server Can Not Get Schedule status: {e}")
         
     Driver.quit()
     
-    port = 4722 + driver_number
+    port = 4722 + driverID
     find_pid_cmd = f'netstat -aon | findstr :{port}'
     result = subprocess.check_output(find_pid_cmd, shell=True, text=True)
     line = result.strip().splitlines()
@@ -216,26 +239,27 @@ try:
             pid = line[0].split()[-1]
             kill_cmd = f'taskkill /PID {pid} /F'
             subprocess.run(kill_cmd, shell=True)
-            print("Kill Appium server: ",driver_number)
+            print("Kill Appium server: ",driverID)
         else:
             print(f"Not found {port}")
-            
+    activity.setActivity("Done")
+    time.sleep(2)
+    activity.setActivity("No Action...")
+
 except (InvalidSessionIdException, MaxRetryError, ConnectionError):
     print("Closing Appium server During Remote Driver")
+    activity.setActivity("Failed")
     sys.exit(1)
-    
-
-
         
 '''
-
-r = requests.get("http://127.0.0.1:5000/LDcount")
+URL = "http://127.0.0.1:5000/"
+r = requests.get(URL + "openOrder")
 response = r.json()
-LDId: list[int] = response.get("LDcount", False)
+LDId: list[int] = response.get("openOrder", False)
 print(LDId)
 if LDId:
     for i in LDId:
-        changeNum  = drivername.replace("driver_number = None", f"driver_number = {i}")
+        changeNum  = drivername.replace("driverID = None", f"driverID = {i}")
         Mythread = threading.Thread(
             target=lambda n=changeNum: exec(n))
         Mythread.start()
