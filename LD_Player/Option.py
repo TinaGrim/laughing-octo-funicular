@@ -12,6 +12,7 @@ import platform
 import traceback
 import subprocess
 import pygetwindow as gw
+from typing import Optional
 from appium import webdriver
 from email.header import decode_header
 from appium.options.android.uiautomator2.base import UiAutomator2Options
@@ -29,7 +30,7 @@ def timer(func):
     return wrapper
         
 class option:
-    def __init__(self):
+    def __init__(self, Number: Optional[list[int]] = []):
         self.SELECTOR = {
         "Messenger": """//android.widget.TextView[@content-desc="Messenger"]""",
         "cancelAuth": """//android.widget.ImageView[@content-desc="Cancel"]""",
@@ -49,31 +50,31 @@ class option:
         "confirmEmail": """//android.view.View[@content-desc="Next"]"""
         }
         self.IMFORMATION = {
-        "firstName":self.Random_first_Name(),
-        "lastName":self.Random_last_Name(),
-        "month": self.Random_Month(),
-        "day": self.Random_Day(),
-        "year": self.Random_Year(),
-        "gender": self.Random_Gender(),
-        "email": self.Get_Temp_Mail()
+        "firstName":self.__Random_first_Name(),
+        "lastName":self.__Random_last_Name(),
+        "month": self.__Random_Month(),
+        "day": self.__Random_Day(),
+        "year": self.__Random_Year(),
+        "gender": self.__Random_Gender(),
+        "email": self.__Get_Temp_Mail()
         }
-        
+        self.number = Number
+        self.URL = "http://127.0.0.1:5000/"
     @timer
-    def Open_Appium(self, port):
+    def __Open_Appium(self, port):
         """Opening Cmd of Appium"""
-        startupinfo = self.info(2)
+        startupinfo = self.__info(2)
         subprocess.Popen(f'start /MIN cmd /c appium --port {port}', shell=True, startupinfo=startupinfo)
         time.sleep(0.5)
-        
+
     @timer
-    def LDPlayer(self, startupinfo, index):
+    def __LDPlayer(self, startupinfo, index):
         """Opening LDPlayer by cmd"""
-        startupinfo = self.info(1)
+        startupinfo = self.__info(1)
         
         try:
             LDPlayer_launcher_path = f'"D:\\LDPlayer\\LDPlayer9\\ldconsole.exe" launch --index {index}'
             LDPlayer_setup_path = f'"D:\\LDPlayer\\LDPlayer9\\ldconsole.exe" modify --index {index} --resolution 300,600,160 '
-            print("LDPlayer count:", index + 1)
             
             subprocess.run(LDPlayer_setup_path, shell=True, startupinfo=startupinfo) 
             subprocess.Popen(LDPlayer_launcher_path, shell=True, startupinfo=startupinfo)
@@ -82,10 +83,11 @@ class option:
             print(f"Error launching LDPlayer: {e}")
             return
         time.sleep(0.5)
-        
-        self.Arrangment(index)
+
+        self.__Arrangment(index)
 
     def check_ld_in_list(self)->list[str]:
+        
         try:
             path = "D:\\LDPlayer\\LDPlayer9\\ldconsole.exe list"
             self.ld_list_name = subprocess.run(path, shell = True,stdout=subprocess.PIPE, text=True)
@@ -95,9 +97,9 @@ class option:
             return []
         self.ld_list_name = (self.ld_list_name.stdout.split("\n"))
         self.ld_list_name.pop()
-        return self.ld_list_name
+        return self.ld_list_name #Sample [LDPlayer-1, LDPlayer-2]
 
-    def Arrangment(self, index: int) -> None:
+    def __Arrangment(self, index: int) -> None:
         """Arranging LDPlayer windows"""
         try:
             LD_Name = f"LDPlayer" if index == 0 else f"LDPlayer-{index}"
@@ -115,20 +117,20 @@ class option:
 
     def cap(self,port: int,choose: int)->webdriver.Remote:#type: ignore
         try:
-            desired_caps = self.get_des_cap(choose)
+            desired_caps = self.__get_des_cap(choose)
             options = UiAutomator2Options()
             for k, v in desired_caps.items():
                 options.set_capability(k, v)
-                
-            self.Open_Appium(port=port)
+
+            self.__Open_Appium(port=port)
             self.driver = webdriver.Remote(f"http://localhost:{port}", options=options) # type: ignore
         except Exception as e:
             print(f"Error initializing Appium driver: {e}")
             traceback.print_exc()
-            
-        return self.driver
 
-    def get_des_cap(self, ID) -> dict:
+        return self.driver #Sample [webdriver.Remote]
+
+    def __get_des_cap(self, ID) -> dict:
         
         des_cap = {
             "automationName": "UiAutomator2",
@@ -140,7 +142,7 @@ class option:
         }
         return des_cap
 
-    def info(self, Show):
+    def __info(self, Show):
         """Just for hide window - Windows only"""
         if platform.system() == "Windows":
             startupinfo = subprocess.STARTUPINFO()
@@ -183,28 +185,31 @@ class option:
         print(f"Timeout: {device_name} did not appear in adb devices.")
         return False
 
-    def Open_LD(self, Number: list[int]):
-        startupinfo = self.info(1)
-        for i in Number:
-            self.LDPlayer(startupinfo, index=i-1)
+    def Open_LD(self):
+        startupinfo = self.__info(1)
+        if not self.number:
+            return
+        for i in self.number:
+            self.__LDPlayer(startupinfo, index=i-1) # Sample Open Your LDName
 
     def Remote_Driver(self) -> None:
         """Start Remote Driver"""   
         Driver_path = os.path.abspath(__file__)
         Driver_path = os.path.dirname(Driver_path) + f"\\Drivers.py"
         print("Remote Driver Path: ", Driver_path)
-        subprocess.Popen(["python",Driver_path])
-    
-    def Full_setup(self,Number):
-        for i in Number:
+        subprocess.Popen(["python",Driver_path]) # Sample Remote using Driver in Path That Exists
+
+    def Full_setup(self):
+        if not self.number:
+            return
+        for i in self.number:
 
             device_name = f"emulator-55{((i-1)*2+54)}"
             
-            openLD = self.name = self.wait_for_ldplayer_device(device_name)
+            openLD = self.wait_for_ldplayer_device(device_name)
             if openLD:
-                self.__clear_app_data(device_name)
-
-
+                self.__clear_app_data(device_name)# Sample Wait Full setup  and clear it up
+                
     def GetCode(self, username, password, email):
         imap_server = "imap.yandex.ru"
         port = 993
@@ -266,32 +271,32 @@ class option:
             for driver_name in Drivers_list:
                 if driver_name in line:
                     Drivers_list_opened.append(driver_name)
-        return Drivers_list_opened
+        return Drivers_list_opened # sample [emulator-5554, emulator-5556] is open
 
-    def Random_first_Name(self)-> str:
+    def __Random_first_Name(self)-> str:
         NAME = names.get_first_name()
         return NAME
-    def Random_last_Name(self)-> str:
+    def __Random_last_Name(self)-> str:
         NAME = names.get_last_name()
         return NAME
-    def Random_Gender(self)-> str:
+    def __Random_Gender(self)-> str:
         GENDER = ["Female","Male"]
         Gender = random.choice(GENDER)
         return Gender
     
-    def Get_Temp_Mail(self):
+    def __Get_Temp_Mail(self):
 
         Mail = "tinagrim+"+ ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(6)) + "@yandex.com"
         return Mail
 
-    def Random_Year(self)-> int:
+    def __Random_Year(self)-> int:
         YEAR = random.randint(2000, 2005)
         return YEAR
 
-    def Random_Day(self)-> int:
+    def __Random_Day(self)-> int:
         Day = random.randint(15,30)
         return Day
-    def Random_Month(self)-> str:
+    def __Random_Month(self)-> str:
         months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
         MONTH = random.choice(months)
         return MONTH
@@ -299,3 +304,18 @@ class option:
     def __clear_app_data(self, device_name, package_name = "com.facebook.orca")-> None:
         Clear = subprocess.run(["adb", "-s", device_name, "shell", "pm", "clear", package_name])
         print("Clear out: ",Clear)
+class Activity:
+    def __init__(self, emulator, driverID):
+        self.emulator = emulator
+        self.driverID = driverID
+        self.URL = "http://127.0.0.1:5000/"
+
+
+    def setActivity(self, status):
+        body = {
+            self.emulator: {
+                "id": self.driverID,
+                "status": status
+            }
+        }
+        requests.post(self.URL + "LDActivity", json=body)
