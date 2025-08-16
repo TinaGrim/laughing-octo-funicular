@@ -63,21 +63,21 @@ class option:
     @timer
     def __Open_Appium(self, port):
         """Opening Cmd of Appium"""
-        startupinfo = self.__info(2)
-        subprocess.Popen(f'start /MIN cmd /c appium --port {port}', shell=True, startupinfo=startupinfo)
+        
+        subprocess.Popen(f'start /MIN cmd /c appium --port {port}', shell=True, startupinfo=self.__info(2))
         time.sleep(0.5)
 
     @timer
     def __LDPlayer(self, startupinfo, index):
         """Opening LDPlayer by cmd"""
-        startupinfo = self.__info(1)
+        SUP = self.__info(1)
         
         try:
             LDPlayer_launcher_path = f'"D:\\LDPlayer\\LDPlayer9\\ldconsole.exe" launch --index {index}'
             LDPlayer_setup_path = f'"D:\\LDPlayer\\LDPlayer9\\ldconsole.exe" modify --index {index} --resolution 300,600,160 '
             
-            subprocess.run(LDPlayer_setup_path, shell=True, startupinfo=startupinfo) 
-            subprocess.Popen(LDPlayer_launcher_path, shell=True, startupinfo=startupinfo)
+            subprocess.run(LDPlayer_setup_path, shell=True, startupinfo=SUP) 
+            subprocess.Popen(LDPlayer_launcher_path, shell=True, startupinfo=SUP)
         except Exception as e:
             traceback.print_exc()
             print(f"Error launching LDPlayer: {e}")
@@ -107,7 +107,7 @@ class option:
             while not found:
                 for w in gw.getAllWindows():
                     if w.title == LD_Name:
-                        w.moveTo(index * 250,0)
+                        w.moveTo(index * 300,0)
                         print(f"LDPlayer {index + 1} Arranged successfully")
                         found = True
                         break
@@ -130,7 +130,7 @@ class option:
 
         return self.driver #Sample [webdriver.Remote]
 
-    def __get_des_cap(self, ID) -> dict:
+    def __get_des_cap(self, ID) -> dict[str,str]:
         
         des_cap = {
             "automationName": "UiAutomator2",
@@ -142,7 +142,7 @@ class option:
         }
         return des_cap
 
-    def __info(self, Show):
+    def __info(self, Show)->subprocess.STARTUPINFO:
         """Just for hide window - Windows only"""
         if platform.system() == "Windows":
             startupinfo = subprocess.STARTUPINFO()
@@ -186,11 +186,11 @@ class option:
         return False
 
     def Open_LD(self):
-        startupinfo = self.__info(1)
+        
         if not self.number:
             return
         for i in self.number:
-            self.__LDPlayer(startupinfo, index=i-1) # Sample Open Your LDName
+            self.__LDPlayer(self.__info(1), index=i-1) # Sample Open Your LDName
 
     def Remote_Driver(self) -> None:
         """Start Remote Driver"""   
