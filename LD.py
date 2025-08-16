@@ -2,6 +2,8 @@ import os
 import sys
 import cv2
 import time
+import logging
+import requests
 import dotenv
 import signal
 import platform
@@ -10,7 +12,7 @@ import webbrowser
 from LD_Player import *
 from typing import Optional
 from threading import Thread
-from flask import Flask, jsonify
+from flask import Flask, jsonify , request
 from PySide6.QtGui import QColor, QFont, QPixmap,QIcon
 from PySide6.QtCore import Qt, QTimer,QSize,QThread, QRect
 from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QFrame, QLabel, QMainWindow, QHBoxLayout, QListWidget,QGroupBox,QMenuBar,QMenu,QTabWidget,QLineEdit,QTableWidget,QTableWidgetItem,QBoxLayout,QCheckBox,QHeaderView,QPushButton, QButtonGroup,QSpinBox,QSizePolicy,QStyle,QProxyStyle,QStyleOptionComplex,QStyleOptionSpinBox,QAbstractSpinBox
@@ -23,25 +25,56 @@ dotenv.load_dotenv(dotenv_path=".git/.env")
 server = Flask(__name__)
 Thread(target=lambda: server.run(port=5000),daemon=True).start()
 
-
+LDActivity_data = {}
 @server.route("/schedule")
 def scheduleFunc():
     return jsonify(scheduleClose=GUI.scheduleCheck())
 
-@server.route("/LDcount")
-def LDcount():
-    ID = GUI.specificId
-    for btn in GUI.ld_list_name_gp.buttons():
-        btn.setChecked(False)
+@server.route("/LDActivity", methods=["GET", "POST"])
+def LDActivity():
+    log = logging.getLogger('werkzeug')
+    prev = log.level
+    log.setLevel(logging.ERROR)
+    if request.method == "POST":
+        data = request.get_json()
 
-    return jsonify(LDcount=ID)
+        for key in data.keys():
+            LDActivity_data[key] = data[key]
+        log.setLevel(prev)
+        return jsonify(LDActivity=data)
+    elif request.method == "GET":
+        log.setLevel(prev)
+        return jsonify(LDActivity=LDActivity_data)
+    else:
+        log.setLevel(prev)
+        return jsonify(LDActivity=[])
+
+
+RemainingID = []
+@server.route("/openOrder", methods=["GET", "POST"])
+def openOrder():
+
+    for btn in GUI.LD_Button_list_qp.buttons():
+        btn.setChecked(False)
+        
+    if request.method == "POST":
+        ID = request.get_json()
+        print("ID from request: ", ID)
+        RemainingID.clear()
+        RemainingID.extend(ID)
+        print("RemainingID after POST: ", RemainingID)
+        return jsonify(openOrder=RemainingID)
+    elif request.method == "GET":
+        return jsonify(openOrder=RemainingID)
+    else:
+        return jsonify(openOrder=[])
 
 class BobPrimeApp(QMainWindow):
     def __init__(self):
         super().__init__()
         global GUI
         GUI = self
-        
+        self.Grim = Option()
         self.setWindowTitle("Girm Prime App")
         self.setGeometry(100, 100, 1500, 800)
         self.setStyleSheet("""
@@ -129,12 +162,12 @@ class BobPrimeApp(QMainWindow):
         self.LDNameTimer = QTimer()
         self.scheduleClose = False
         self.checkBox = QCheckBox()
-        self.checkBoxlist = []
-        self.ld_list_name_gp = QButtonGroup(self)
-        self.ld_list_name_gp.setExclusive(False)
+        self.Check_Box_LD_Name = []
+        self.LD_Button_list_qp = QButtonGroup(self)
+        self.LD_Button_list_qp.setExclusive(False)
         self.specificId = []
-        
-        
+        self.activity_LD = {}
+
         #widgets
         self.Open_ld = QPushButton("➕")
         self.Open_ld.setStyleSheet("margin: 0px 0px 10px 0px;")
@@ -153,12 +186,12 @@ class BobPrimeApp(QMainWindow):
         
         #table activity
         self.activityTimer.timeout.connect(self.update_activity_table)
-        self.activityTimer.start(3000)
+        self.activityTimer.start(1000)
         
         #table LDName
         self.LDNameTimer.timeout.connect(self.update_LDName_table)
         self.LDNameTimer.start(60000)
-        self.ld_list_name_gp.idToggled.connect(self.Select_LDPlayer)
+        self.LD_Button_list_qp.idToggled.connect(self.Select_LDPlayer)
         
         #trigger
         self.Open_ld.clicked.connect(lambda: self.openLD())
@@ -172,16 +205,16 @@ class BobPrimeApp(QMainWindow):
 
     def Select_LDPlayer(self, id: int, checked: bool):
         count = 0
-        for checkbox in self.ld_list_name_gp.buttons():
+        for checkbox in self.LD_Button_list_qp.buttons():
             if checkbox.isChecked():
                 count += 1
         if (checked):
-            self.select_all.setChecked(all(btn.isChecked() for btn in self.ld_list_name_gp.buttons()))
+            self.select_all.setChecked(all(btn.isChecked() for btn in self.LD_Button_list_qp.buttons()))
         else:
             self.select_all.setChecked(False)
         self.count = count
         self.selected.setText(f"{self.count} Selected")
-        self.specificId = [self.ld_list_name_gp.id(b) for b in self.ld_list_name_gp.buttons() if b.isChecked()]
+        self.specificId = [self.LD_Button_list_qp.id(b) for b in self.LD_Button_list_qp.buttons() if b.isChecked()]
 
     
         if checked:
@@ -205,9 +238,10 @@ class BobPrimeApp(QMainWindow):
         self.select_all.setChecked(False)
         self.selected.setText(f"{0} Selected")
         self.start_thread(LDPlayer().run, self.specificId)
+        
     def check_activity(self):
         try:
-            self.drivers = Option().opened_drivers()
+            self.drivers = self.Grim.opened_drivers()
             return self.drivers if self.drivers is not None else []
         except Exception as e:
             print(f"Error checking activity: {e}")
@@ -215,7 +249,9 @@ class BobPrimeApp(QMainWindow):
 
     def update_activity_table(self)->QTableWidget:
         driver_list = self.check_activity()
-        
+
+        activity = requests.get("http://127.0.0.1:5000/LDActivity", {})
+        activityData = activity.json()['LDActivity']
 
         if not hasattr(self,'table') or self.table is None:
             self.table = QTableWidget(0, 4)
@@ -234,22 +270,27 @@ class BobPrimeApp(QMainWindow):
             self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)  
             self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)  
             self.table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch) 
-        self.update_exist_activity_table(driver_list)
+        self.update_exist_activity_table(driver_list, activityData)
         return self.table
 
-    def update_exist_activity_table(self, driver_list: list[str]):
+    def update_exist_activity_table(self, driver_list: list[str], activityData: list[dict]):
 
         if not self.table and not driver_list:
             self.table.setRowCount(0)
             return
         for i, driverName in enumerate(driver_list):
+            status = "No Action..."
+            
+            if driverName in activityData:
+                status = activityData[driverName]['status']
+            
             self.table.setRowCount(len(driver_list))
             self.table.setItem(i,0, QTableWidgetItem(str(i+1)))
             self.table.setItem(i,1, QTableWidgetItem(driverName))
             self.table.setItem(i,2, QTableWidgetItem(str(int((int(driverName[-2:])-50)/2-1))))
-            self.table.setItem(i,3, QTableWidgetItem("Activity"))
-        
-    
+            self.table.setItem(i,3, QTableWidgetItem(status))
+
+
     def update_time(self) -> None:
         """Update the time label with current time using replace"""
         elapsed = int(time.time() - self.starttime)
@@ -259,7 +300,7 @@ class BobPrimeApp(QMainWindow):
         self.time_label.setText(f'<div style="font-size: 50px;">{hours:02}:{minutes:02}:{seconds:02}</div>')
         
     def update_LDName_table(self) -> QTableWidget:
-        driver_list = Option().check_ld_in_list()
+        driver_list = self.Grim.check_ld_in_list()
         if not hasattr(self, 'LDName_table') or self.LDName_table is None:
             self.LDName_table = QTableWidget(0, 2)
             self.LDName_table.setHorizontalHeaderLabels(["ID", "LD Name"])
@@ -288,10 +329,10 @@ class BobPrimeApp(QMainWindow):
             self.LDName_table.setRowCount(len(driver_list))
             
             self.checkBox = QCheckBox(str(i + 1))
-            self.ld_list_name_gp.addButton(self.checkBox, i + 1)
+            self.LD_Button_list_qp.addButton(self.checkBox, i + 1)
             self.LDName_table.setCellWidget(i, 0, self.checkBox)
             self.LDName_table.setItem(i, 1, QTableWidgetItem(driver_name))
-            self.checkBoxlist.append(self.checkBox)
+            self.Check_Box_LD_Name.append(self.checkBox)
 
 
     def init(self) -> None:
@@ -428,7 +469,7 @@ class BobPrimeApp(QMainWindow):
         select_ld_name_layout_top.addWidget(self.select_all)
         
         try:
-            MAX = len(Option().check_ld_in_list())
+            MAX = len(self.Grim.check_ld_in_list())
         except:
             print(f"cannot get a max value for spinBox Raise")
             
@@ -466,23 +507,23 @@ class BobPrimeApp(QMainWindow):
         
         return select_ld_name_widget
     def confirmSelectedRange(self, start: int, end: int) -> None:
-        self.selectAll = all(btn.isChecked() for btn in self.ld_list_name_gp.buttons())
+        self.selectAll = all(btn.isChecked() for btn in self.LD_Button_list_qp.buttons())
         count = 0
         for i in range(start, end + 1):
-            btn = self.ld_list_name_gp.button(i)
+            btn = self.LD_Button_list_qp.button(i)
             if btn:
                 btn.setChecked(True)
-        for checkbox in self.ld_list_name_gp.buttons():
+        for checkbox in self.LD_Button_list_qp.buttons():
             count += 1 if checkbox.isChecked() else 0
         self.count = count
         self.select_all.setChecked(self.selectAll)
         self.selected.setText(f"{self.count} Selected")
-        self.specificId = [self.ld_list_name_gp.id(b) for b in self.ld_list_name_gp.buttons() if b.isChecked()]
+        self.specificId = [self.LD_Button_list_qp.id(b) for b in self.LD_Button_list_qp.buttons() if b.isChecked()]
 
     def select_all_changed(self, checked: bool) -> None:
-        self.selectAll: bool = all(btn.isChecked() for btn in self.ld_list_name_gp.buttons())
+        self.selectAll: bool = all(btn.isChecked() for btn in self.LD_Button_list_qp.buttons())
         if checked:
-            self.confirmSelectedRange(1, len(Option().check_ld_in_list()))
+            self.confirmSelectedRange(1, len(self.Grim.check_ld_in_list()))
             self.select_all.setChecked(True)
         else:
             self.select_all.setChecked(False)
@@ -490,7 +531,7 @@ class BobPrimeApp(QMainWindow):
         
     def selectRange(self, which: str, value: int) -> None:
         try:
-            max_value = len(Option().check_ld_in_list())
+            max_value = len(self.Grim.check_ld_in_list())
         except:
             print("Error occurred while getting max value")
         start = self.spinBox_selectAll_start.value()
@@ -599,7 +640,7 @@ class Proxy(QProxyStyle):
         subControl: QStyle.SubControl,
         widget: Optional[QSpinBox] = None,
     ) -> QRect:
-        rect = super().subControlRect(control, opt, subControl, widget)  # type: ignore[arg-type]
+        rect = super().subControlRect(control, opt, subControl, widget)  # type: ignore
         if control == QStyle.ComplexControl.CC_SpinBox:
             total_w = widget.width() if widget is not None else rect.width()
             total_h = rect.height()
