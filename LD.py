@@ -25,6 +25,15 @@ dotenv.load_dotenv(dotenv_path=".git/.env")
 server = Flask(__name__)
 Thread(target=lambda: server.run(port=5000),daemon=True).start()
 
+
+
+
+
+class NoLog(logging.Filter):
+    def filter(self, record: logging.LogRecord) -> bool:
+        return "/LDActivity" not in record.getMessage()
+logging.getLogger('werkzeug').addFilter(NoLog())
+
 LDActivity_data = {}
 @server.route("/schedule")
 def scheduleFunc():
@@ -32,21 +41,18 @@ def scheduleFunc():
 
 @server.route("/LDActivity", methods=["GET", "POST"])
 def LDActivity():
-    log = logging.getLogger('werkzeug')
-    prev = log.level
-    log.setLevel(logging.ERROR)
+
     if request.method == "POST":
         data = request.get_json()
 
         for key in data.keys():
             LDActivity_data[key] = data[key]
-        log.setLevel(prev)
+        
         return jsonify(LDActivity=data)
     elif request.method == "GET":
-        log.setLevel(prev)
+        
         return jsonify(LDActivity=LDActivity_data)
     else:
-        log.setLevel(prev)
         return jsonify(LDActivity=[])
 
 
@@ -59,7 +65,6 @@ def openOrder():
         
     if request.method == "POST":
         ID = request.get_json()
-        print("ID from request: ", ID)
         RemainingID.clear()
         RemainingID.extend(ID)
         print("RemainingID after POST: ", RemainingID)
@@ -167,6 +172,7 @@ class BobPrimeApp(QMainWindow):
         self.LD_Button_list_qp.setExclusive(False)
         self.specificId = []
         self.activity_LD = {}
+
 
         #widgets
         self.Open_ld = QPushButton("➕")
