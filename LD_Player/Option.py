@@ -11,7 +11,7 @@ import platform
 import platform
 import traceback
 import subprocess
-import pygetwindow as gw
+import pygetwindow
 from typing import Optional
 from appium import webdriver
 from email.header import decode_header
@@ -50,13 +50,13 @@ class option:
         "confirmEmail": """//android.view.View[@content-desc="Next"]"""
         }
         self.IMFORMATION = {
-        "firstName":self.__Random_first_Name(),
-        "lastName":self.__Random_last_Name(),
-        "month": self.__Random_Month(),
         "day": self.__Random_Day(),
         "year": self.__Random_Year(),
+        "month": self.__Random_Month(),
         "gender": self.__Random_Gender(),
-        "email": self.__Get_Temp_Mail()
+        "emailRan": self.__Get_Temp_Mail(),
+        "lastName":self.__Random_last_Name(),
+        "firstName":self.__Random_first_Name()
         }
         self.number = Number
         self.URL = "http://127.0.0.1:5000/"
@@ -105,13 +105,14 @@ class option:
             LD_Name = f"LDPlayer" if index == 0 else f"LDPlayer-{index}"
             found = False
             while not found:
-                for w in gw.getAllWindows():
+                for w in pygetwindow.getAllWindows():
                     if w.title == LD_Name:
                         w.moveTo(index * 300,0)
                         print(f"LDPlayer {index + 1} Arranged successfully")
                         found = True
                         break
                 time.sleep(1)
+                
         except Exception as e:
             print(f"Error moving window: {e}")
 
@@ -206,7 +207,7 @@ class option:
 
             device_name = f"emulator-55{((i-1)*2+54)}"
             
-            openLD = self.wait_for_ldplayer_device(device_name)
+            openLD = self.wait_for_ldplayer_device(device_name)# Sample running test shell CMD in LD
             if openLD:
                 self.__clear_app_data(device_name)# Sample Wait Full setup  and clear it up
                 
@@ -252,7 +253,7 @@ class option:
     # filter_email = "tinagrim+001kh@yandex.com"
 
     def opened_drivers(self)-> list[str]:
-        Drivers_list = [f"emulator-55{(i-1)*2+54}" for i in range(1, 21)]
+
         Drivers_list_opened = []
         
         try:
@@ -265,12 +266,13 @@ class option:
         except Exception as e:
             print(f"not found adb.exe: {e}")
             return Drivers_list_opened
-            
+
         """Activity Check"""
         for line in result.stdout.splitlines():
-            for driver_name in Drivers_list:
-                if driver_name in line:
-                    Drivers_list_opened.append(driver_name)
+            if "emulator" in line:
+                driver_name: str = line.split("\t")[0]
+                Drivers_list_opened.append(driver_name)
+
         return Drivers_list_opened # sample [emulator-5554, emulator-5556] is open
 
     def __Random_first_Name(self)-> str:
@@ -305,7 +307,7 @@ class option:
         Clear = subprocess.run(["adb", "-s", device_name, "shell", "pm", "clear", package_name])
         print("Clear out: ",Clear)
 class Activity:
-    def __init__(self, emulator, driverID):
+    def __init__(self, emulator:str, driverID: int):
         self.emulator = emulator
         self.driverID = driverID
         self.URL = "http://127.0.0.1:5000/"
@@ -319,3 +321,34 @@ class Activity:
             }
         }
         requests.post(self.URL + "LDActivity", json=body)
+        
+    def KillAppium(self, port: int, ID:int) -> None:
+        
+        try:
+        
+            r = requests.get(self.URL + "schedule")
+            close_appium_response = r.json().get("scheduleClose",True) 
+
+        except Exception as e:
+            print(f"Server Can Not Get Schedule status: {e}")
+            
+        find_pid_cmd = f'netstat -aon | findstr :{port}'
+        line = []
+        try:
+            result = subprocess.check_output(find_pid_cmd, shell=True, text=True)
+            line = result.strip().splitlines()
+            
+        except subprocess.CalledProcessError:
+            print("Port Cleared")
+        except Exception as e:
+            print(f"Unexpected error: {e}")
+
+        
+        if close_appium_response:
+            if line:
+                pid = line[0].split()[-1]
+                kill_cmd = f'taskkill /PID {pid} /F'
+                subprocess.run(kill_cmd, shell=True)
+                print("Kill Appium server: ", ID)
+
+            
