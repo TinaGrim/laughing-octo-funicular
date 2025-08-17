@@ -13,9 +13,9 @@ from LD_Player import *
 from typing import Optional
 from threading import Thread
 from flask import Flask, jsonify , request
-from PySide6.QtGui import QColor, QFont, QPixmap,QIcon
-from PySide6.QtCore import Qt, QTimer,QSize,QThread, QRect
-from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QFrame, QLabel, QMainWindow, QHBoxLayout, QListWidget,QGroupBox,QMenuBar,QMenu,QTabWidget,QLineEdit,QTableWidget,QTableWidgetItem,QBoxLayout,QCheckBox,QHeaderView,QPushButton, QButtonGroup,QSpinBox,QSizePolicy,QStyle,QProxyStyle,QStyleOptionComplex,QStyleOptionSpinBox,QAbstractSpinBox
+from PySide6.QtGui import QColor, QFont,QIcon
+from PySide6.QtCore import Qt, QTimer,QSize, QRect
+from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QMainWindow, QHBoxLayout, QListWidget,QGroupBox,QMenu,QTabWidget,QLineEdit,QTableWidget,QTableWidgetItem,QBoxLayout,QCheckBox,QHeaderView,QPushButton, QButtonGroup,QSpinBox,QSizePolicy,QStyle,QProxyStyle,QStyleOptionSpinBox
 
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 dotenv.load_dotenv(dotenv_path=".git/.env")
@@ -670,9 +670,8 @@ if __name__ == "__main__":
     if platform.system() != "Windows":
         sys.exit("Only Windows supported!")
     QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
-    LD = LDPlayer()
     app = QApplication(sys.argv)
     app.setStyle(Proxy())
     window = BobPrimeApp()  
     window.show()
-    app.exec()
+    sys.exit(app.exec())
