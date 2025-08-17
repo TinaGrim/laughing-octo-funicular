@@ -164,7 +164,9 @@ class BobPrimeApp(QMainWindow):
         self.time_label = QLabel()
         self.timer = QTimer()
         self.activityTimer = QTimer()
+        self.DevicesTimer = QTimer()
         self.LDNameTimer = QTimer()
+        self.DeviceList = QTimer()
         self.scheduleClose = False
         self.checkBox = QCheckBox()
         self.Check_Box_LD_Name = []
@@ -198,6 +200,14 @@ class BobPrimeApp(QMainWindow):
         self.LDNameTimer.timeout.connect(self.update_LDName_table)
         self.LDNameTimer.start(60000)
         self.LD_Button_list_qp.idToggled.connect(self.Select_LDPlayer)
+        
+        #table devices
+        self.DevicesTimer.timeout.connect(self.update_devices_table)
+        self.DevicesTimer.start(4000)
+        
+        #table devices list
+        self.DeviceList.timeout.connect(self.update_devices_list)
+        self.DeviceList.start(4000)
         
         #trigger
         self.Open_ld.clicked.connect(lambda: self.openLD())
@@ -374,10 +384,10 @@ class BobPrimeApp(QMainWindow):
         cornerContainer.setStyleSheet("margin: 0px;")
 
         self.Tabs = QTabWidget()
-        self.Tabs.addTab(QLabel("Hello"), "Devices")
+        self.Tabs.addTab(self.Tab_Devices(), "Devices")
         self.Tabs.addTab(QLabel("Hello"), "Active")
         self.Tabs.addTab(self.Tab_auto_post(), "Auto Post")
-        self.Tabs.addTab(QLabel("Hello"), "Manage")
+        self.Tabs.addTab(self.Tab_manage(), "Manage")
         self.Tabs.setCornerWidget(cornerContainer) 
         """End Tabs"""
         
@@ -388,7 +398,262 @@ class BobPrimeApp(QMainWindow):
         main_widget.setLayout(main_layout)
         self.setCentralWidget(main_widget)
 
+    def Tab_Devices(self) -> QWidget:
+        devices_widget = QWidget()
+        devices_widget_layout = QVBoxLayout(devices_widget)
+        #Top
+        devices_browser_widget = QWidget()
+        devices_browser_widget_layout = QHBoxLayout(devices_browser_widget)
         
+        devices_locate_widget = QWidget()
+        devices_locate_widget_layout = QVBoxLayout(devices_locate_widget)
+        
+        devices_locate_widget_layout_top = QHBoxLayout()
+        labeltop1 = QLabel("Locate Device:")
+        labeltop2 = QLabel("Locate Device:")
+        labeltop3 = QLabel("Locate Device:")
+        
+        devices_locate_widget_layout_top.addWidget(labeltop1)
+        devices_locate_widget_layout_top.addWidget(labeltop2)
+        devices_locate_widget_layout_top.addWidget(labeltop3)
+        
+        devices_locate_widget_layout_bottom = QHBoxLayout()
+        labelbottom1 = QLabel("Locate Device:")
+        labelbottom2 = QLabel("Locate Device:")
+        labelbottom3 = QLabel("Locate Device:")
+        
+        devices_locate_widget_layout_bottom.addWidget(labelbottom1)
+        devices_locate_widget_layout_bottom.addWidget(labelbottom2)
+        devices_locate_widget_layout_bottom.addWidget(labelbottom3)
+        
+        devices_locate_widget_layout.addLayout(devices_locate_widget_layout_top)
+        devices_locate_widget_layout.addLayout(devices_locate_widget_layout_bottom)
+
+        devices_upload = QPushButton("Upload")
+
+
+        devices_browser_widget_layout.addWidget(devices_locate_widget, 8)
+        devices_browser_widget_layout.addWidget(devices_upload, 2)
+
+        #Bottom
+        devices_information_widget = QWidget()
+        devices_information_widget_layout = QVBoxLayout(devices_information_widget)
+        
+        devices_information_widget_layout_top_widget = QWidget()
+        devices_information_widget_layout_top = QHBoxLayout(devices_information_widget_layout_top_widget)
+        
+        label1 = QLabel("Device Name:")
+        label2 = QLabel("Device Name:")
+        label3 = QLabel("Device Name:")
+        label4 = QLabel("Device Name:")
+
+        devices_information_widget_layout_top.addWidget(label1)
+        devices_information_widget_layout_top.addWidget(label2)
+        devices_information_widget_layout_top.addWidget(label3)
+        devices_information_widget_layout_top.addWidget(label4)
+
+        devices_information_widget_layout_bottom_widget = QWidget()
+        devices_information_widget_layout_bottom = QHBoxLayout(devices_information_widget_layout_bottom_widget)
+        
+        devices_setting_box = QGroupBox("LDPlayer Setting")
+        devices_setting_box_layout = QVBoxLayout(devices_setting_box)
+        devices_setting_box_layout_IP = QHBoxLayout()
+        labelip = QLabel("IP Address:")
+        devices_setting_box_layout_IP.addWidget(labelip)
+        devices_setting_box_layout_auto_config = QHBoxLayout()
+        label_auto_config = QLabel("Auto Config:")
+        devices_setting_box_layout_auto_config.addWidget(label_auto_config)
+        devices_setting_box_layout_arrange = QHBoxLayout()
+        label_arrange = QLabel("Arrange:")
+        devices_setting_box_layout_arrange.addWidget(label_arrange)
+        devices_setting_box_layout_screen = QHBoxLayout()
+        label_screen = QLabel("Screen:")
+        devices_setting_box_layout_screen.addWidget(label_screen)
+        devices_setting_box_layout_startup = QHBoxLayout()
+        label_startup = QLabel("Startup:")
+        devices_setting_box_layout_startup.addWidget(label_startup)
+        devices_setting_box_layout_autostop = QHBoxLayout()
+        label_autostop = QLabel("Auto Stop:")
+        devices_setting_box_layout_autostop.addWidget(label_autostop)
+        devices_setting_box_layout_clearcache = QHBoxLayout()
+        label_clearcache = QLabel("Clear Cache:")
+        devices_setting_box_layout_clearcache.addWidget(label_clearcache)
+        devices_setting_box_layout_iffbexceed = QHBoxLayout()
+        label_iffbexceed = QLabel("If FB Exceed:")
+        devices_setting_box_layout_iffbexceed.addWidget(label_iffbexceed)
+        devices_setting_box_layout_ifldexceed = QHBoxLayout()
+        label_ifldexceed = QLabel("If LD Exceed:")
+        devices_setting_box_layout_ifldexceed.addWidget(label_ifldexceed)
+        devices_setting_box_layout_closeld = QHBoxLayout()
+        label_closeld = QLabel("Close LD:")
+        devices_setting_box_layout_closeld.addWidget(label_closeld)
+
+        devices_setting_box_layout.addLayout(devices_setting_box_layout_IP)
+        devices_setting_box_layout.addLayout(devices_setting_box_layout_auto_config)
+        devices_setting_box_layout.addLayout(devices_setting_box_layout_arrange)
+        devices_setting_box_layout.addLayout(devices_setting_box_layout_screen)
+        devices_setting_box_layout.addLayout(devices_setting_box_layout_startup)
+        devices_setting_box_layout.addLayout(devices_setting_box_layout_autostop)
+        devices_setting_box_layout.addLayout(devices_setting_box_layout_clearcache)
+        devices_setting_box_layout.addLayout(devices_setting_box_layout_iffbexceed)
+        devices_setting_box_layout.addLayout(devices_setting_box_layout_ifldexceed)
+        devices_setting_box_layout.addLayout(devices_setting_box_layout_closeld)
+
+        devices_information_widget_layout_bottom.addWidget(self.update_devices_table(), 4)
+        devices_information_widget_layout_bottom.addWidget(devices_setting_box, 6)
+        
+        devices_information_widget_layout.addWidget(devices_information_widget_layout_top_widget, 1)
+        devices_information_widget_layout.addWidget(devices_information_widget_layout_bottom_widget, 9)
+
+        devices_widget_layout.addWidget(devices_browser_widget, 1)
+        devices_widget_layout.addWidget(devices_information_widget, 9)
+        return devices_widget
+    
+    def update_devices_table(self) -> QTableWidget:
+        if not hasattr(self, "devices_table") or self.devices_table is None:
+            self.devices_table = QTableWidget(0, 5)
+            self.devices_table.setHorizontalHeaderLabels(["ID", "LD Name", "Status", "Model", "M.facturer"])
+            self.devices_table.verticalHeader().setVisible(False)
+            self.devices_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+            self.devices_table.setAutoFillBackground(False)
+            self.devices_table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+            self.devices_table.resizeColumnsToContents()
+            self.devices_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)  
+            self.devices_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch) 
+            self.devices_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch) 
+            self.devices_table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch) 
+            self.devices_table.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch) 
+    
+            self.update_exist_devices_table()
+        return self.devices_table
+    
+    def update_exist_devices_table(self) -> None:
+        if not self.devices_table:
+            return
+        for i in range(0,15):
+            self.devices_table.setRowCount(15)
+            self.devices_table.setItem(i, 0, QTableWidgetItem(str(i+1)))
+            self.devices_table.setItem(i, 1, QTableWidgetItem(f"LD Name"))
+            self.devices_table.setItem(i, 2, QTableWidgetItem("Mac Address"))
+            self.devices_table.setItem(i, 3, QTableWidgetItem("Model"))
+            self.devices_table.setItem(i, 4, QTableWidgetItem("M.facturer"))
+    def Tab_manage(self) -> QWidget:
+        ld_manage_widget = QWidget()
+        ld_manage_layout = QHBoxLayout(ld_manage_widget)
+        
+        #left
+        ld_manage_list = QWidget()
+        manage_list_layout = QVBoxLayout(ld_manage_list)
+        
+        manage_list_bottom_widget = QWidget()
+        manage_list_bottom = QVBoxLayout(manage_list_bottom_widget)
+        
+        manage_list_bottom_top = QHBoxLayout()
+        label1 = QLabel("LD Name:")
+        label11 = QLabel("select")
+        
+        manage_list_bottom_top.addWidget(label1)
+        manage_list_bottom_top.addWidget(label11)
+        
+        manage_list_bottom_bottom = QHBoxLayout()
+        label2 = QLabel("LD ID:")
+        label22 = QLabel("select")
+        manage_list_bottom_bottom.addWidget(label2)
+        manage_list_bottom_bottom.addWidget(label22)
+
+        manage_list_bottom.addLayout(manage_list_bottom_top)
+        manage_list_bottom.addLayout(manage_list_bottom_bottom)
+        
+        manage_list_layout.addWidget(self.update_devices_list(),9)
+        manage_list_layout.addWidget(manage_list_bottom_widget, 1)
+
+        #right
+        ld_manage_manager = QWidget()
+        ld_manage_manager_layout = QVBoxLayout(ld_manage_manager)
+        ld_manage_manager_layout.setContentsMargins(0, 0, 0, 0)
+
+        ld_manage_group_boxtop = QGroupBox("Enable LDPlayer Manager")
+        ld_manage_manager_layout_top = QVBoxLayout(ld_manage_group_boxtop)
+        
+        number_active = QHBoxLayout()
+        number = QLabel("Number of Active LD:")
+        number_active.addWidget(number)
+        cloneld = QHBoxLayout()
+        clone = QLabel("Clone LD:")
+        cloneld.addWidget(clone)
+        backup = QHBoxLayout()
+        backup_label = QLabel("Backup LD:")
+        backup.addWidget(backup_label)
+        restore = QHBoxLayout()
+        restore_label = QLabel("Restore LD:")
+        restore.addWidget(restore_label)
+        remove = QHBoxLayout()
+        remove_label = QLabel("Remove LD:")
+        remove.addWidget(remove_label)
+        shutdown = QHBoxLayout()
+        shutdown_label = QLabel("Shutdown LD:")
+        shutdown.addWidget(shutdown_label)
+        
+        ld_manage_manager_layout_top.addLayout(number_active)
+        ld_manage_manager_layout_top.addLayout(cloneld)
+        ld_manage_manager_layout_top.addLayout(backup)
+        ld_manage_manager_layout_top.addLayout(restore)
+        ld_manage_manager_layout_top.addLayout(remove)
+        ld_manage_manager_layout_top.addLayout(shutdown)
+
+        ld_manage_group_boxbottom = QGroupBox("Enable LDPlayer Manager")
+        ld_manage_manager_layout_bottom = QVBoxLayout(ld_manage_group_boxbottom)
+        autoput = QHBoxLayout()
+        autoput_label = QLabel("Auto Put LD:")
+        autoput.addWidget(autoput_label)
+        FBlocal = QHBoxLayout()
+        FBlocal_label = QLabel("FB Local LD:")
+        FBlocal.addWidget(FBlocal_label)
+        createpage = QHBoxLayout()
+        createpage_label = QLabel("Create Page LD:")
+        createpage.addWidget(createpage_label)
+        shutdownbottom = QHBoxLayout()
+        shutdownbottom_label = QLabel("Shutdown Bottom LD:")
+        shutdownbottom.addWidget(shutdownbottom_label)
+
+        ld_manage_manager_layout_bottom.addLayout(autoput)
+        ld_manage_manager_layout_bottom.addLayout(FBlocal)
+        ld_manage_manager_layout_bottom.addLayout(createpage)
+        ld_manage_manager_layout_bottom.addLayout(shutdownbottom)
+
+        ld_manage_manager_layout.addWidget(ld_manage_group_boxtop)
+        ld_manage_manager_layout.addWidget(ld_manage_group_boxbottom)
+        
+        ld_manage_layout.addWidget(ld_manage_list, 3)
+        ld_manage_layout.addWidget(ld_manage_manager, 7)
+
+        return ld_manage_widget
+    
+    def update_devices_list(self) -> QWidget:
+        
+        if not hasattr(self, "devices_list") or self.devices_list is None:
+            self.devices_list = QTableWidget(0, 2)
+            self.devices_list.setHorizontalHeaderLabels(["ID", "LD Name"])
+            self.devices_list.verticalHeader().setVisible(False)
+            self.devices_list.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+            self.devices_list.setAutoFillBackground(False)
+            self.devices_list.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+            self.devices_list.resizeColumnsToContents()
+            self.devices_list.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)  
+            self.devices_list.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch) 
+            
+        self.update_exist_devices_list()
+        return self.devices_list
+    
+    def update_exist_devices_list(self) -> None:
+        if not self.devices_list:
+            return
+        for i in range(0, 15):
+            self.devices_list.setRowCount(15)
+            btn = QCheckBox(str(i+1))
+            self.devices_list.setCellWidget(i, 0, btn)
+            self.devices_list.setItem(i, 1, QTableWidgetItem(f"LD Name {i+1}"))
+
     def Tab_auto_post(self) -> QWidget:
 
         auto_post_widget = QWidget()
