@@ -20,14 +20,13 @@ from selenium.webdriver.common.by import By
 from urllib3.exceptions import MaxRetryError
 from requests.exceptions import ConnectionError
 from selenium.webdriver.support.ui import WebDriverWait
+from selenium.common.exceptions import TimeoutException
 from selenium.common.exceptions import WebDriverException
+from selenium.common.exceptions import  NoSuchElementException
 from selenium.common.exceptions import InvalidSessionIdException
 from selenium.webdriver.support import expected_conditions as EC
 from appium.options.android.uiautomator2.base import UiAutomator2Options
 
-GET = option()
-SELECTOR = GET.SELECTOR
-IMFORMATION = GET.IMFORMATION
 
 # current_file = os.path.basename(__file__)
 # number_match = re.search(r"Driver(\d+)\.py", current_file)
@@ -37,14 +36,21 @@ IMFORMATION = GET.IMFORMATION
 driverID = None
 URL = "http://127.0.0.1:5000/"
 emu = f"emulator-55{(driverID-1)*2+54}"
+port = 4722 + driverID
 
+
+
+GET = option()
+SELECTOR = GET.SELECTOR
+IMFORMATION = GET.IMFORMATION
+activity = Activity(emu, driverID)
 
 try:
 
-    activity = Activity(emu, driverID)
     activity.setActivity("Start")
-    
-    Driver = GET.cap(4722 + driverID, driverID)
+
+    activity.KillAppium(port, driverID)
+    Driver = GET.cap(port, driverID)
 
     if Driver is None:
         print("Driver did not exist...")
@@ -54,7 +60,7 @@ try:
     time.sleep(3)
     WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH,SELECTOR["Messenger"] ))).click()
 
-    activity.setActivity("Cancel  Button")
+    activity.setActivity("Cancel Button")
     time.sleep(8)
     try:
         output = subprocess.check_output(f'adb -s {emu} shell dumpsys activity activities', shell=True).decode('utf-8')
@@ -70,7 +76,7 @@ try:
                 passing = True
                 break
         if not passing:
-            print("Found")
+            print("Found Cancel Button")
             WebDriverWait(Driver, 10).until(
                 EC.presence_of_element_located((By.XPATH, SELECTOR["cancelAuth"]))
             ).click()
@@ -83,7 +89,7 @@ try:
     time.sleep(4)
     WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, SELECTOR["createAccount"]))).click()
 
-    activity.setActivity("start")
+    activity.setActivity("Start Create Account")
     time.sleep(4)
     
     try:
@@ -91,7 +97,7 @@ try:
     except Exception:
         WebDriverWait(Driver, 10).until(EC.presence_of_element_located((By.XPATH, SELECTOR["getStarted2"]))).click()
         
-    activity.setActivity("permissionDeny")
+    activity.setActivity("Permission Deny")
     time.sleep(4)
     try:
         WebDriverWait(Driver, 10).until(EC.presence_of_element_located((By.XPATH, SELECTOR["permissionDeny"]))).click()
@@ -100,7 +106,7 @@ try:
 
 
     #WebDriverWait(Driver, 10).until(EC.presence_of_element_located((By.XPATH, SELECTOR["startAfterDeny"]))).click()
-    activity.setActivity("Fill Name")
+    activity.setActivity("fill name")
     time.sleep(4)
     WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, SELECTOR["firstNameWidget"]))).send_keys(IMFORMATION["firstName"])
     time.sleep(4)
@@ -111,7 +117,7 @@ try:
     time.sleep(4)
 
     WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, SELECTOR["afterNameFill"]))).click()
-    activity.setActivity("Fill Birthday")
+    activity.setActivity("fill BD")
     time.sleep(4)
 
 
@@ -182,7 +188,7 @@ try:
         
 
 
-    activity.setActivity("setDate")
+    activity.setActivity("set date")
     time.sleep(4)
     WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, SELECTOR["setDate"]))).click()
 
@@ -205,7 +211,7 @@ try:
     Email = WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, SELECTOR["emailWidget"])))
     Email.click()
 
-    Mail = IMFORMATION["email"]
+    Mail = IMFORMATION["emailRan"]
     Email.send_keys(Mail)
 
 
@@ -220,38 +226,25 @@ try:
 
     activity.setActivity("Close appium")
     time.sleep(2)
-    try:
-    
-        r = requests.get("http://127.0.0.1:5000/schedule")
-        response = r.json().get("scheduleClose",True) 
-        
-    except Exception as e:
-        print(f"Server Can Not Get Schedule status: {e}")
-        
     Driver.quit()
-    
-    port = 4722 + driverID
-    find_pid_cmd = f'netstat -aon | findstr :{port}'
-    result = subprocess.check_output(find_pid_cmd, shell=True, text=True)
-    line = result.strip().splitlines()
-    if response:
-        if line:
-            pid = line[0].split()[-1]
-            kill_cmd = f'taskkill /PID {pid} /F'
-            subprocess.run(kill_cmd, shell=True)
-            print("Kill Appium server: ",driverID)
-        else:
-            print(f"Not found {port}")
+    activity.KillAppium(port, driverID)
+
     activity.setActivity("Done")
     time.sleep(2)
     activity.setActivity("No Action...")
+    sys.exit(0)
 
 except (InvalidSessionIdException, MaxRetryError, ConnectionError):
     print("Closing Appium server During Remote Driver")
     activity.setActivity("Failed")
     sys.exit(1)
-        
+except (NoSuchElementException, TimeoutException):
+    print("Found no element")
+    activity.setActivity("Failed")
+    sys.exit(1)
+
 '''
+
 URL = "http://127.0.0.1:5000/"
 r = requests.get(URL + "openOrder")
 response = r.json()
