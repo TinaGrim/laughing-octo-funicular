@@ -291,14 +291,14 @@ class BobPrimeApp(QMainWindow):
 
     def update_exist_activity_table(self, driver_list: list[str], activityData: list[dict]):
 
-        if not self.table and not driver_list:
+        if not driver_list:
             self.table.setRowCount(0)
             return
         for i, driverName in enumerate(driver_list):
             status = "No Action..."
             
             if driverName in activityData:
-                status = activityData[driverName]['status']
+                status = activityData[driverName].get('status', 'No Action...')
             
             self.table.setRowCount(len(driver_list))
             self.table.setItem(i,0, QTableWidgetItem(str(i+1)))
@@ -335,8 +335,6 @@ class BobPrimeApp(QMainWindow):
         return self.LDName_table
     
     def update_exist_LDName_table(self, driver_list: list[str]) -> None:
-        if not self.LDName_table:
-            return
         if not driver_list:
             self.LDName_table.setRowCount(0)
             return
@@ -431,7 +429,7 @@ class BobPrimeApp(QMainWindow):
 
         devices_upload = QPushButton("Upload")
 
-
+        devices_upload.setStyleSheet("margin: 0px; padding: 40px 60px; ")
         devices_browser_widget_layout.addWidget(devices_locate_widget, 8)
         devices_browser_widget_layout.addWidget(devices_upload, 2)
 
@@ -498,9 +496,13 @@ class BobPrimeApp(QMainWindow):
         devices_setting_box_layout.addLayout(devices_setting_box_layout_iffbexceed)
         devices_setting_box_layout.addLayout(devices_setting_box_layout_ifldexceed)
         devices_setting_box_layout.addLayout(devices_setting_box_layout_closeld)
-
-        devices_information_widget_layout_bottom.addWidget(self.update_devices_table(), 4)
-        devices_information_widget_layout_bottom.addWidget(devices_setting_box, 6)
+        devices_setting_box_layout.addStretch(1)
+        devices_setting_box_layout.setContentsMargins(10, 20, 0, 0)
+        
+        devices_setting_box.setStyleSheet("margin: 5; padding: 0;")
+        
+        devices_information_widget_layout_bottom.addWidget(self.update_devices_table(), 6)
+        devices_information_widget_layout_bottom.addWidget(devices_setting_box, 4)
         
         devices_information_widget_layout.addWidget(devices_information_widget_layout_top_widget, 1)
         devices_information_widget_layout.addWidget(devices_information_widget_layout_bottom_widget, 9)
@@ -516,7 +518,6 @@ class BobPrimeApp(QMainWindow):
             self.devices_table.verticalHeader().setVisible(False)
             self.devices_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
             self.devices_table.setAutoFillBackground(False)
-            self.devices_table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
             self.devices_table.resizeColumnsToContents()
             self.devices_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)  
             self.devices_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch) 
@@ -600,7 +601,10 @@ class BobPrimeApp(QMainWindow):
         ld_manage_manager_layout_top.addLayout(restore)
         ld_manage_manager_layout_top.addLayout(remove)
         ld_manage_manager_layout_top.addLayout(shutdown)
+        ld_manage_manager_layout_top.addStretch(1)
 
+        ld_manage_manager_layout_top.setContentsMargins(10, 20, 0, 0)
+        
         ld_manage_group_boxbottom = QGroupBox("Enable LDPlayer Manager")
         ld_manage_manager_layout_bottom = QVBoxLayout(ld_manage_group_boxbottom)
         autoput = QHBoxLayout()
@@ -620,6 +624,12 @@ class BobPrimeApp(QMainWindow):
         ld_manage_manager_layout_bottom.addLayout(FBlocal)
         ld_manage_manager_layout_bottom.addLayout(createpage)
         ld_manage_manager_layout_bottom.addLayout(shutdownbottom)
+        ld_manage_manager_layout_bottom.addStretch(1)
+        ld_manage_manager_layout_bottom.setContentsMargins(10, 20, 0, 0)
+
+
+        ld_manage_group_boxtop.setStyleSheet("margin: 5; padding: 0;")
+        ld_manage_group_boxbottom.setStyleSheet("margin: 5; padding: 0;")
 
         ld_manage_manager_layout.addWidget(ld_manage_group_boxtop)
         ld_manage_manager_layout.addWidget(ld_manage_group_boxbottom)
