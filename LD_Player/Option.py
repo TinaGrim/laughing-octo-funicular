@@ -74,7 +74,7 @@ class option:
         
         try:
             LDPlayer_launcher_path = f'"D:\\LDPlayer\\LDPlayer9\\ldconsole.exe" launch --index {index}'
-            LDPlayer_setup_path = f'"D:\\LDPlayer\\LDPlayer9\\ldconsole.exe" modify --index {index} --resolution 300,600,160 '
+            LDPlayer_setup_path = f'"D:\\LDPlayer\\LDPlayer9\\ldconsole.exe" modify --index {index} --resolution 300,600,160 --cpu 2 --memory 2048'
             
             subprocess.run(LDPlayer_setup_path, shell=True, startupinfo=SUP) 
             subprocess.Popen(LDPlayer_launcher_path, shell=True, startupinfo=SUP)
