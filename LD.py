@@ -12,7 +12,7 @@ import webbrowser
 from LD_Player import *
 from typing import Optional
 from threading import Thread
-from flask import Flask, jsonify , request
+from flask import Flask, jsonify , request, url_for
 from PySide6.QtGui import QColor, QFont,QIcon
 from PySide6.QtCore import Qt, QTimer,QSize, QRect
 from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QMainWindow, QHBoxLayout, QListWidget,QGroupBox,QMenu,QTabWidget,QLineEdit,QTableWidget,QTableWidgetItem,QBoxLayout,QCheckBox,QHeaderView,QPushButton, QButtonGroup,QSpinBox,QSizePolicy,QStyle,QProxyStyle,QStyleOptionSpinBox
@@ -33,6 +33,18 @@ class NoLog(logging.Filter):
     def filter(self, record: logging.LogRecord) -> bool:
         return "/LDActivity" not in record.getMessage()
 logging.getLogger('werkzeug').addFilter(NoLog())
+
+
+
+@server.route("/")
+def index():
+    links = []
+    for rule in server.url_map.iter_rules():
+        if "GET" in getattr(rule, "methods", set()) and len(rule.arguments) == 0:
+            links.append(f'<li><a href="{url_for(rule.endpoint)}">{url_for(rule.endpoint)}</a></li>')
+    links.pop(0)  
+    return f"<ul>{''.join(links)}</ul>"
+
 
 LDActivity_data = {}
 @server.route("/schedule")
@@ -170,9 +182,13 @@ class BobPrimeApp(QMainWindow):
         self.scheduleClose = False
         self.checkBox = QCheckBox()
         self.Check_Box_LD_Name = []
+        self.Check_Box_List_Devices = []
         self.LD_Button_list_qp = QButtonGroup(self)
         self.LD_Button_list_qp.setExclusive(False)
-        self.specificId = []
+        self.devices_list_qp = QButtonGroup(self)
+        self.devices_list_qp.setExclusive(False)
+        self.specific_ld_ID = []
+        self.specific_list_devices_ID = []
         self.activity_LD = {}
 
 
@@ -207,7 +223,8 @@ class BobPrimeApp(QMainWindow):
         
         #table devices list
         self.DeviceList.timeout.connect(self.update_devices_list)
-        self.DeviceList.start(4000)
+        self.DeviceList.start(60000)
+        self.devices_list_qp.idToggled.connect(self.Select_list_devices)
         
         #trigger
         self.Open_ld.clicked.connect(lambda: self.openLD())
@@ -225,12 +242,12 @@ class BobPrimeApp(QMainWindow):
             if checkbox.isChecked():
                 count += 1
         if (checked):
-            self.select_all.setChecked(all(btn.isChecked() for btn in self.LD_Button_list_qp.buttons()))
+            self.select_all_ld.setChecked(all(btn.isChecked() for btn in self.LD_Button_list_qp.buttons()))
         else:
-            self.select_all.setChecked(False)
-        self.count = count
-        self.selected.setText(f"{self.count} Selected")
-        self.specificId = [self.LD_Button_list_qp.id(b) for b in self.LD_Button_list_qp.buttons() if b.isChecked()]
+            self.select_all_ld.setChecked(False)
+        self.ld_count = count
+        self.selected_LD.setText(f"{self.ld_count} Selected")
+        self.specific_ld_ID = [self.LD_Button_list_qp.id(b) for b in self.LD_Button_list_qp.buttons() if b.isChecked()]
 
     
         if checked:
@@ -243,17 +260,41 @@ class BobPrimeApp(QMainWindow):
                 item = self.LDName_table.item(id-1, 1)
                 if item is not None:
                     item.setBackground(QColor("#292c3b"))
-                        
+                    
+    def Select_list_devices(self,id: int, checked: bool) -> None:
+        count = 0
+        for checkbox in self.devices_list_qp.buttons():
+            if checkbox.isChecked():
+                count += 1
+        if (checked):
+            self.select_all_devices.setChecked(all(btn.isChecked() for btn in self.devices_list_qp.buttons()))
+        else:
+            self.select_all_devices.setChecked(False)
+        self.device_count = count
+        self.selected_Devices.setText(f"{self.device_count} Selected")
+        self.specific_list_devices_ID = [self.devices_list_qp.id(b) for b in self.devices_list_qp.buttons() if b.isChecked()]
+        
+        if checked:
+            if self.devices_table.item(id-1, 1):
+                item = self.devices_table.item(id-1, 1)
+                if item is not None:
+                    item.setBackground(QColor("#07417a"))
+        else:
+            if self.devices_table.item(id-1, 1):
+                item = self.devices_table.item(id-1, 1)
+                if item is not None:
+                    item.setBackground(QColor("#292c3b"))
+
     def scheduleCheck(self) -> bool:
         self.scheduleClose = self.closeAppium.isChecked()
         return self.scheduleClose
 
     def openLD(self):
-        if not self.specificId:
+        if not self.specific_ld_ID:
             return
-        self.select_all.setChecked(False)
-        self.selected.setText(f"{0} Selected")
-        self.start_thread(LDPlayer().run, self.specificId)
+        self.select_all_ld.setChecked(False)
+        self.selected_LD.setText(f"{0} Selected")
+        self.start_thread(LDPlayer().run, self.specific_ld_ID)
         
     def check_activity(self):
         try:
@@ -316,7 +357,9 @@ class BobPrimeApp(QMainWindow):
         self.time_label.setText(f'<div style="font-size: 50px;">{hours:02}:{minutes:02}:{seconds:02}</div>')
         
     def update_LDName_table(self) -> QTableWidget:
-        driver_list = self.Grim.check_ld_in_list()
+
+        driver_list = self.Grim.check_ld_in_list()# Sample [<LD Name>]
+
         if not hasattr(self, 'LDName_table') or self.LDName_table is None:
             self.LDName_table = QTableWidget(0, 2)
             self.LDName_table.setHorizontalHeaderLabels(["ID", "LD Name"])
@@ -328,9 +371,9 @@ class BobPrimeApp(QMainWindow):
             self.LDName_table.resizeColumnsToContents()
             self.LDName_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)  
             self.LDName_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
-        if getattr(self, "select_all", None):
-            self.select_all.setChecked(False)
-            self.selected.setText(f"{0} Selected")
+        if getattr(self, "select_all_ld", None):
+            self.select_all_ld.setChecked(False)
+            self.selected_LD.setText(f"{0} Selected")
         self.update_exist_LDName_table(driver_list)
         return self.LDName_table
     
@@ -512,6 +555,7 @@ class BobPrimeApp(QMainWindow):
         return devices_widget
     
     def update_devices_table(self) -> QTableWidget:
+        list_devices = self.Grim.check_ld_in_list()  # Sample [<LD Name>]
         if not hasattr(self, "devices_table") or self.devices_table is None:
             self.devices_table = QTableWidget(0, 5)
             self.devices_table.setHorizontalHeaderLabels(["ID", "LD Name", "Status", "Model", "M.facturer"])
@@ -524,50 +568,36 @@ class BobPrimeApp(QMainWindow):
             self.devices_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch) 
             self.devices_table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch) 
             self.devices_table.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch) 
-    
-            self.update_exist_devices_table()
+            self.update_exist_devices_table(list_devices)
         return self.devices_table
-    
-    def update_exist_devices_table(self) -> None:
+
+    def update_exist_devices_table(self, list_devices: list[str]) -> None:
         if not self.devices_table:
             return
-        for i in range(0,15):
-            self.devices_table.setRowCount(15)
+
+        for i in range(0, len(list_devices)):
+            self.devices_table.setRowCount(len(list_devices))
             self.devices_table.setItem(i, 0, QTableWidgetItem(str(i+1)))
-            self.devices_table.setItem(i, 1, QTableWidgetItem(f"LD Name"))
+            self.devices_table.setItem(i, 1, QTableWidgetItem(f"LD Name {i+1}"))
             self.devices_table.setItem(i, 2, QTableWidgetItem("Mac Address"))
             self.devices_table.setItem(i, 3, QTableWidgetItem("Model"))
             self.devices_table.setItem(i, 4, QTableWidgetItem("M.facturer"))
+            
     def Tab_manage(self) -> QWidget:
         ld_manage_widget = QWidget()
         ld_manage_layout = QHBoxLayout(ld_manage_widget)
-        
+        ld_manage_layout.setContentsMargins(0, 0, 0, 0)
+        ld_manage_layout.setSpacing(5)
         #left
         ld_manage_list = QWidget()
         manage_list_layout = QVBoxLayout(ld_manage_list)
         
-        manage_list_bottom_widget = QWidget()
-        manage_list_bottom = QVBoxLayout(manage_list_bottom_widget)
-        
-        manage_list_bottom_top = QHBoxLayout()
-        label1 = QLabel("LD Name:")
-        label11 = QLabel("select")
-        
-        manage_list_bottom_top.addWidget(label1)
-        manage_list_bottom_top.addWidget(label11)
-        
-        manage_list_bottom_bottom = QHBoxLayout()
-        label2 = QLabel("LD ID:")
-        label22 = QLabel("select")
-        manage_list_bottom_bottom.addWidget(label2)
-        manage_list_bottom_bottom.addWidget(label22)
 
-        manage_list_bottom.addLayout(manage_list_bottom_top)
-        manage_list_bottom.addLayout(manage_list_bottom_bottom)
         
         manage_list_layout.addWidget(self.update_devices_list(),9)
-        manage_list_layout.addWidget(manage_list_bottom_widget, 1)
-
+        manage_list_layout.addWidget(self.selected_list_devices(), 1)
+        manage_list_layout.setContentsMargins(5, 20, 0, 0)
+        
         #right
         ld_manage_manager = QWidget()
         ld_manage_manager_layout = QVBoxLayout(ld_manage_manager)
@@ -640,7 +670,7 @@ class BobPrimeApp(QMainWindow):
         return ld_manage_widget
     
     def update_devices_list(self) -> QWidget:
-        
+        list_devices = self.Grim.check_ld_in_list()  # Sample [<LD Name>]
         if not hasattr(self, "devices_list") or self.devices_list is None:
             self.devices_list = QTableWidget(0, 2)
             self.devices_list.setHorizontalHeaderLabels(["ID", "LD Name"])
@@ -650,19 +680,23 @@ class BobPrimeApp(QMainWindow):
             self.devices_list.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
             self.devices_list.resizeColumnsToContents()
             self.devices_list.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)  
-            self.devices_list.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch) 
-            
-        self.update_exist_devices_list()
+            self.devices_list.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        if getattr(self, "select_all_devices", None):
+            self.select_all_devices.setChecked(False)
+            self.selected_Devices.setText(f"{0} Selected")
+        self.update_exist_devices_list(list_devices)
         return self.devices_list
-    
-    def update_exist_devices_list(self) -> None:
+
+    def update_exist_devices_list(self, list_devices: list[str]) -> None:
         if not self.devices_list:
             return
-        for i in range(0, 15):
-            self.devices_list.setRowCount(15)
-            btn = QCheckBox(str(i+1))
-            self.devices_list.setCellWidget(i, 0, btn)
-            self.devices_list.setItem(i, 1, QTableWidgetItem(f"LD Name {i+1}"))
+        for i in range(0, len(list_devices)):
+            self.devices_list.setRowCount(len(list_devices))
+            self.list_devices_checkBox = QCheckBox(str(i+1))
+            self.devices_list_qp.addButton(self.list_devices_checkBox, i+1)
+            self.devices_list.setCellWidget(i, 0, self.list_devices_checkBox)
+            self.devices_list.setItem(i, 1, QTableWidgetItem(list_devices[i]))
+            self.Check_Box_List_Devices.append(self.list_devices_checkBox)
 
     def Tab_auto_post(self) -> QWidget:
 
@@ -733,6 +767,80 @@ class BobPrimeApp(QMainWindow):
 
         return auto_post_widget
     
+    def selected_list_devices(self)-> QWidget:
+        select_list_devices_widget = QWidget()
+        select_list_devices_layout = QVBoxLayout(select_list_devices_widget)
+
+        select_list_devices_layout_top = QHBoxLayout()
+        select_list_devices_layout_bottom = QHBoxLayout()
+        
+        #top
+        self.selected_Devices = QLabel("0 Selected")
+        self.select_all_devices = QCheckBox("Select All")
+        self.select_all_devices.stateChanged.connect(lambda: self.select_all_devices_changed(self.select_all_devices.isChecked()))
+        
+        select_list_devices_layout_top.addWidget(self.selected_Devices)
+        select_list_devices_layout_top.addStretch(1)
+        select_list_devices_layout_top.addWidget(self.select_all_devices)
+        try:
+            MAX = len(self.Grim.check_ld_in_list())
+        except: 
+            print(f"cannot get a max value for spinBox Raise")
+        #bottom
+        
+        
+        self.spinBox_select_all_list_devices_start = QSpinBox(self)
+        self.spinBox_select_all_list_devices_start.setRange(1, MAX)
+        self.spinBox_select_all_list_devices_start.setValue(1)
+        
+        toLabel = QLabel("To")
+        toLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        
+        self.spinBox_select_all_list_devices_end = QSpinBox(self)
+        self.spinBox_select_all_list_devices_end.setRange(1, MAX)
+        self.spinBox_select_all_list_devices_end.setValue(MAX)
+        self.spinBox_select_all_list_devices_end.valueChanged.connect(lambda v: self.selectRange("end",v))
+        self.spinBox_select_all_list_devices_start.valueChanged.connect(lambda v: self.selectRange("start",v))
+
+        confirm = QPushButton("☑︎")
+        confirm.clicked.connect(lambda: self.confirmSelectRange_list_devices(self.spinBox_select_all_list_devices_start.value(), self.spinBox_select_all_list_devices_end.value()))
+        confirm.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        
+        select_list_devices_layout_bottom.addWidget(self.spinBox_select_all_list_devices_start)
+        select_list_devices_layout_bottom.addWidget(toLabel)
+        select_list_devices_layout_bottom.addWidget(self.spinBox_select_all_list_devices_end)
+        select_list_devices_layout_bottom.addWidget(confirm, 0)
+        
+
+
+        select_list_devices_layout.addLayout(select_list_devices_layout_top)
+        select_list_devices_layout.addLayout(select_list_devices_layout_bottom)
+        
+        select_list_devices_layout.setContentsMargins(5, 0, 0, 0)
+        return select_list_devices_widget
+    
+    def confirmSelectRange_list_devices(self,start: int, end: int) -> None:
+        self.select_all_devices_ld = all(btn.isChecked() for btn in self.devices_list_qp.buttons())
+        count = 0 
+        for i in range(start, end+1):
+            btn = self.devices_list_qp.button(i)
+            if btn:
+                btn.setChecked(True)
+        for checkbox in self.devices_list_qp.buttons():
+            count += 1 if checkbox.isChecked() else 0
+        self.list_devices_count = count
+        self.select_all_devices.setChecked(self.select_all_devices_ld)
+        self.selected_Devices.setText(f"{self.list_devices_count} Selected")
+        self.specific_list_devices_ID = [self.devices_list_qp.id(b) for b in self.devices_list_qp.buttons() if b.isChecked()]
+
+    def select_all_devices_changed(self, checked: bool) -> None:
+        self.select_all_devices_ld: bool = all(btn.isChecked() for btn in self.devices_list_qp.buttons())
+        if checked:
+            self.confirmSelectRange_list_devices(1, len(self.Grim.check_ld_in_list()))
+            self.select_all_devices.setChecked(True)
+        else:
+            self.select_all_devices.setChecked(False)
+    
     def selected_LD_name(self) -> QWidget:
         select_ld_name_widget = QWidget()
         select_ld_name_widget_layout = QVBoxLayout()
@@ -741,13 +849,13 @@ class BobPrimeApp(QMainWindow):
         select_ld_name_layout_bottom = QHBoxLayout()
         
         #top
-        self.selected = QLabel("0 Selected")
-        self.select_all = QCheckBox("Select All")
-        self.select_all.stateChanged.connect(lambda: self.select_all_changed(self.select_all.isChecked()))
+        self.selected_LD = QLabel("0 Selected")
+        self.select_all_ld = QCheckBox("Select All")
+        self.select_all_ld.stateChanged.connect(lambda: self.select_all_ld_changed(self.select_all_ld.isChecked()))
 
-        select_ld_name_layout_top.addWidget(self.selected)
+        select_ld_name_layout_top.addWidget(self.selected_LD)
         select_ld_name_layout_top.addStretch(1)
-        select_ld_name_layout_top.addWidget(self.select_all)
+        select_ld_name_layout_top.addWidget(self.select_all_ld)
         
         try:
             MAX = len(self.Grim.check_ld_in_list())
@@ -755,30 +863,27 @@ class BobPrimeApp(QMainWindow):
             print(f"cannot get a max value for spinBox Raise")
             
         #bottom
-        self.spinBox_selectAll_start = QSpinBox(self)
-        
-
-        self.spinBox_selectAll_start.setRange(1, MAX)
-        self.spinBox_selectAll_start.setValue(1)
+        self.spinBox_select_all_ld_ld_name_start = QSpinBox(self)
+        self.spinBox_select_all_ld_ld_name_start.setRange(1, MAX)
+        self.spinBox_select_all_ld_ld_name_start.setValue(1)
         
 
         toLabel = QLabel("To")
         toLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
-        self.spinBox_selectAll_end = QSpinBox(self)
-
-        self.spinBox_selectAll_end.setRange(1, MAX)
-        self.spinBox_selectAll_end.setValue(MAX)
-        self.spinBox_selectAll_end.valueChanged.connect(lambda v: self.selectRange("end",v))
-        self.spinBox_selectAll_start.valueChanged.connect(lambda v: self.selectRange("start",v))
+        self.spinBox_select_all_ld_ld_name_end = QSpinBox(self)
+        self.spinBox_select_all_ld_ld_name_end.setRange(1, MAX)
+        self.spinBox_select_all_ld_ld_name_end.setValue(MAX)
+        self.spinBox_select_all_ld_ld_name_end.valueChanged.connect(lambda v: self.selectRange("end",v))
+        self.spinBox_select_all_ld_ld_name_start.valueChanged.connect(lambda v: self.selectRange("start",v))
         
         confirm = QPushButton("☑︎")
-        confirm.clicked.connect(lambda: self.confirmSelectedRange(self.spinBox_selectAll_start.value(), self.spinBox_selectAll_end.value()))
+        confirm.clicked.connect(lambda: self.confirmSelectedRange(self.spinBox_select_all_ld_ld_name_start.value(), self.spinBox_select_all_ld_ld_name_end.value()))
         confirm.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
 
-        select_ld_name_layout_bottom.addWidget(self.spinBox_selectAll_start)
+        select_ld_name_layout_bottom.addWidget(self.spinBox_select_all_ld_ld_name_start)
         select_ld_name_layout_bottom.addWidget(toLabel)
-        select_ld_name_layout_bottom.addWidget(self.spinBox_selectAll_end)
+        select_ld_name_layout_bottom.addWidget(self.spinBox_select_all_ld_ld_name_end)
         select_ld_name_layout_bottom.addWidget(confirm, 0)
         
         select_ld_name_widget_layout.addLayout(select_ld_name_layout_top)
@@ -788,7 +893,8 @@ class BobPrimeApp(QMainWindow):
         
         return select_ld_name_widget
     def confirmSelectedRange(self, start: int, end: int) -> None:
-        self.selectAll = all(btn.isChecked() for btn in self.LD_Button_list_qp.buttons())
+        
+        self.select_all_ld_ld_name = all(btn.isChecked() for btn in self.LD_Button_list_qp.buttons())
         count = 0
         for i in range(start, end + 1):
             btn = self.LD_Button_list_qp.button(i)
@@ -796,18 +902,18 @@ class BobPrimeApp(QMainWindow):
                 btn.setChecked(True)
         for checkbox in self.LD_Button_list_qp.buttons():
             count += 1 if checkbox.isChecked() else 0
-        self.count = count
-        self.select_all.setChecked(self.selectAll)
-        self.selected.setText(f"{self.count} Selected")
-        self.specificId = [self.LD_Button_list_qp.id(b) for b in self.LD_Button_list_qp.buttons() if b.isChecked()]
+        self.ld_count = count
+        self.select_all_ld.setChecked(self.select_all_ld_ld_name)
+        self.selected_LD.setText(f"{self.ld_count} Selected")
+        self.specific_ld_ID = [self.LD_Button_list_qp.id(b) for b in self.LD_Button_list_qp.buttons() if b.isChecked()]
 
-    def select_all_changed(self, checked: bool) -> None:
-        self.selectAll: bool = all(btn.isChecked() for btn in self.LD_Button_list_qp.buttons())
+    def select_all_ld_changed(self, checked: bool) -> None:
+        self.select_all_ld_ld_name: bool = all(btn.isChecked() for btn in self.LD_Button_list_qp.buttons())
         if checked:
             self.confirmSelectedRange(1, len(self.Grim.check_ld_in_list()))
-            self.select_all.setChecked(True)
+            self.select_all_ld.setChecked(True)
         else:
-            self.select_all.setChecked(False)
+            self.select_all_ld.setChecked(False)
 
         
     def selectRange(self, which: str, value: int) -> None:
@@ -815,26 +921,26 @@ class BobPrimeApp(QMainWindow):
             max_value = len(self.Grim.check_ld_in_list())
         except:
             print("Error occurred while getting max value")
-        start = self.spinBox_selectAll_start.value()
-        end = self.spinBox_selectAll_end.value()
+        start = self.spinBox_select_all_ld_ld_name_start.value()
+        end = self.spinBox_select_all_ld_ld_name_end.value()
         
-        if self.spinBox_selectAll_start.maximum() != max_value:
-            self.spinBox_selectAll_start.setMaximum(max_value)
-        if self.spinBox_selectAll_end.maximum() != max_value:
-            self.spinBox_selectAll_end.setMaximum(max_value)
+        if self.spinBox_select_all_ld_ld_name_start.maximum() != max_value:
+            self.spinBox_select_all_ld_ld_name_start.setMaximum(max_value)
+        if self.spinBox_select_all_ld_ld_name_end.maximum() != max_value:
+            self.spinBox_select_all_ld_ld_name_end.setMaximum(max_value)
 
         if which == "start":
             if value <= end:
                 
-                self.spinBox_selectAll_start.setValue(value)
+                self.spinBox_select_all_ld_ld_name_start.setValue(value)
             else:
-                self.spinBox_selectAll_start.setValue(value - 1)
+                self.spinBox_select_all_ld_ld_name_start.setValue(value - 1)
         elif which == "end":
             if value >= start:
                 
-                self.spinBox_selectAll_end.setValue(value)
+                self.spinBox_select_all_ld_ld_name_end.setValue(value)
             else:
-                self.spinBox_selectAll_end.setValue(value + 1)
+                self.spinBox_select_all_ld_ld_name_end.setValue(value + 1)
                 
     
     def Left_view(self) -> QWidget:
