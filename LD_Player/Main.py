@@ -29,13 +29,15 @@ class LDPlayer():
                     numkey = f"emulator-55{(number-1)*2+54}"
                     status = LDActivity.get(numkey, {'status': "No Action..."}).get('status')
                     if status == "No Action...":
-                        remainLD.append(number)
+                        remainLD.append(number)# sample [1, 2, 3]
         else:
             print("Error:", r.status_code)
             sys.exit(1)
             
         print("Remaining LD: ", remainLD)
         requests.post("http://127.0.0.1:5000/openOrder", json=remainLD)
+        
+        
         GET = Get(remainLD)
         print("Starting...\n")
             
