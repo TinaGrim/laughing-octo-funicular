@@ -60,6 +60,7 @@ class option:
         }
         self.number = Number
         self.URL = "http://127.0.0.1:5000/"
+        
     @timer
     def __Open_Appium(self, port):
         """Opening Cmd of Appium"""
@@ -98,6 +99,23 @@ class option:
         self.ld_list_name = (self.ld_list_name.stdout.split("\n"))
         self.ld_list_name.pop()
         return self.ld_list_name #Sample [LDPlayer-1, LDPlayer-2]
+    
+    def LD_devieces_detail(self, FIND) -> list[str]:
+        
+        try:
+            Datas = []
+            for i in range(0, 5):
+                with open(f"D:\\LDPlayer\\LDPlayer9\\vms\\config\\leidian{i}.config") as f:
+                    lines = f.readlines()
+                    for line in lines:
+                        if FIND in line:
+                            Data = line.split('"')[3].strip()
+                            Datas.append(Data)
+
+            return Datas # Sample Love You 
+        except FileNotFoundError:
+            print("LDPlayer config file not found.")
+            return []
 
     def __Arrangment(self, index: int) -> None:
         """Arranging LDPlayer windows"""
