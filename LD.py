@@ -555,10 +555,15 @@ class BobPrimeApp(QMainWindow):
         return devices_widget
     
     def update_devices_table(self) -> QTableWidget:
+        
         list_devices = self.Grim.check_ld_in_list()  # Sample [<LD Name>]
+        MacS = self.Grim.LD_devieces_detail("propertySettings.macAddress")  # Sample ["00:11:22:33:44:55"]
+        Models = self.Grim.LD_devieces_detail("propertySettings.phoneModel")  # Sample ["Model1", "Model2"]
+        Manufacturers = self.Grim.LD_devieces_detail("propertySettings.phoneManufacturer")  # Sample ["Manufacturer1", "Manufacturer2"]
+        
         if not hasattr(self, "devices_table") or self.devices_table is None:
             self.devices_table = QTableWidget(0, 5)
-            self.devices_table.setHorizontalHeaderLabels(["ID", "LD Name", "Status", "Model", "M.facturer"])
+            self.devices_table.setHorizontalHeaderLabels(["ID", "LD Name", "MAC", "Model", "M.facturer"])
             self.devices_table.verticalHeader().setVisible(False)
             self.devices_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
             self.devices_table.setAutoFillBackground(False)
@@ -568,21 +573,21 @@ class BobPrimeApp(QMainWindow):
             self.devices_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch) 
             self.devices_table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch) 
             self.devices_table.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch) 
-            self.update_exist_devices_table(list_devices)
+            self.update_exist_devices_table(list_devices, MacS, Models, Manufacturers)
         return self.devices_table
 
-    def update_exist_devices_table(self, list_devices: list[str]) -> None:
+    def update_exist_devices_table(self, list_devices: list[str], MacS: list[str], Models: list[str], Manufacturers: list[str]) -> None:
         if not self.devices_table:
             return
 
         for i in range(0, len(list_devices)):
             self.devices_table.setRowCount(len(list_devices))
             self.devices_table.setItem(i, 0, QTableWidgetItem(str(i+1)))
-            self.devices_table.setItem(i, 1, QTableWidgetItem(f"LD Name {i+1}"))
-            self.devices_table.setItem(i, 2, QTableWidgetItem("Mac Address"))
-            self.devices_table.setItem(i, 3, QTableWidgetItem("Model"))
-            self.devices_table.setItem(i, 4, QTableWidgetItem("M.facturer"))
-            
+            self.devices_table.setItem(i, 1, QTableWidgetItem(list_devices[i]))
+            self.devices_table.setItem(i, 2, QTableWidgetItem(MacS[i] if i < len(MacS) else ""))
+            self.devices_table.setItem(i, 3, QTableWidgetItem(Models[i] if i < len(Models) else ""))
+            self.devices_table.setItem(i, 4, QTableWidgetItem(Manufacturers[i] if i < len(Manufacturers) else ""))
+
     def Tab_manage(self) -> QWidget:
         ld_manage_widget = QWidget()
         ld_manage_layout = QHBoxLayout(ld_manage_widget)
@@ -892,6 +897,7 @@ class BobPrimeApp(QMainWindow):
         select_ld_name_widget.setLayout(select_ld_name_widget_layout)
         
         return select_ld_name_widget
+    
     def confirmSelectedRange(self, start: int, end: int) -> None:
         
         self.select_all_ld_ld_name = all(btn.isChecked() for btn in self.LD_Button_list_qp.buttons())
