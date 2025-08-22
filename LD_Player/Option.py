@@ -2,7 +2,9 @@ import os
 import sys
 import time
 import email
+import queue
 import names
+import dotenv
 import string
 import random 
 import imaplib
@@ -10,6 +12,7 @@ import requests
 import platform
 import platform
 import traceback
+import threading
 import subprocess
 import pygetwindow
 from typing import Optional
@@ -19,6 +22,11 @@ from appium.options.android.uiautomator2.base import UiAutomator2Options
 from appium.options.common.base import AppiumOptions
 from appium.webdriver.common.appiumby import AppiumBy
 from appium.webdriver.webdriver import WebDriver
+
+
+
+
+
 def timer(func):
     def wrapper(*args, **kwargs):
         start = time.time()
@@ -63,6 +71,7 @@ class option:
         self.number = Number
         self.URL = "http://127.0.0.1:5000/"
         
+
     @timer
     def __Open_Appium(self, port):
         """Opening Cmd of Appium"""
@@ -113,7 +122,6 @@ class option:
                         if FIND in line:
                             Data = line.split('"')[3].strip()
                             Datas.append(Data)
-
             return Datas # Sample Love You 
         except FileNotFoundError:
             print("LDPlayer config file not found.")
@@ -331,6 +339,21 @@ class Activity:
         self.emulator = emulator
         self.driverID = driverID
         self.URL = "http://127.0.0.1:5000/"
+        prv_path = os.path.dirname(os.path.abspath(__file__))
+        dotenv.load_dotenv(dotenv_path=os.path.join(prv_path, "..", ".env"))
+        self.token = {
+            1: os.getenv("TOKEN1"),
+            2: os.getenv("TOKEN2"),
+            3: os.getenv("TOKEN3"),
+            4: os.getenv("TOKEN4"),
+            5: os.getenv("TOKEN5"),
+            6: os.getenv("TOKEN6"),
+            7: os.getenv("TOKEN7"),
+        }
+        self.PROXY_FILE = "proxies.txt"
+        self.TEST_URL = "http://ip-api.com/json"
+        self.TIMEOUT = 5
+        self.proxy = self.__proxy()
 
 
     def setActivity(self, status):
@@ -370,5 +393,56 @@ class Activity:
                 kill_cmd = f'taskkill /PID {pid} /F'
                 subprocess.run(kill_cmd, shell=True)
                 print("Kill Appium server: ", ID)
+                
+    def __check_proxy(self,proxy):
 
-            
+        proxies = {
+            "http": f"socks5://{proxy}",
+            "https": f"socks5://{proxy}"
+        }
+        try:
+            response = requests.get(self.TEST_URL, proxies=proxies, timeout=self.TIMEOUT)
+            if response.status_code == 200:
+                data = response.json()
+                self.results.put((proxy, True, data.get("query"), data.get("country")))
+        except Exception:
+            pass
+
+
+    def __proxy(self):
+        proxies = []
+        self.results = queue.Queue()
+        proxies = self.__load_proxies()
+        print(f"Checking {len(proxies)} proxies using threads...")
+        threads = []
+        
+        for proxy in proxies:
+
+            t = threading.Thread(target=self.__check_proxy, args=(proxy,))
+            t.daemon = True
+            t.start()
+            threads.append(t)
+
+        while True:
+            try:
+                proxy, _, ip, country = self.results.get(timeout=0.1)
+                proxies.append(proxy)
+                
+
+            except queue.Empty:
+
+                if all(not t.is_alive() for t in threads):
+                    print("No working proxy found.")
+                    break
+                time.sleep(0.05)
+            proxy = proxies[random.randint(0, len(proxies)-1)]
+            ip, port = proxy.split(":")
+            return ip, port
+
+    def __load_proxies(self):
+        try:
+            with open(self.PROXY_FILE, "r") as f:
+                return [line.strip() for line in f if line.strip()]
+        except Exception as e:
+            print(f"Error loading proxies: {e}")
+            return []
