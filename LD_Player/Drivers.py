@@ -209,18 +209,18 @@ def driverRun(driverID):
         WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, SELECTOR["confirmEmail"]))).click()
         
         activity.setActivity("Save Data")
-        time.sleep(2)
+        time.sleep(1)
         with open(f"Data.txt", "a") as file:
         
             file.write("="*50 + "\nFirst Name: {First_Name} \nLast Name: {Last_Name} \nEmail: {Mail}\nDate of Birth: {Day}/{month}/{Year}\nGender: {Gender}\n".format(First_Name=IMFORMATION["firstName"],Last_Name=IMFORMATION["lastName"],Mail=Mail,Day=Day,month=Month,Year=Year,Gender=Gender))
 
         activity.setActivity("Close appium")
-        time.sleep(2)
+        time.sleep(1)
         Driver.quit()
         activity.KillAppium(port, driverID)
 
         activity.setActivity("Done")
-        time.sleep(2)
+        time.sleep(1)
         activity.setActivity("No Action...")
         sys.exit(0)
 

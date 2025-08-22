@@ -18,7 +18,7 @@ from PySide6.QtCore import Qt, QTimer,QSize, QRect
 from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QMainWindow, QHBoxLayout, QListWidget,QGroupBox,QMenu,QTabWidget,QLineEdit,QTableWidget,QTableWidgetItem,QBoxLayout,QCheckBox,QHeaderView,QPushButton, QButtonGroup,QSpinBox,QSizePolicy,QStyle,QProxyStyle,QStyleOptionSpinBox
 
 signal.signal(signal.SIGINT, signal.SIG_DFL)
-dotenv.load_dotenv(dotenv_path=".git/.env")
+dotenv.load_dotenv(dotenv_path=".env")
 
 
 
@@ -91,7 +91,7 @@ class BobPrimeApp(QMainWindow):
         super().__init__()
         global GUI
         GUI = self
-        self.Grim = Option()
+        self.Grim = option()
         self.setWindowTitle("Girm Prime App")
         self.setGeometry(100, 100, 1500, 800)
         self.setStyleSheet("""
@@ -218,12 +218,12 @@ class BobPrimeApp(QMainWindow):
         self.LD_Button_list_qp.idToggled.connect(self.Select_LDPlayer)
         
         #table devices
-        self.DevicesTimer.timeout.connect(self.update_devices_table)
-        self.DevicesTimer.start(4000)
-        
+        self.DevicesTimer.timeout.connect(self.update_devices_table_devices)
+        self.DevicesTimer.start(30000)
+
         #table devices list
         self.DeviceList.timeout.connect(self.update_devices_list)
-        self.DeviceList.start(60000)
+        self.DeviceList.start(30000)
         self.devices_list_qp.idToggled.connect(self.Select_list_devices)
         
         #trigger
@@ -255,6 +255,14 @@ class BobPrimeApp(QMainWindow):
         except Exception as e:
             print(f"Error checking activity: {e}")
             return []
+        
+    def update_time(self) -> None:
+        """Update the time label with current time using replace"""
+        elapsed = int(time.time() - self.starttime)
+        hours = elapsed // 3600
+        minutes = (elapsed % 3600) // 60
+        seconds = elapsed % 60
+        self.time_label.setText(f'<div style="font-size: 50px;">{hours:02}:{minutes:02}:{seconds:02}</div>')
     #======================================================================================================
     def update_activity_table(self)->QTableWidget:
         driver_list = self.check_activity()
@@ -300,13 +308,6 @@ class BobPrimeApp(QMainWindow):
             self.table.setItem(i,3, QTableWidgetItem(status))
 
 
-    def update_time(self) -> None:
-        """Update the time label with current time using replace"""
-        elapsed = int(time.time() - self.starttime)
-        hours = elapsed // 3600
-        minutes = (elapsed % 3600) // 60
-        seconds = elapsed % 60
-        self.time_label.setText(f'<div style="font-size: 50px;">{hours:02}:{minutes:02}:{seconds:02}</div>')
         
     #=============================================================================================
     def update_devices_list(self) -> QWidget:
@@ -372,6 +373,40 @@ class BobPrimeApp(QMainWindow):
             self.LDName_table.setCellWidget(i, 0, self.checkBox)
             self.LDName_table.setItem(i, 1, QTableWidgetItem(driver_name))
             self.Check_Box_LD_Name.append(self.checkBox)
+    #===================================================================================================
+    def update_devices_table_devices(self) -> QTableWidget:
+        
+        list_devices = self.Grim.check_ld_in_list()  # Sample [<LD Name>]
+        MacS = self.Grim.LD_devieces_detail("propertySettings.macAddress")  # Sample ["00:11:22:33:44:55"]
+        Models = self.Grim.LD_devieces_detail("propertySettings.phoneModel")  # Sample ["Model1", "Model2"]
+        Manufacturers = self.Grim.LD_devieces_detail("propertySettings.phoneManufacturer")  # Sample ["Manufacturer1", "Manufacturer2"]
+        
+        if not hasattr(self, "devices_table") or self.devices_table is None:
+            self.devices_table = QTableWidget(0, 5)
+            self.devices_table.setHorizontalHeaderLabels(["ID", "LD Name", "MAC", "Model", "M.facturer"])
+            self.devices_table.verticalHeader().setVisible(False)
+            self.devices_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+            self.devices_table.setAutoFillBackground(False)
+            self.devices_table.resizeColumnsToContents()
+            self.devices_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)  
+            self.devices_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch) 
+            self.devices_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch) 
+            self.devices_table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch) 
+            self.devices_table.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch) 
+            self.update_exist_devices_table(list_devices, MacS, Models, Manufacturers)
+        return self.devices_table
+
+    def update_exist_devices_table(self, list_devices: list[str], MacS: list[str], Models: list[str], Manufacturers: list[str]) -> None:
+        if not self.devices_table:
+            return
+
+        for i in range(0, len(list_devices)):
+            self.devices_table.setRowCount(len(list_devices))
+            self.devices_table.setItem(i, 0, QTableWidgetItem(str(i+1)))
+            self.devices_table.setItem(i, 1, QTableWidgetItem(list_devices[i]))
+            self.devices_table.setItem(i, 2, QTableWidgetItem(MacS[i] if i < len(MacS) else ""))
+            self.devices_table.setItem(i, 3, QTableWidgetItem(Models[i] if i < len(Models) else ""))
+            self.devices_table.setItem(i, 4, QTableWidgetItem(Manufacturers[i] if i < len(Manufacturers) else ""))
 
 
     def init(self) -> None:
@@ -526,7 +561,7 @@ class BobPrimeApp(QMainWindow):
         
         devices_setting_box.setStyleSheet("margin: 5; padding: 0;")
         
-        devices_information_widget_layout_bottom.addWidget(self.update_devices_table(), 6)
+        devices_information_widget_layout_bottom.addWidget(self.update_devices_table_devices(), 6)
         devices_information_widget_layout_bottom.addWidget(devices_setting_box, 4)
         
         devices_information_widget_layout.addWidget(devices_information_widget_layout_top_widget, 1)
@@ -692,39 +727,7 @@ class BobPrimeApp(QMainWindow):
         auto_post_widget.setStyleSheet("margin: 0px;")
 
         return auto_post_widget
-    def update_devices_table(self) -> QTableWidget:
-        
-        list_devices = self.Grim.check_ld_in_list()  # Sample [<LD Name>]
-        MacS = self.Grim.LD_devieces_detail("propertySettings.macAddress")  # Sample ["00:11:22:33:44:55"]
-        Models = self.Grim.LD_devieces_detail("propertySettings.phoneModel")  # Sample ["Model1", "Model2"]
-        Manufacturers = self.Grim.LD_devieces_detail("propertySettings.phoneManufacturer")  # Sample ["Manufacturer1", "Manufacturer2"]
-        
-        if not hasattr(self, "devices_table") or self.devices_table is None:
-            self.devices_table = QTableWidget(0, 5)
-            self.devices_table.setHorizontalHeaderLabels(["ID", "LD Name", "MAC", "Model", "M.facturer"])
-            self.devices_table.verticalHeader().setVisible(False)
-            self.devices_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
-            self.devices_table.setAutoFillBackground(False)
-            self.devices_table.resizeColumnsToContents()
-            self.devices_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)  
-            self.devices_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch) 
-            self.devices_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch) 
-            self.devices_table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch) 
-            self.devices_table.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch) 
-            self.update_exist_devices_table(list_devices, MacS, Models, Manufacturers)
-        return self.devices_table
-
-    def update_exist_devices_table(self, list_devices: list[str], MacS: list[str], Models: list[str], Manufacturers: list[str]) -> None:
-        if not self.devices_table:
-            return
-
-        for i in range(0, len(list_devices)):
-            self.devices_table.setRowCount(len(list_devices))
-            self.devices_table.setItem(i, 0, QTableWidgetItem(str(i+1)))
-            self.devices_table.setItem(i, 1, QTableWidgetItem(list_devices[i]))
-            self.devices_table.setItem(i, 2, QTableWidgetItem(MacS[i] if i < len(MacS) else ""))
-            self.devices_table.setItem(i, 3, QTableWidgetItem(Models[i] if i < len(Models) else ""))
-            self.devices_table.setItem(i, 4, QTableWidgetItem(Manufacturers[i] if i < len(Manufacturers) else ""))
+    
     
     def Select_LDPlayer(self, id: int, checked: bool):
         count = 0
@@ -1057,6 +1060,7 @@ class Proxy(QProxyStyle):
         return rect
 
 if __name__ == "__main__":
+    
     if platform.system() != "Windows":
         sys.exit("Only Windows supported!")
     QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
