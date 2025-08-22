@@ -236,54 +236,6 @@ class BobPrimeApp(QMainWindow):
         self.update_time()
         self.init()
 
-    def Select_LDPlayer(self, id: int, checked: bool):
-        count = 0
-        for checkbox in self.LD_Button_list_qp.buttons():
-            if checkbox.isChecked():
-                count += 1
-        if (checked):
-            self.select_all_ld.setChecked(all(btn.isChecked() for btn in self.LD_Button_list_qp.buttons()))
-        else:
-            self.select_all_ld.setChecked(False)
-        self.ld_count = count
-        self.selected_LD.setText(f"{self.ld_count} Selected")
-        self.specific_ld_ID = [self.LD_Button_list_qp.id(b) for b in self.LD_Button_list_qp.buttons() if b.isChecked()]
-
-    
-        if checked:
-            if self.LDName_table.item(id-1, 1):
-                item = self.LDName_table.item(id-1, 1)
-                if item is not None:
-                    item.setBackground(QColor("#07417a"))
-        else:
-            if self.LDName_table.item(id-1, 1):
-                item = self.LDName_table.item(id-1, 1)
-                if item is not None:
-                    item.setBackground(QColor("#292c3b"))
-                    
-    def Select_list_devices(self,id: int, checked: bool) -> None:
-        count = 0
-        for checkbox in self.devices_list_qp.buttons():
-            if checkbox.isChecked():
-                count += 1
-        if (checked):
-            self.select_all_devices.setChecked(all(btn.isChecked() for btn in self.devices_list_qp.buttons()))
-        else:
-            self.select_all_devices.setChecked(False)
-        self.device_count = count
-        self.selected_Devices.setText(f"{self.device_count} Selected")
-        self.specific_list_devices_ID = [self.devices_list_qp.id(b) for b in self.devices_list_qp.buttons() if b.isChecked()]
-        
-        if checked:
-            if self.devices_table.item(id-1, 1):
-                item = self.devices_table.item(id-1, 1)
-                if item is not None:
-                    item.setBackground(QColor("#07417a"))
-        else:
-            if self.devices_table.item(id-1, 1):
-                item = self.devices_table.item(id-1, 1)
-                if item is not None:
-                    item.setBackground(QColor("#292c3b"))
 
     def scheduleCheck(self) -> bool:
         self.scheduleClose = self.closeAppium.isChecked()
@@ -303,7 +255,7 @@ class BobPrimeApp(QMainWindow):
         except Exception as e:
             print(f"Error checking activity: {e}")
             return []
-
+    #======================================================================================================
     def update_activity_table(self)->QTableWidget:
         driver_list = self.check_activity()
 
@@ -356,6 +308,36 @@ class BobPrimeApp(QMainWindow):
         seconds = elapsed % 60
         self.time_label.setText(f'<div style="font-size: 50px;">{hours:02}:{minutes:02}:{seconds:02}</div>')
         
+    #=============================================================================================
+    def update_devices_list(self) -> QWidget:
+        list_devices = self.Grim.check_ld_in_list()  # Sample [<LD Name>]
+        if not hasattr(self, "devices_list") or self.devices_list is None:
+            self.devices_list = QTableWidget(0, 2)
+            self.devices_list.setHorizontalHeaderLabels(["ID", "LD Name"])
+            self.devices_list.verticalHeader().setVisible(False)
+            self.devices_list.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+            self.devices_list.setAutoFillBackground(False)
+            self.devices_list.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+            self.devices_list.resizeColumnsToContents()
+            self.devices_list.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)  
+            self.devices_list.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        if getattr(self, "select_all_devices", None):
+            self.select_all_devices.setChecked(False)
+            self.selected_Devices.setText(f"{0} Selected")
+        self.update_exist_devices_list(list_devices)
+        return self.devices_list
+
+    def update_exist_devices_list(self, list_devices: list[str]) -> None:
+        if not self.devices_list:
+            return
+        for i in range(0, len(list_devices)):
+            self.devices_list.setRowCount(len(list_devices))
+            self.list_devices_checkBox = QCheckBox(str(i+1))
+            self.devices_list_qp.addButton(self.list_devices_checkBox, i+1)
+            self.devices_list.setCellWidget(i, 0, self.list_devices_checkBox)
+            self.devices_list.setItem(i, 1, QTableWidgetItem(list_devices[i]))
+            self.Check_Box_List_Devices.append(self.list_devices_checkBox)
+    #==================================================================================================
     def update_LDName_table(self) -> QTableWidget:
 
         driver_list = self.Grim.check_ld_in_list()# Sample [<LD Name>]
@@ -554,39 +536,6 @@ class BobPrimeApp(QMainWindow):
         devices_widget_layout.addWidget(devices_information_widget, 9)
         return devices_widget
     
-    def update_devices_table(self) -> QTableWidget:
-        
-        list_devices = self.Grim.check_ld_in_list()  # Sample [<LD Name>]
-        MacS = self.Grim.LD_devieces_detail("propertySettings.macAddress")  # Sample ["00:11:22:33:44:55"]
-        Models = self.Grim.LD_devieces_detail("propertySettings.phoneModel")  # Sample ["Model1", "Model2"]
-        Manufacturers = self.Grim.LD_devieces_detail("propertySettings.phoneManufacturer")  # Sample ["Manufacturer1", "Manufacturer2"]
-        
-        if not hasattr(self, "devices_table") or self.devices_table is None:
-            self.devices_table = QTableWidget(0, 5)
-            self.devices_table.setHorizontalHeaderLabels(["ID", "LD Name", "MAC", "Model", "M.facturer"])
-            self.devices_table.verticalHeader().setVisible(False)
-            self.devices_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
-            self.devices_table.setAutoFillBackground(False)
-            self.devices_table.resizeColumnsToContents()
-            self.devices_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)  
-            self.devices_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch) 
-            self.devices_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch) 
-            self.devices_table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch) 
-            self.devices_table.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch) 
-            self.update_exist_devices_table(list_devices, MacS, Models, Manufacturers)
-        return self.devices_table
-
-    def update_exist_devices_table(self, list_devices: list[str], MacS: list[str], Models: list[str], Manufacturers: list[str]) -> None:
-        if not self.devices_table:
-            return
-
-        for i in range(0, len(list_devices)):
-            self.devices_table.setRowCount(len(list_devices))
-            self.devices_table.setItem(i, 0, QTableWidgetItem(str(i+1)))
-            self.devices_table.setItem(i, 1, QTableWidgetItem(list_devices[i]))
-            self.devices_table.setItem(i, 2, QTableWidgetItem(MacS[i] if i < len(MacS) else ""))
-            self.devices_table.setItem(i, 3, QTableWidgetItem(Models[i] if i < len(Models) else ""))
-            self.devices_table.setItem(i, 4, QTableWidgetItem(Manufacturers[i] if i < len(Manufacturers) else ""))
 
     def Tab_manage(self) -> QWidget:
         ld_manage_widget = QWidget()
@@ -674,34 +623,6 @@ class BobPrimeApp(QMainWindow):
 
         return ld_manage_widget
     
-    def update_devices_list(self) -> QWidget:
-        list_devices = self.Grim.check_ld_in_list()  # Sample [<LD Name>]
-        if not hasattr(self, "devices_list") or self.devices_list is None:
-            self.devices_list = QTableWidget(0, 2)
-            self.devices_list.setHorizontalHeaderLabels(["ID", "LD Name"])
-            self.devices_list.verticalHeader().setVisible(False)
-            self.devices_list.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
-            self.devices_list.setAutoFillBackground(False)
-            self.devices_list.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-            self.devices_list.resizeColumnsToContents()
-            self.devices_list.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)  
-            self.devices_list.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
-        if getattr(self, "select_all_devices", None):
-            self.select_all_devices.setChecked(False)
-            self.selected_Devices.setText(f"{0} Selected")
-        self.update_exist_devices_list(list_devices)
-        return self.devices_list
-
-    def update_exist_devices_list(self, list_devices: list[str]) -> None:
-        if not self.devices_list:
-            return
-        for i in range(0, len(list_devices)):
-            self.devices_list.setRowCount(len(list_devices))
-            self.list_devices_checkBox = QCheckBox(str(i+1))
-            self.devices_list_qp.addButton(self.list_devices_checkBox, i+1)
-            self.devices_list.setCellWidget(i, 0, self.list_devices_checkBox)
-            self.devices_list.setItem(i, 1, QTableWidgetItem(list_devices[i]))
-            self.Check_Box_List_Devices.append(self.list_devices_checkBox)
 
     def Tab_auto_post(self) -> QWidget:
 
@@ -771,6 +692,88 @@ class BobPrimeApp(QMainWindow):
         auto_post_widget.setStyleSheet("margin: 0px;")
 
         return auto_post_widget
+    def update_devices_table(self) -> QTableWidget:
+        
+        list_devices = self.Grim.check_ld_in_list()  # Sample [<LD Name>]
+        MacS = self.Grim.LD_devieces_detail("propertySettings.macAddress")  # Sample ["00:11:22:33:44:55"]
+        Models = self.Grim.LD_devieces_detail("propertySettings.phoneModel")  # Sample ["Model1", "Model2"]
+        Manufacturers = self.Grim.LD_devieces_detail("propertySettings.phoneManufacturer")  # Sample ["Manufacturer1", "Manufacturer2"]
+        
+        if not hasattr(self, "devices_table") or self.devices_table is None:
+            self.devices_table = QTableWidget(0, 5)
+            self.devices_table.setHorizontalHeaderLabels(["ID", "LD Name", "MAC", "Model", "M.facturer"])
+            self.devices_table.verticalHeader().setVisible(False)
+            self.devices_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+            self.devices_table.setAutoFillBackground(False)
+            self.devices_table.resizeColumnsToContents()
+            self.devices_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)  
+            self.devices_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch) 
+            self.devices_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch) 
+            self.devices_table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch) 
+            self.devices_table.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch) 
+            self.update_exist_devices_table(list_devices, MacS, Models, Manufacturers)
+        return self.devices_table
+
+    def update_exist_devices_table(self, list_devices: list[str], MacS: list[str], Models: list[str], Manufacturers: list[str]) -> None:
+        if not self.devices_table:
+            return
+
+        for i in range(0, len(list_devices)):
+            self.devices_table.setRowCount(len(list_devices))
+            self.devices_table.setItem(i, 0, QTableWidgetItem(str(i+1)))
+            self.devices_table.setItem(i, 1, QTableWidgetItem(list_devices[i]))
+            self.devices_table.setItem(i, 2, QTableWidgetItem(MacS[i] if i < len(MacS) else ""))
+            self.devices_table.setItem(i, 3, QTableWidgetItem(Models[i] if i < len(Models) else ""))
+            self.devices_table.setItem(i, 4, QTableWidgetItem(Manufacturers[i] if i < len(Manufacturers) else ""))
+    
+    def Select_LDPlayer(self, id: int, checked: bool):
+        count = 0
+        for checkbox in self.LD_Button_list_qp.buttons():
+            if checkbox.isChecked():
+                count += 1
+        if (checked):
+            self.select_all_ld.setChecked(all(btn.isChecked() for btn in self.LD_Button_list_qp.buttons()))
+        else:
+            self.select_all_ld.setChecked(False)
+        self.ld_count = count
+        self.selected_LD.setText(f"{self.ld_count} Selected")
+        self.specific_ld_ID = [self.LD_Button_list_qp.id(b) for b in self.LD_Button_list_qp.buttons() if b.isChecked()]
+
+    
+        if checked:
+            if self.LDName_table.item(id-1, 1):
+                item = self.LDName_table.item(id-1, 1)
+                if item is not None:
+                    item.setBackground(QColor("#07417a"))
+        else:
+            if self.LDName_table.item(id-1, 1):
+                item = self.LDName_table.item(id-1, 1)
+                if item is not None:
+                    item.setBackground(QColor("#292c3b"))
+                    
+    def Select_list_devices(self,id: int, checked: bool) -> None:
+        count = 0
+        for checkbox in self.devices_list_qp.buttons():
+            if checkbox.isChecked():
+                count += 1
+        if (checked):
+            self.select_all_devices.setChecked(all(btn.isChecked() for btn in self.devices_list_qp.buttons()))
+        else:
+            self.select_all_devices.setChecked(False)
+        self.device_count = count
+        self.selected_Devices.setText(f"{self.device_count} Selected")
+        self.specific_list_devices_ID = [self.devices_list_qp.id(b) for b in self.devices_list_qp.buttons() if b.isChecked()]
+        
+        if checked:
+            if self.devices_table.item(id-1, 1):
+                item = self.devices_table.item(id-1, 1)
+                if item is not None:
+                    item.setBackground(QColor("#07417a"))
+        else:
+            if self.devices_table.item(id-1, 1):
+                item = self.devices_table.item(id-1, 1)
+                if item is not None:
+                    item.setBackground(QColor("#292c3b"))
     
     def selected_list_devices(self)-> QWidget:
         select_list_devices_widget = QWidget()
@@ -948,7 +951,6 @@ class BobPrimeApp(QMainWindow):
             else:
                 self.spinBox_select_all_ld_ld_name_end.setValue(value + 1)
                 
-    
     def Left_view(self) -> QWidget:
         
         left_widget = QWidget()
@@ -997,6 +999,7 @@ class BobPrimeApp(QMainWindow):
         left_widget.setLayout(Left_Panel)
         left_widget.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding)
         return left_widget
+    
 
     
     def open_qr(self, path: str ,width: int,height: int) -> None:

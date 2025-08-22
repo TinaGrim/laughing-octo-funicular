@@ -16,7 +16,9 @@ from typing import Optional
 from appium import webdriver
 from email.header import decode_header
 from appium.options.android.uiautomator2.base import UiAutomator2Options
-
+from appium.options.common.base import AppiumOptions
+from appium.webdriver.common.appiumby import AppiumBy
+from appium.webdriver.webdriver import WebDriver
 def timer(func):
     def wrapper(*args, **kwargs):
         start = time.time()
@@ -35,8 +37,8 @@ class option:
         "Messenger": """//android.widget.TextView[@content-desc="Messenger"]""",
         "cancelAuth": """//android.widget.ImageView[@content-desc="Cancel"]""",
         "createAccount": """//android.widget.Button[@content-desc="Create new account"]/android.view.ViewGroup""",
-        "getStarted": """//android.view.View[@content-desc="Get started"]""",
-        "getStarted2": """//android.view.View[@content-desc="Create new account"]""",
+        "getStarted2": """//android.view.View[@content-desc="Get started"]""",
+        "getStarted": """//android.view.View[@content-desc="Create new account"]""",
         "permissionDeny": """//android.widget.Button[@resource-id="com.android.packageinstaller:id/permission_deny_button"]""",
         "startAfterDeny": """//androidx.recyclerview.widget.RecyclerView/android.view.ViewGroup[2]/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup[1]/android.view.ViewGroup/android.view.ViewGroup/android.widget.EditText""",
         "firstNameWidget": """//androidx.recyclerview.widget.RecyclerView/android.view.ViewGroup[2]/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup[1]/android.view.ViewGroup/android.widget.EditText""",
@@ -134,7 +136,7 @@ class option:
         except Exception as e:
             print(f"Error moving window: {e}")
 
-    def cap(self,port: int,choose: int)->webdriver.Remote:#type: ignore
+    def cap(self,port: int,choose: int)-> WebDriver:
         try:
             desired_caps = self.__get_des_cap(choose)
             options = UiAutomator2Options()
@@ -142,14 +144,14 @@ class option:
                 options.set_capability(k, v)
 
             self.__Open_Appium(port=port)
-            self.driver = webdriver.Remote(f"http://localhost:{port}", options=options) # type: ignore
+            self.driver = WebDriver(f"http://localhost:{port}", options=options) 
         except Exception as e:
             print(f"Error initializing Appium driver: {e}")
             traceback.print_exc()
 
         return self.driver #Sample [webdriver.Remote]
 
-    def __get_des_cap(self, ID) -> dict[str,str]:
+    def __get_des_cap(self, ID: int) -> dict[str,str]:
         
         des_cap = {
             "automationName": "UiAutomator2",
@@ -161,7 +163,7 @@ class option:
         }
         return des_cap
 
-    def __info(self, Show)->subprocess.STARTUPINFO:
+    def __info(self, Show: int)->subprocess.STARTUPINFO:
         """Just for hide window - Windows only"""
         if platform.system() == "Windows":
             startupinfo = subprocess.STARTUPINFO()
@@ -172,7 +174,7 @@ class option:
             # currently only support Windows
             sys.exit(1)
     
-    def wait_for_ldplayer_device(self, device_name, timeout=60):
+    def wait_for_ldplayer_device(self, device_name: str, timeout=60):
         """check if LDPlayer fully opened"""
         start_time = time.time()
         
@@ -228,8 +230,8 @@ class option:
             openLD = self.wait_for_ldplayer_device(device_name)# Sample running test shell CMD in LD
             if openLD:
                 self.__clear_app_data(device_name)# Sample Wait Full setup  and clear it up
-                
-    def GetCode(self, username, password, email):
+
+    def GetCode(self, username: str, password: str, email):
         imap_server = "imap.yandex.ru"
         port = 993
         try:

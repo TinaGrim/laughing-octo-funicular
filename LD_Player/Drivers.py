@@ -6,9 +6,8 @@ import time
 import requests
 import threading
 import subprocess
-from Option import option#type: ignore
-from Option import Activity#type: ignore
-from appium import webdriver
+from Option import option
+from Option import Activity
 from datetime import datetime 
 from selenium.webdriver.common.by import By
 from urllib3.exceptions import MaxRetryError
@@ -19,7 +18,7 @@ from selenium.common.exceptions import WebDriverException
 from selenium.common.exceptions import  NoSuchElementException
 from selenium.common.exceptions import InvalidSessionIdException
 from selenium.webdriver.support import expected_conditions as EC
-from appium.options.android.uiautomator2.base import UiAutomator2Options
+
 
 
 def driverRun(driverID):
@@ -52,6 +51,7 @@ def driverRun(driverID):
 
         activity.setActivity("Cancel Button")
         time.sleep(8)
+        
         try:
             output = subprocess.check_output(f'adb -s {emu} shell dumpsys activity activities', shell=True).decode('utf-8')
             Attempt = 0
@@ -226,11 +226,11 @@ def driverRun(driverID):
 
     except (InvalidSessionIdException, MaxRetryError, ConnectionError):
         print("Closing Appium server During Remote Driver")
-        activity.setActivity("Failed")
+        activity.setActivity("No Actiond...")
         sys.exit(1)
     except (NoSuchElementException, TimeoutException):
         print("Found no element")
-        activity.setActivity("Failed")
+        activity.setActivity("No Action...")
         sys.exit(1)
 
 
