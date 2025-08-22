@@ -1,9 +1,10 @@
 
 
 from .Main import LDPlayer
-from .Option import option as Option
+from .Option import option
+from .Option import Activity
 from .runThread import Threader
-__all__ = ["LDPlayer", "Option", "Threader"]
+__all__ = ["LDPlayer", "option", "Threader","Activity"]
 # Package metadata
 __version__ = "1.0.0"
 __author__ = "Grim"
