@@ -42,6 +42,12 @@ def timer(func):
 class option:
     def __init__(self, Number: Optional[list[int]] = []):
         self.SELECTOR = {
+        "Proxy": """//android.widget.TextView[@content-desc="Super Proxy"]""",
+        "addProxy": """//android.widget.Button[@content-desc="Add proxy"]""",
+        "server": """//android.widget.ScrollView/android.widget.EditText[3]""",
+        "port": """//android.widget.ScrollView/android.widget.EditText[4]""",
+        "save": """//android.widget.FrameLayout[@resource-id="android:id/content"]/android.widget.FrameLayout/android.view.View/android.view.View/android.view.View/android.view.View[1]/android.view.View/android.view.View/android.widget.Button[2]""",
+        "startProxy": """//android.widget.Button[@content-desc="Start"]""",
         "Messenger": """//android.widget.TextView[@content-desc="Messenger"]""",
         "cancelAuth": """//android.widget.ImageView[@content-desc="Cancel"]""",
         "createAccount": """//android.widget.Button[@content-desc="Create new account"]/android.view.ViewGroup""",
@@ -237,7 +243,9 @@ class option:
             
             openLD = self.wait_for_ldplayer_device(device_name)# Sample running test shell CMD in LD
             if openLD:
-                self.__clear_app_data(device_name)# Sample Wait Full setup  and clear it up
+                self.clear_app_data(device_name, "com.scheler.superproxy")# Sample Wait Full setup and clear it up
+                time.sleep(2)
+                self.clear_app_data(device_name,"com.facebook.orca")# Sample Wait Full setup  and clear it up
 
     def GetCode(self, username: str, password: str, email):
         imap_server = "imap.yandex.ru"
@@ -331,39 +339,10 @@ class option:
         MONTH = random.choice(months)
         return MONTH
     
-    def __clear_app_data(self, device_name, package_name = "com.facebook.orca")-> None:
+    def clear_app_data(self, device_name, package_name)-> None:
         Clear = subprocess.run(["adb", "-s", device_name, "shell", "pm", "clear", package_name])
         print("Clear out: ",Clear)
-class Activity:
-    def __init__(self, emulator:str, driverID: int):
-        self.emulator = emulator
-        self.driverID = driverID
-        self.URL = "http://127.0.0.1:5000/"
-        prv_path = os.path.dirname(os.path.abspath(__file__))
-        dotenv.load_dotenv(dotenv_path=os.path.join(prv_path, "..", ".env"))
-        self.token = {
-            1: os.getenv("TOKEN1"),
-            2: os.getenv("TOKEN2"),
-            3: os.getenv("TOKEN3"),
-            4: os.getenv("TOKEN4"),
-            5: os.getenv("TOKEN5"),
-            6: os.getenv("TOKEN6"),
-            7: os.getenv("TOKEN7"),
-        }
-        self.PROXY_FILE = "proxies.txt"
-        self.TEST_URL = "http://ip-api.com/json"
-        self.TIMEOUT = 5
-        self.proxy = self.__proxy()
-
-
-    def setActivity(self, status):
-        body = {
-            self.emulator: {
-                "id": self.driverID,
-                "status": status
-            }
-        }
-        requests.post(self.URL + "LDActivity", json=body)
+        
         
     def KillAppium(self, port: int, ID:int) -> None:
         
@@ -394,22 +373,62 @@ class Activity:
                 subprocess.run(kill_cmd, shell=True)
                 print("Kill Appium server: ", ID)
                 
-    def __check_proxy(self,proxy):
+                
+class Activity:
+    def __init__(self, emulator:str, driverID: int):
+        self.emulator = emulator
+        self.driverID = driverID
+        self.URL = "http://127.0.0.1:5000/"
+        prv_path = os.path.dirname(os.path.abspath(__file__))
+        dotenv.load_dotenv(dotenv_path=os.path.join(prv_path, "..", ".env"))
+        self.token = {
+            1: os.getenv("TOKEN1"),
+            2: os.getenv("TOKEN2"),
+            3: os.getenv("TOKEN3"),
+            4: os.getenv("TOKEN4"),
+            5: os.getenv("TOKEN5"),
+            6: os.getenv("TOKEN6"),
+            7: os.getenv("TOKEN7"),
+        }
+        self.PROXY_FILE = os.path.dirname(os.path.abspath(__file__)) + "\\proxies.txt"
+        self.TEST_URL1 = "http://ip-api.com/json"
+        self.TEST_URL2 = "https://httpbin.org/ip"
+        self.webproxy = ""
+        self.TIMEOUT = 5
+        self.stop_thread = False
 
+
+
+    def setActivity(self, status):
+        body = {
+            self.emulator: {
+                "id": self.driverID,
+                "status": status
+            }
+        }
+        requests.post(self.URL + "LDActivity", json=body)
+        
+                
+    def __check_proxy(self,proxy):
         proxies = {
             "http": f"socks5://{proxy}",
             "https": f"socks5://{proxy}"
         }
         try:
-            response = requests.get(self.TEST_URL, proxies=proxies, timeout=self.TIMEOUT)
-            if response.status_code == 200:
-                data = response.json()
-                self.results.put((proxy, True, data.get("query"), data.get("country")))
+            from_ip_api = requests.get(self.TEST_URL1, proxies=proxies, timeout=self.TIMEOUT)
+            from_httpbin = requests.get(self.TEST_URL2, proxies=proxies, timeout=self.TIMEOUT)
+            if self.stop_thread:
+                return
+            print(f"Proxy: {proxy} | IP API: {from_ip_api.status_code} | HTTPBin: {from_httpbin.status_code}")
+            if from_httpbin.status_code == 200 and from_ip_api.status_code == 200:
+                data = from_httpbin.json()
+                ip = data.get("origin")
+                self.results.put(proxy)
         except Exception:
             pass
 
 
-    def __proxy(self):
+    def proxy(self) -> str:
         proxies = []
         self.results = queue.Queue()
         proxies = self.__load_proxies()
@@ -423,24 +442,46 @@ class Activity:
             t.start()
             threads.append(t)
 
+        working = []
         while True:
             try:
-                proxy, _, ip, country = self.results.get(timeout=0.1)
-                proxies.append(proxy)
-                
-
+                proxy = self.results.get(timeout=0.1)
+                working.append((proxy))
+                if len(working) >= 5:
+                    print(f"Found {len(working)} working proxies.")
+                    self.stop_thread = True
+                    print(self.stop_thread)
+                    
+                    proxy = random.choice(working)
+                    return proxy if proxy else ""
+                    
             except queue.Empty:
-
                 if all(not t.is_alive() for t in threads):
                     print("No working proxy found.")
                     break
                 time.sleep(0.05)
-            proxy = proxies[random.randint(0, len(proxies)-1)]
-            ip, port = proxy.split(":")
-            return ip, port
 
+        if not working:
+            print("proxies NONE.")
+            return ""
+        return ""
+    def MyProxy(self):
+        try:
+            r = requests.get("")
+            proxies = {
+                "http": f"socks5://{self.proxy()}",
+                "https": f"socks5://{self.proxy()}"
+            }
+        except Exception as e:
+            print(f"Error getting proxy: {e}")
+            return ""
+        
+        
+        
+        
     def __load_proxies(self):
         try:
+
             with open(self.PROXY_FILE, "r") as f:
                 return [line.strip() for line in f if line.strip()]
         except Exception as e:
