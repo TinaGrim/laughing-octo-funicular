@@ -27,24 +27,79 @@ def driverRun(driverID):
     emu = f"emulator-55{(driverID-1)*2+54}"
     port = 4722 + driverID
 
-
-
     GET = option()
     SELECTOR = GET.SELECTOR
     IMFORMATION = GET.IMFORMATION
     activity = Activity(emu, driverID)
-
+    
+        
     try:
 
         activity.setActivity("Start")
 
-        activity.KillAppium(port, driverID)
-        Driver = GET.cap(port, driverID)
 
+        GET.KillAppium(port, driverID)
+        
+        Driver = GET.cap(port, driverID)
+        
         if Driver is None:
             print("Driver did not exist...")
             return 0
+        
+        
+        activity.setActivity("Open Proxy")
+        time.sleep(3)
+        WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, GET.SELECTOR["Proxy"] ))).click()
+        
+        activity.setActivity("Add New")
+        time.sleep(3)
+        WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, GET.SELECTOR["addProxy"] ))).click()
+        
+        try:
+            proxy = activity.proxy()
+            ip, pot = proxy.split(":") if proxy is not None else ("OK", "OK")
 
+            print(f"Using Proxy: {ip}:{pot}")
+        except Exception as e:
+            print(f"Error getting proxy: {e}")
+            
+        try:
+            activity.setActivity("Server")
+            time.sleep(3)
+            clickserver = WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, GET.SELECTOR["server"] )))
+            clickserver.click()
+            clickserver.send_keys(ip)
+        except Exception as e:
+            print(f"Error filling server: {e}")
+        try:
+            activity.setActivity("Port")
+            time.sleep(3)
+            clickport = WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, GET.SELECTOR["port"] )))
+            clickport.click()
+            clickport.send_keys(pot)
+        except Exception as e:
+            print(f"Error filling port: {e}")
+
+
+        activity.setActivity("Save Proxy")
+        time.sleep(6)
+        WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, GET.SELECTOR["save"] ))).click()
+
+        activity.setActivity("Start Proxy")
+        time.sleep(6)
+        WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH,SELECTOR["startProxy"] ))).click()
+
+
+
+        GET.KillAppium(port, driverID)
+        
+        Driver = GET.cap(port, driverID)
+        
+        if Driver is None:
+            print("Driver did not exist...")
+            return 0
+        
+        Driver.press_keycode(3)
         activity.setActivity("Messenger")
         time.sleep(3)
         WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH,SELECTOR["Messenger"] ))).click()
@@ -56,11 +111,25 @@ def driverRun(driverID):
             output = subprocess.check_output(f'adb -s {emu} shell dumpsys activity activities', shell=True).decode('utf-8')
             Attempt = 0
             passing = False
-            while ".auth.api.credentials.assistedsignin.ui.AssistedSignInActivity" not in output:
-                if Attempt < 5:
-                    time.sleep(3)
+            for line in output.splitlines():
+                if re.match("Activities=", line.strip()):
+                    line = line.split("=", 1)
+                    act = line[1].strip("[]")
+                    print(f"Current Activity: {act}")
+                    break
+
+            while "AssistedSignInGET" not in act and "AssistedSignInActivity" not in act:
+
+                if Attempt < 8:
+                    time.sleep(5)
                     Attempt += 1
                     output = subprocess.check_output(f'adb -s emulator-55{(driverID-1)*2+54} shell dumpsys activity activities', shell=True).decode('utf-8')
+                    for line in output.splitlines():
+                        if re.match("Activities=", line.strip()):
+                            line = line.split("=", 1)
+                            act = line[1].strip("[]")
+                            print(f"Current Activity: {act}")
+                            break
                 else:
                     print("Not found try pass")
                     passing = True
@@ -96,7 +165,7 @@ def driverRun(driverID):
 
 
         #WebDriverWait(Driver, 10).until(EC.presence_of_element_located((By.XPATH, SELECTOR["startAfterDeny"]))).click()
-        activity.setActivity("fill name")
+        activity.setActivity("fill Name")
         time.sleep(4)
         WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, SELECTOR["firstNameWidget"]))).send_keys(IMFORMATION["firstName"])
         time.sleep(4)
@@ -217,7 +286,7 @@ def driverRun(driverID):
         activity.setActivity("Close appium")
         time.sleep(1)
         Driver.quit()
-        activity.KillAppium(port, driverID)
+        GET.KillAppium(port, driverID)
 
         activity.setActivity("Done")
         time.sleep(1)
@@ -226,7 +295,7 @@ def driverRun(driverID):
 
     except (InvalidSessionIdException, MaxRetryError, ConnectionError):
         print("Closing Appium server During Remote Driver")
-        activity.setActivity("No Actiond...")
+        activity.setActivity("No Action...")
         sys.exit(1)
     except (NoSuchElementException, TimeoutException):
         print("Found no element")
@@ -235,10 +304,13 @@ def driverRun(driverID):
 
 
 URL = "http://127.0.0.1:5000/"
-r = requests.get(URL + "openOrder")
-response = r.json()
-LDId: list[int] = response.get("openOrder", False)
-print(LDId)
+try:
+    r = requests.get(URL + "openOrder")
+    response = r.json()
+    LDId: list[int] = response.get("openOrder", False)
+    print(LDId)
+except Exception as e:
+    print(f"Server Error: {e}")
 if LDId:
     for i in LDId:
         Mythread = threading.Thread(

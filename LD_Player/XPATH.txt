@@ -113,3 +113,30 @@ Example.com
 
 //android.view.View[@content-desc="Next"]
 
+# proxy
+
+//android.widget.TextView[@content-desc="Super Proxy"]
+
+# add 
+
+//android.widget.Button[@content-desc="Add proxy"]
+
+#server
+//android.widget.ScrollView/android.widget.EditText[3]
+//android.widget.ScrollView/android.widget.EditText[3]
+
+ip
+
+# port 
+
+//android.widget.ScrollView/android.widget.EditText[4]
+
+port
+
+# Save
+
+//android.widget.FrameLayout[@resource-id="android:id/content"]/android.widget.FrameLayout/android.view.View/android.view.View/android.view.View/android.view.View[1]/android.view.View/android.view.View/android.widget.Button[2]
+
+# start proxy
+
+//android.widget.Button[@content-desc="Start"]
