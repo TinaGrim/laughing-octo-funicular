@@ -59,10 +59,10 @@ def driverRun(driverID):
             proxy = activity.proxy()
             ip, pot = proxy.split(":") if proxy is not None else ("OK", "OK")
 
-            print(f"Using Proxy: {ip}:{pot}")
+            print("[ \033[92mOK\033[0m ] " + f"Using Proxy: {ip}:{pot}")
         except Exception as e:
-            print(f"Error getting proxy: {e}")
-            
+            print("[ \033[92mNot Found\033[0m ] " + f"Error getting proxy: {e}")
+
         try:
             activity.setActivity("Server")
             time.sleep(3)
@@ -115,7 +115,7 @@ def driverRun(driverID):
                 if re.match("Activities=", line.strip()):
                     line = line.split("=", 1)
                     act = line[1].strip("[]")
-                    print(f"Current Activity: {act}")
+                    print("[ \033[92mOK\033[0m ] " + f"Current Activity: {act}")
                     break
 
             while "AssistedSignInGET" not in act and "AssistedSignInActivity" not in act:
@@ -128,14 +128,14 @@ def driverRun(driverID):
                         if re.match("Activities=", line.strip()):
                             line = line.split("=", 1)
                             act = line[1].strip("[]")
-                            print(f"Current Activity: {act}")
+                            print("[ \033[92mOK\033[0m ] " + f"Current Activity: {act}")
                             break
                 else:
                     print("Not found try pass")
                     passing = True
                     break
             if not passing:
-                print("Found Cancel Button")
+                print("[ \033[92mOK\033[0m ] " + "Found Cancel Button")
                 WebDriverWait(Driver, 10).until(
                     EC.presence_of_element_located((By.XPATH, SELECTOR["cancelAuth"]))
                 ).click()
@@ -294,11 +294,11 @@ def driverRun(driverID):
         sys.exit(0)
 
     except (InvalidSessionIdException, MaxRetryError, ConnectionError):
-        print("Closing Appium server During Remote Driver")
+        print("[ \033[91mClose\033[0m ] " + "Closing Appium server During Remote Driver")
         activity.setActivity("No Action...")
         sys.exit(1)
     except (NoSuchElementException, TimeoutException):
-        print("Found no element")
+        print("[ \033[91mClose\033[0m ] " + "Found no element")
         activity.setActivity("No Action...")
         sys.exit(1)
 
@@ -308,7 +308,7 @@ try:
     r = requests.get(URL + "openOrder")
     response = r.json()
     LDId: list[int] = response.get("openOrder", False)
-    print(LDId)
+    print("[ \033[92mOK \033[0m ] " ,LDId)
 except Exception as e:
     print(f"Server Error: {e}")
 if LDId:

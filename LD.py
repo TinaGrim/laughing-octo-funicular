@@ -34,7 +34,10 @@ class NoLog(logging.Filter):
         return "/LDActivity" not in record.getMessage()
 logging.getLogger('werkzeug').addFilter(NoLog())
 
-
+@server.before_request
+def before_request():
+    if "/LDActivity" not in request.path:
+        print(f"[ \033[92mSERVER\033[0m ] {request.method} {request.path}")
 
 @server.route("/")
 def index():
@@ -79,7 +82,7 @@ def openOrder():
         ID = request.get_json()
         RemainingID.clear()
         RemainingID.extend(ID)
-        print("RemainingID after POST: ", RemainingID)
+        print("[ \033[92mOK\033[0m ] " + "RemainingID after POST: ", RemainingID)
         return jsonify(openOrder=RemainingID)
     elif request.method == "GET":
         return jsonify(openOrder=RemainingID)

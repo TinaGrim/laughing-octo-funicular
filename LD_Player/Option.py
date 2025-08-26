@@ -7,6 +7,7 @@ import names
 import dotenv
 import string
 import random 
+import signal
 import imaplib
 import requests
 import platform
@@ -34,7 +35,7 @@ def timer(func):
         end = time.time()
         time_get = end - start
         time_get = round(time_get, 1) 
-        time_get =  f"Open {func.__name__} Time : {time_get} seconde"
+        time_get =  "[ \033[92mOK\033[0m ] " + f"Open {func.__name__} Time : {time_get} seconde"
         print(time_get)
         return result
     return wrapper
@@ -142,7 +143,7 @@ class option:
                 for w in pygetwindow.getAllWindows():
                     if w.title == LD_Name:
                         w.moveTo(index * 300,0)
-                        print(f"LDPlayer {index + 1} Arranged successfully")
+                        print("[ \033[92mOK\033[0m ] " + f"LDPlayer {index + 1} Arranged successfully")
                         found = True
                         break
                 time.sleep(1)
@@ -215,7 +216,7 @@ class option:
                         text=True
                     )
                     if shell_result.returncode == 0 and "ok" in shell_result.stdout:
-                        print(f"{device_name} is fully ready.")
+                        print("[ \033[92mOK\033[0m ] " + f"{device_name} is fully ready.")
                         return True
         print(f"Timeout: {device_name} did not appear in adb devices.")
         return False
@@ -231,7 +232,7 @@ class option:
         """Start Remote Driver"""   
         Driver_path = os.path.abspath(__file__)
         Driver_path = os.path.dirname(Driver_path) + f"\\Drivers.py"
-        print("Remote Driver Path: ", Driver_path)
+        print("[ \033[92mOK\033[0m ] " + f"Remote Driver Path: ", Driver_path)
         subprocess.Popen(["python",Driver_path]) # Sample Remote using Driver in Path That Exists
 
     def Full_setup(self):
@@ -341,7 +342,7 @@ class option:
     
     def clear_app_data(self, device_name, package_name)-> None:
         Clear = subprocess.run(["adb", "-s", device_name, "shell", "pm", "clear", package_name])
-        print("Clear out: ",Clear)
+        print("[ \033[92mOK\033[0m ] " + "Clear out: ",Clear)
         
         
     def KillAppium(self, port: int, ID:int) -> None:
@@ -361,7 +362,7 @@ class option:
             line = result.strip().splitlines()
             
         except subprocess.CalledProcessError:
-            print("Port Cleared")
+            print("[ \033[92mOK\033[0m ] " + "Port Cleared")
         except Exception as e:
             print(f"Unexpected error: {e}")
 
@@ -369,9 +370,9 @@ class option:
         if close_appium_response:
             if line:
                 pid = line[0].split()[-1]
-                kill_cmd = f'taskkill /PID {pid} /F'
-                subprocess.run(kill_cmd, shell=True)
-                print("Kill Appium server: ", ID)
+
+                os.kill(int(pid), signal.SIGTERM)
+                print("[ \033[92mOK\033[0m ] " + "Kill Appium server: ", ID)
                 
                 
 class Activity:
@@ -419,7 +420,7 @@ class Activity:
             from_httpbin = requests.get(self.TEST_URL2, proxies=proxies, timeout=self.TIMEOUT)
             if self.stop_thread:
                 return
-            print(f"Proxy: {proxy} | IP API: {from_ip_api.status_code} | HTTPBin: {from_httpbin.status_code}")
+            print("[ \033[92mOK\033[0m ] " + f"Proxy: {proxy} | IP API: {from_ip_api.status_code} | HTTPBin: {from_httpbin.status_code}")
             if from_httpbin.status_code == 200 and from_ip_api.status_code == 200:
                 data = from_httpbin.json()
                 ip = data.get("origin")
@@ -432,7 +433,7 @@ class Activity:
         proxies = []
         self.results = queue.Queue()
         proxies = self.__load_proxies()
-        print(f"Checking {len(proxies)} proxies using threads...")
+        print("[ \033[92mOK\033[0m ] " + f"Checking {len(proxies)} proxies using threads...")
         threads = []
         
         for proxy in proxies:
@@ -448,7 +449,7 @@ class Activity:
                 proxy = self.results.get(timeout=0.1)
                 working.append((proxy))
                 if len(working) >= 5:
-                    print(f"Found {len(working)} working proxies.")
+                    print("[ \033[92mOK\033[0m ]" + f"Found {len(working)} working proxies.")
                     self.stop_thread = True
                     print(self.stop_thread)
                     
