@@ -82,7 +82,7 @@ class option:
     def __Open_Appium(self, port):
         """Opening Cmd of Appium"""
         
-        subprocess.Popen(f'start /MIN cmd /c appium --port {port}', shell=True, startupinfo=self.__info(2))
+        subprocess.Popen(f'start /MIN cmd /c appium --log-level debug --relaxed-security --port {port}', shell=True, startupinfo=self.__info(2))
         time.sleep(0.5)
 
     @timer
@@ -138,8 +138,6 @@ class option:
         try:
             LD_Name = f"LDPlayer" if index == 0 else f"LDPlayer-{index}"
             found = False
-            if platform.system() is not "Windows":
-                return
             while not found:
                 for w in pygetwindow.getAllWindows():
                     if w.title == LD_Name:
@@ -175,7 +173,8 @@ class option:
             "platformVersion": "9",
             "deviceName": f"emulator-55{(ID-1)*2 + 54}",
             "udid" : f"emulator-55{(ID-1)*2 + 54}",
-            "noReset": True
+            "showLogcat": True,
+
         }
         return des_cap
 
@@ -247,7 +246,7 @@ class option:
             if openLD:
                 self.clear_app_data(device_name, "com.scheler.superproxy")# Sample Wait Full setup and clear it up
                 time.sleep(2)
-                self.clear_app_data(device_name,"com.facebook.orca")# Sample Wait Full setup  and clear it up
+                # self.clear_app_data(device_name,"com.facebook.orca")# Sample Wait Full setup  and clear it up
 
     def GetCode(self, username: str, password: str, email):
         imap_server = "imap.yandex.ru"
@@ -450,7 +449,7 @@ class Activity:
                 proxy = self.results.get(timeout=0.1)
                 working.append((proxy))
                 if len(working) >= 5:
-                    print("[ \033[92mOK\033[0m ]" + f"Found {len(working)} working proxies.")
+                    print("[ \033[92mOK\033[0m ]" + f" Found {len(working)} working proxies.")
                     self.stop_thread = True
                     print(self.stop_thread)
                     

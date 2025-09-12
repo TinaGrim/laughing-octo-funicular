@@ -33,7 +33,7 @@ class LDPlayer():
         else:
             print("Error:", r.status_code)
             sys.exit(1)
-            
+
         print("Remaining LD: ", remainLD)
         requests.post("http://127.0.0.1:5000/openOrder", json=remainLD)
         
