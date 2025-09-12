@@ -32,21 +32,22 @@ def driverRun(driverID):
     IMFORMATION = GET.IMFORMATION
     activity = Activity(emu, driverID)
     
-        
+
     try:
 
         activity.setActivity("Start")
 
 
-        GET.KillAppium(port, driverID)
+        # GET.KillAppium(port, driverID)
         
         Driver = GET.cap(port, driverID)
         
         if Driver is None:
             print("Driver did not exist...")
             return 0
-        
-        
+        time.sleep(2)
+        Driver.press_keycode(3)
+        time.sleep(2)
         activity.setActivity("Open Proxy")
         time.sleep(3)
         WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, GET.SELECTOR["Proxy"] ))).click()
@@ -68,6 +69,7 @@ def driverRun(driverID):
             time.sleep(3)
             clickserver = WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, GET.SELECTOR["server"] )))
             clickserver.click()
+            time.sleep(1)
             clickserver.send_keys(ip)
         except Exception as e:
             print(f"Error filling server: {e}")
@@ -76,6 +78,7 @@ def driverRun(driverID):
             time.sleep(3)
             clickport = WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, GET.SELECTOR["port"] )))
             clickport.click()
+            time.sleep(1)
             clickport.send_keys(pot)
         except Exception as e:
             print(f"Error filling port: {e}")
@@ -100,6 +103,7 @@ def driverRun(driverID):
             return 0
         
         Driver.press_keycode(3)
+        GET.clear_app_data(emu, "com.facebook.orca")
         activity.setActivity("Messenger")
         time.sleep(3)
         WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH,SELECTOR["Messenger"] ))).click()
@@ -148,7 +152,7 @@ def driverRun(driverID):
         time.sleep(4)
         WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, SELECTOR["createAccount"]))).click()
 
-        activity.setActivity("Start Create Account")
+        activity.setActivity("Create Account")
         time.sleep(4)
         
         try:
@@ -156,7 +160,7 @@ def driverRun(driverID):
         except Exception:
             WebDriverWait(Driver, 10).until(EC.presence_of_element_located((By.XPATH, SELECTOR["getStarted2"]))).click()
             
-        activity.setActivity("Permission Deny")
+
         time.sleep(4)
         try:
             WebDriverWait(Driver, 10).until(EC.presence_of_element_located((By.XPATH, SELECTOR["permissionDeny"]))).click()
@@ -165,7 +169,7 @@ def driverRun(driverID):
 
 
         #WebDriverWait(Driver, 10).until(EC.presence_of_element_located((By.XPATH, SELECTOR["startAfterDeny"]))).click()
-        activity.setActivity("fill Name")
+
         time.sleep(4)
         WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, SELECTOR["firstNameWidget"]))).send_keys(IMFORMATION["firstName"])
         time.sleep(4)
@@ -176,7 +180,7 @@ def driverRun(driverID):
         time.sleep(4)
 
         WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, SELECTOR["afterNameFill"]))).click()
-        activity.setActivity("fill BD")
+
         time.sleep(4)
 
 
@@ -247,14 +251,14 @@ def driverRun(driverID):
             
 
 
-        activity.setActivity("set date")
+
         time.sleep(4)
         WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, SELECTOR["setDate"]))).click()
 
         time.sleep(4)
         WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, SELECTOR["afterDate"]))).click()
         
-        activity.setActivity("Gender")
+
         Gender = IMFORMATION["gender"]
         time.sleep(4)
         WebDriverWait(Driver, 30).until(EC.presence_of_element_located((By.XPATH, f"""//android.widget.RadioButton[@content-desc="{Gender}"]/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup/android.widget.ImageView"""))).click()
@@ -299,6 +303,10 @@ def driverRun(driverID):
         sys.exit(1)
     except (NoSuchElementException, TimeoutException):
         print("[ \033[91mClose\033[0m ] " + "Found no element")
+        activity.setActivity("No Action...")
+        sys.exit(1)
+    except WebDriverException as e:
+        print(f"[ \033[91mClose\033[0m ] " + "Server get error")
         activity.setActivity("No Action...")
         sys.exit(1)
 
