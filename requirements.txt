@@ -3,6 +3,5 @@ pyside6
 python-dotenv
 Appium-Python-Client
 selenium
-platform
 flask
 names
