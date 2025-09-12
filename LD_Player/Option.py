@@ -11,7 +11,6 @@ import signal
 import imaplib
 import requests
 import platform
-import platform
 import traceback
 import threading
 import subprocess
@@ -139,6 +138,8 @@ class option:
         try:
             LD_Name = f"LDPlayer" if index == 0 else f"LDPlayer-{index}"
             found = False
+            if platform.system() is not "Windows":
+                return
             while not found:
                 for w in pygetwindow.getAllWindows():
                     if w.title == LD_Name:
