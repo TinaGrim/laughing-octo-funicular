@@ -24,7 +24,7 @@ dotenv.load_dotenv(dotenv_path=".env")
 
 server = Flask(__name__)
 Thread(target=lambda: server.run(port=5000),daemon=True).start()
-
+print("test")
 
 
 
