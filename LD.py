@@ -161,10 +161,20 @@ class BobPrimeApp(QMainWindow):
                 border-radius: 10px;
                 font-size: 12px;
             }
+            QGroupBox::indicator {
+                width: 18px;
+                height: 18px;
+            }
+            QGroupBox::indicator:checked {
+                image: url(Logo/check1.png);
+            }
             QHeaderView {
                 background-color: transparent;
 
                 border-radius: 5px;
+            }
+            QSpinBox {
+                margin: 0px;
             }
         """)
         
@@ -581,6 +591,7 @@ class BobPrimeApp(QMainWindow):
         
         devices_setting_box = QGroupBox("LDPlayer Setting")
         devices_setting_box_layout = QVBoxLayout(devices_setting_box)
+        
         devices_setting_box_layout_IP = QHBoxLayout()
         self.Checkbox = QCheckBox("Check IP")
         self.GPS = QCheckBox("GPS/TimeZone")
@@ -602,15 +613,16 @@ class BobPrimeApp(QMainWindow):
         label_ram_list = QComboBox()
         label_ram_list.addItems(["512MB","1GB","2GB","3GB","4GB"])
         
-        devices_setting_box_layout_cpu.addWidget(label_cpu)
+        devices_setting_box_layout_cpu.addWidget(label_cpu, alignment=Qt.AlignmentFlag.AlignCenter)
         devices_setting_box_layout_cpu.addWidget(label_cpu_list)
-        devices_setting_box_layout_cpu.addWidget(label_ram)
+        devices_setting_box_layout_cpu.addWidget(label_ram, alignment=Qt.AlignmentFlag.AlignCenter)
         devices_setting_box_layout_cpu.addWidget(label_ram_list)
 
         devices_setting_box_layout_arrange = QHBoxLayout()
         label_arrange = QCheckBox("Arrange LDplayer")
         label_arrange_value = QSpinBox()
         label_arrange_value.setValue(5)
+        label_arrange_value.setStyleSheet("margin: 0px;")
         Auto_fit = QCheckBox("Auto Fit")
         devices_setting_box_layout_arrange.addWidget(label_arrange)
         devices_setting_box_layout_arrange.addWidget(label_arrange_value)
@@ -623,14 +635,15 @@ class BobPrimeApp(QMainWindow):
         screen_resolution_list = QComboBox()
         screen_resolution_list.addItems(["1280x720","1920x1080","2560x1440","3840x2160"])
         screen_resolution_list.setCurrentIndex(1)
-        devices_setting_box_layout_screen.addWidget(screen_resolution)
-        devices_setting_box_layout_screen.addWidget(screen_resolution_list)
+        devices_setting_box_layout_screen.addWidget(screen_resolution, alignment=Qt.AlignmentFlag.AlignCenter)
+        devices_setting_box_layout_screen.addWidget(screen_resolution_list, alignment=Qt.AlignmentFlag.AlignCenter)
         
 
         devices_setting_box_layout_startup = QHBoxLayout()
         label_startup = QCheckBox("Run at Startup")
         label_startup_value = QSpinBox()
         label_startup_value.setValue(30)
+        label_startup_value.setStyleSheet("margin: 0px;")
         label_startup_second = QLabel("Seconds")
         devices_setting_box_layout_startup.addWidget(label_startup)
         devices_setting_box_layout_startup.addWidget(label_startup_value)
@@ -640,6 +653,7 @@ class BobPrimeApp(QMainWindow):
         label_autostop = QCheckBox("Auto Stop at")
         label_autostop_value = QSpinBox()
         label_autostop_value.setValue(30)
+        label_autostop_value.setStyleSheet("margin: 0px;")  
         label_autostop_second = QLabel("Minutes")
         label_autostop_shutdown = QCheckBox("Shutdown")
         
@@ -652,6 +666,7 @@ class BobPrimeApp(QMainWindow):
         label_clearcache = QCheckBox("Clear cache every run counts")
         label_clearcache_value = QSpinBox()
         label_clearcache_value.setValue(200)
+        label_clearcache_value.setStyleSheet("margin: 0px;")
         devices_setting_box_layout_clearcache.addWidget(label_clearcache)
         devices_setting_box_layout_clearcache.addWidget(label_clearcache_value)
         
@@ -662,6 +677,7 @@ class BobPrimeApp(QMainWindow):
         label_ifldexceed = QCheckBox("Clear LDPlayer if exceeds ")
         label_ifldexceed_value = QSpinBox()
         label_ifldexceed_value.setValue(2)
+        label_ifldexceed_value.setStyleSheet("margin: 0px;")
         label_ifldexceed_MB = QLabel("GB")
         devices_setting_box_layout_ifldexceed.addWidget(label_ifldexceed)
         devices_setting_box_layout_ifldexceed.addWidget(label_ifldexceed_value)
@@ -712,11 +728,11 @@ class BobPrimeApp(QMainWindow):
         devices_widget_layout.addWidget(devices_information_widget, 9)
         devices_widget_layout.setContentsMargins(30, 5, 5, 5)
         return devices_widget
+    
     def Tab_Active(self) -> QWidget:
         active_widget = QWidget()
         active_layout = QHBoxLayout(active_widget)
         active_layout.setContentsMargins(0, 0, 0, 0)
-        active_layout.setSpacing(5)
         
         #
         #active
@@ -727,6 +743,8 @@ class BobPrimeApp(QMainWindow):
         
         active_widget_main_top = QWidget()
         active_layout_main_top = QGridLayout(active_widget_main_top)
+        active_layout_main_top.setContentsMargins(10, 10, 0, 0)
+        
         #
         #notify action
         #
@@ -744,22 +762,38 @@ class BobPrimeApp(QMainWindow):
         self.scroll_newsfeed.setChecked(False)
         self.scroll_newsfeed_start_value = QSpinBox()
         self.scroll_newsfeed_start_value.setValue(0)
+        self.scroll_newsfeed_widget = QWidget()
+        self.scroll_newsfeed_layout = QHBoxLayout(self.scroll_newsfeed_widget)
         self.scroll_newsfeed_end_value = QSpinBox()
         self.scroll_newsfeed_end_value.setValue(0)
+        self.scroll_newsfeed_layout.addWidget(self.scroll_newsfeed_end_value)
+        self.scroll_newsfeed_layout.addWidget(QLabel("Minutes"))
+        self.scroll_newsfeed_layout.setContentsMargins(0, 0, 0, 0)
         
         self.scroll_video = QCheckBox("Scroll Video")
         self.scroll_video.setChecked(False)
         self.scroll_video_start_value = QSpinBox()
         self.scroll_video_start_value.setValue(0)
+        self.scroll_video_widget = QWidget()
+        self.scroll_video_layout = QHBoxLayout(self.scroll_video_widget)
         self.scroll_video_end_value = QSpinBox()
         self.scroll_video_end_value.setValue(0)
+        self.scroll_video_layout.addWidget(self.scroll_video_end_value)
+        self.scroll_video_layout.addWidget(QLabel("Minutes"))
+        self.scroll_video_layout.setContentsMargins(0, 0, 0, 0)
         
         self.scroll_reels = QCheckBox("Scroll Reels")
         self.scroll_reels.setChecked(False)
         self.scroll_reels_start_value = QSpinBox()
         self.scroll_reels_start_value.setValue(0)
+        self.scroll_reels_widget = QWidget()
+        self.scroll_reels_layout = QHBoxLayout(self.scroll_reels_widget)
         self.scroll_reels_end_value = QSpinBox()
         self.scroll_reels_end_value.setValue(0)
+        self.scroll_reels_layout.addWidget(self.scroll_reels_end_value)
+        self.scroll_reels_layout.addWidget(QLabel("Minutes"))
+        self.scroll_reels_layout.setContentsMargins(0, 0, 0, 0)
+        
         #
         #confirm action
         #
@@ -785,10 +819,15 @@ class BobPrimeApp(QMainWindow):
         self.check_message.setChecked(False)
         self.check_message_value = QSpinBox()
         self.check_message_value.setValue(0)
+        self.reply_widget = QWidget()
+        self.reply_layout = QHBoxLayout(self.reply_widget)
         self.reply = QCheckBox("Reply")
         self.reply.setChecked(False)
         self.reply_value = QLineEdit()
         self.reply_value.setText(r"{Hi|Hello|Hey|How are you}")
+        self.reply_layout.addWidget(self.reply)
+        self.reply_layout.addWidget(self.reply_value)
+        self.reply_layout.setContentsMargins(0, 0, 0, 0)
 
         #
         # create post action
@@ -799,9 +838,17 @@ class BobPrimeApp(QMainWindow):
         self.create_post_value.setValue(0)
         self.photo_img = QCheckBox("Photo")
         self.photo_img.setChecked(False)
+        self.photo_widget = QWidget()
+        self.photo_layout = QHBoxLayout(self.photo_widget)
         self.photo_img_value = QLineEdit()
         self.photo_img_value.setText(r"C:/path/to/photo.jpg")
         self.photo_img_browse = QPushButton("...")
+        self.photo_img_browse.setStyleSheet("margin: 0px; padding: 2px 10px; ")
+
+        self.photo_layout.addWidget(self.photo_img)
+        self.photo_layout.addWidget(self.photo_img_value)
+        self.photo_layout.addWidget(self.photo_img_browse)
+        self.photo_layout.setContentsMargins(0, 0, 0, 0)
         
         #
         # story action
@@ -810,10 +857,16 @@ class BobPrimeApp(QMainWindow):
         self.check_Story.setChecked(False)
         self.check_Story_value = QSpinBox()
         self.check_Story_value.setValue(0)
+        self.story_video_widget = QWidget()
+        self.story_video_layout = QHBoxLayout(self.story_video_widget)
         self.story_video_value = QLineEdit()
         self.story_video_value.setText(r"C:/path/to/video.mp4")
         self.story_video_browse = QPushButton("...")
-        
+        self.story_video_browse.setStyleSheet("margin: 0px; padding: 2px 10px; ")
+
+        self.story_video_layout.addWidget(self.story_video_value)
+        self.story_video_layout.addWidget(self.story_video_browse)
+        self.story_video_layout.setContentsMargins(0, 0, 0, 0)
         #
         # comment action
         #
@@ -831,10 +884,14 @@ class BobPrimeApp(QMainWindow):
         self.share_post_group.setChecked(False)
         self.share_post_group_value = QSpinBox()
         self.share_post_group_value.setValue(0)
+        self.profile_widget = QWidget()
+        self.profile_layout = QHBoxLayout(self.profile_widget)
         self.profile = QCheckBox("Profile")
         self.profile_group_value = QLineEdit()
         self.profile_group_value.setPlaceholderText(r"profile link1, profile link2, profile link3")
-        
+        self.profile_layout.addWidget(self.profile)
+        self.profile_layout.addWidget(self.profile_group_value)
+        self.profile_layout.setContentsMargins(0, 0, 0, 0)
         #
         # loop action
         #
@@ -847,8 +904,21 @@ class BobPrimeApp(QMainWindow):
         self.active_between_time_start_value.setValue(0)
         self.active_between_time_end_value = QSpinBox()
         self.active_between_time_end_value.setValue(0)
+        #
+        # install apk action
+        #
+        self.install_apk_widget = QWidget()
+        self.install_apk_layout = QHBoxLayout(self.install_apk_widget)
         self.install_apk = QCheckBox("Install APK")
         self.install_apk.setChecked(False)
+        self.install_apk_value = QLineEdit()
+        self.install_apk_value.setText(r"C:/path/to/app.apk")
+        self.install_apk_browse = QPushButton("...")
+        self.install_apk_browse.setStyleSheet("margin: 0px; padding: 2px 10px; ")
+        self.install_apk_layout.addWidget(self.install_apk)
+        self.install_apk_layout.addWidget(self.install_apk_value)
+        self.install_apk_layout.addWidget(self.install_apk_browse)
+        self.install_apk_layout.setContentsMargins(0, 0, 0, 0)
         
         #
         # shutdown action
@@ -858,53 +928,54 @@ class BobPrimeApp(QMainWindow):
 
 
         active_layout_main_top.addWidget(self.check_notification, 0, 0)
-        active_layout_main_top.addWidget(self.check_notification_value, 0, 1)
+        active_layout_main_top.addWidget(self.check_notification_value, 0, 1, alignment=Qt.AlignmentFlag.AlignLeft)
         active_layout_main_top.addWidget(self.check_primary_location, 0, 3)
         active_layout_main_top.addWidget(self.scroll_newsfeed, 1, 0)
-        active_layout_main_top.addWidget(self.scroll_newsfeed_start_value, 1, 1)
-        active_layout_main_top.addWidget(QLabel("To"), 1, 2)
-        active_layout_main_top.addWidget(self.scroll_newsfeed_end_value, 1, 3)
+        active_layout_main_top.addWidget(self.scroll_newsfeed_start_value, 1, 1, alignment=Qt.AlignmentFlag.AlignLeft)
+        active_layout_main_top.addWidget(QLabel("To"), 1, 2, alignment=Qt.AlignmentFlag.AlignCenter)
+        active_layout_main_top.addWidget(self.scroll_newsfeed_widget, 1, 3, 1, 2, alignment=Qt.AlignmentFlag.AlignLeft)
         active_layout_main_top.addWidget(self.scroll_video, 2, 0)
-        active_layout_main_top.addWidget(self.scroll_video_start_value, 2, 1)
-        active_layout_main_top.addWidget(QLabel("To"), 2, 2)
-        active_layout_main_top.addWidget(self.scroll_video_end_value, 2, 3)
+        active_layout_main_top.addWidget(self.scroll_video_start_value, 2, 1, alignment=Qt.AlignmentFlag.AlignLeft)
+        active_layout_main_top.addWidget(QLabel("To"), 2, 2, alignment=Qt.AlignmentFlag.AlignCenter)
+        active_layout_main_top.addWidget(self.scroll_video_widget, 2, 3, 1, 2, alignment=Qt.AlignmentFlag.AlignLeft)
         active_layout_main_top.addWidget(self.scroll_reels, 3, 0)
-        active_layout_main_top.addWidget(self.scroll_reels_start_value, 3, 1)
-        active_layout_main_top.addWidget(QLabel("To"), 3, 2)
-        active_layout_main_top.addWidget(self.scroll_reels_end_value, 3, 3)
+        active_layout_main_top.addWidget(self.scroll_reels_start_value, 3, 1, alignment=Qt.AlignmentFlag.AlignLeft)
+        active_layout_main_top.addWidget(QLabel("To"), 3, 2, alignment=Qt.AlignmentFlag.AlignCenter)
+        active_layout_main_top.addWidget(self.scroll_reels_widget, 3, 3, 1, 2, alignment=Qt.AlignmentFlag.AlignLeft)
         active_layout_main_top.addWidget(self.confirm_friend, 4, 0)
-        active_layout_main_top.addWidget(self.confirm_friend_value, 4, 1)
+        active_layout_main_top.addWidget(self.confirm_friend_value, 4, 1, alignment=Qt.AlignmentFlag.AlignLeft)
         active_layout_main_top.addWidget(self.add_friend, 4, 2)
-        active_layout_main_top.addWidget(self.add_friend_value, 4, 3)
+        active_layout_main_top.addWidget(self.add_friend_value, 4, 3, alignment=Qt.AlignmentFlag.AlignLeft)
         active_layout_main_top.addWidget(self.reaction_post, 5, 0)
-        active_layout_main_top.addWidget(self.reaction_post_value, 5, 1)
+        active_layout_main_top.addWidget(self.reaction_post_value, 5, 1, alignment=Qt.AlignmentFlag.AlignLeft)
         active_layout_main_top.addWidget(self.check_message, 6, 0)
-        active_layout_main_top.addWidget(self.check_message_value, 6, 1)
-        active_layout_main_top.addWidget(self.reply, 6, 2)
-        active_layout_main_top.addWidget(self.reply_value, 6, 3)
+        active_layout_main_top.addWidget(self.check_message_value, 6, 1, alignment=Qt.AlignmentFlag.AlignLeft)
+        active_layout_main_top.addWidget(self.reply_widget, 6, 2, 1, 2)
         active_layout_main_top.addWidget(self.create_post, 7, 0)
-        active_layout_main_top.addWidget(self.create_post_value, 7, 1)
-        active_layout_main_top.addWidget(self.photo_img, 7, 2)
-        active_layout_main_top.addWidget(self.photo_img_value, 7, 3)
+        active_layout_main_top.addWidget(self.create_post_value, 7, 1, alignment=Qt.AlignmentFlag.AlignLeft)
+        active_layout_main_top.addWidget(self.photo_widget, 7, 2, 1, 2)
         active_layout_main_top.addWidget(self.check_Story, 8, 0)
-        active_layout_main_top.addWidget(self.check_Story_value, 8, 1)
-        active_layout_main_top.addWidget(self.story_video_value, 8, 2)
-        active_layout_main_top.addWidget(self.story_video_browse, 8, 3)
+        active_layout_main_top.addWidget(self.check_Story_value, 8, 1, alignment=Qt.AlignmentFlag.AlignLeft)
+        active_layout_main_top.addWidget(self.story_video_widget, 8, 2, 1, 2)
         active_layout_main_top.addWidget(self.comment_post, 9, 0)
-        active_layout_main_top.addWidget(self.comment_post_value, 9, 1)
+        active_layout_main_top.addWidget(self.comment_post_value, 9, 1, alignment=Qt.AlignmentFlag.AlignLeft)
         active_layout_main_top.addWidget(self.comment_post_value_box, 9, 2, 1, 2)
+        active_layout_main_top.setColumnStretch(3, 1)
         active_layout_main_top.addWidget(self.share_post_group, 10, 0)
-        active_layout_main_top.addWidget(self.share_post_group_value, 10, 1)
-        active_layout_main_top.addWidget(self.profile, 10, 2)
-        active_layout_main_top.addWidget(self.profile_group_value, 10, 3)
+        active_layout_main_top.addWidget(self.share_post_group_value, 10, 1, alignment=Qt.AlignmentFlag.AlignLeft)
+        active_layout_main_top.addWidget(self.profile_widget, 10, 2, 1, 2)
         active_layout_main_top.addWidget(self.Number_loop_time_label, 11, 0)
-        active_layout_main_top.addWidget(self.Number_loop_time_value, 11, 1)
+        active_layout_main_top.addWidget(self.Number_loop_time_value, 11, 1, alignment=Qt.AlignmentFlag.AlignLeft)
         active_layout_main_top.addWidget(QLabel("Times"), 11, 2)
         active_layout_main_top.addWidget(self.active_between_time, 12, 0)
-        active_layout_main_top.addWidget(self.active_between_time_start_value, 12, 1)
-        active_layout_main_top.addWidget(QLabel("To"), 12, 2)
-        active_layout_main_top.addWidget(self.active_between_time_end_value, 12, 3)
+        active_layout_main_top.addWidget(self.active_between_time_start_value, 12, 1, alignment=Qt.AlignmentFlag.AlignLeft)
+        active_layout_main_top.addWidget(QLabel("To"), 12, 2, alignment=Qt.AlignmentFlag.AlignCenter)
+        active_layout_main_top.addWidget(self.active_between_time_end_value, 12, 3, alignment=Qt.AlignmentFlag.AlignLeft)
         active_layout_main_top.addWidget(self.shutdown_when_finish, 13, 0)
+        active_layout_main_top.addWidget(self.install_apk_widget, 13, 1, 1, 3)
+        active_layout_main_top.setRowStretch(14, 1)
+        active_layout_main_top.setSpacing(18)
+
 
         #
         #facebook app name
@@ -992,32 +1063,71 @@ class BobPrimeApp(QMainWindow):
         #
         ld_manage_manager = QWidget()
         ld_manage_manager_layout = QVBoxLayout(ld_manage_manager)
-        ld_manage_manager_layout.setContentsMargins(0, 0, 0, 0)
+        ld_manage_manager_layout.setContentsMargins(0, 10, 0, 0)
 
         ld_manage_group_boxtop = QGroupBox("Enable LDPlayer Manager")
+        ld_manage_group_boxtop.setCheckable(True)
+        ld_manage_group_boxtop.setChecked(True)
         ld_manage_manager_layout_top = QVBoxLayout(ld_manage_group_boxtop)
         
         number_active = QHBoxLayout()
-        number = QLabel("Number of Active LD:")
+        number = QLabel("Number of Active Batch")
+        number_value = QSpinBox()
+        number_value.setStyleSheet("margin: 0px;")
+        
+        number_value.setValue(1)
         number_active.addWidget(number)
-        cloneld = QHBoxLayout()
-        clone = QLabel("Clone LD:")
-        cloneld.addWidget(clone)
+        number_active.addWidget(number_value)
+        number_active.addStretch(1)
+
+        new_ld = QHBoxLayout()
+        new_ld_label = QCheckBox("Add New LDPlayers")
+        new_ld_value = QSpinBox()
+        new_ld_value.setValue(1)
+        new_ld_value.setStyleSheet("margin: 0px;")
+
+        copy_from = QCheckBox("Copy From")
+        copy_from_value = QComboBox()
+        copy_from_value.addItems(self.Grim.check_ld_in_list())
+        copy_from_value.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        
+        
+        new_ld.addWidget(new_ld_label)
+        new_ld.addWidget(new_ld_value)
+        new_ld.addWidget(copy_from)
+        new_ld.addWidget(copy_from_value)
+        
         backup = QHBoxLayout()
-        backup_label = QLabel("Backup LD:")
+        backup_label = QCheckBox("Backup LDPlayer To")
+        backup_value = QLineEdit()
+        backup_value.setText(r"C:/path/to/backup.zip")
+        backup_browse = QPushButton("...")
+        backup_browse.setStyleSheet("margin: 0px; padding: 2px 10px; ")
+        
         backup.addWidget(backup_label)
+        backup.addWidget(backup_value)
+        backup.addWidget(backup_browse)
+        
         restore = QHBoxLayout()
-        restore_label = QLabel("Restore LD:")
+        restore_label = QCheckBox("Restore LDPlayer From")
+        restore_value = QLineEdit()
+        restore_value.setText(r"C:/path/to/backup.zip")
+        restore_browse = QPushButton("...")
+        restore_browse.setStyleSheet("margin: 0px; padding: 2px 10px; ")
+        
         restore.addWidget(restore_label)
+        restore.addWidget(restore_value)
+        restore.addWidget(restore_browse)
+        
         remove = QHBoxLayout()
-        remove_label = QLabel("Remove LD:")
+        remove_label = QCheckBox("Remove LDPlayer")
         remove.addWidget(remove_label)
         shutdown = QHBoxLayout()
-        shutdown_label = QLabel("Shutdown LD:")
+        shutdown_label = QCheckBox("Shutdown PC When Finish")
         shutdown.addWidget(shutdown_label)
         
         ld_manage_manager_layout_top.addLayout(number_active)
-        ld_manage_manager_layout_top.addLayout(cloneld)
+        ld_manage_manager_layout_top.addLayout(new_ld)
         ld_manage_manager_layout_top.addLayout(backup)
         ld_manage_manager_layout_top.addLayout(restore)
         ld_manage_manager_layout_top.addLayout(remove)
@@ -1027,18 +1137,37 @@ class BobPrimeApp(QMainWindow):
         ld_manage_manager_layout_top.setContentsMargins(10, 20, 0, 0)
         
         ld_manage_group_boxbottom = QGroupBox("Enable LDPlayer Manager")
+        ld_manage_group_boxbottom.setCheckable(True)
+        ld_manage_group_boxbottom.setChecked(True)
         ld_manage_manager_layout_bottom = QVBoxLayout(ld_manage_group_boxbottom)
         autoput = QHBoxLayout()
-        autoput_label = QLabel("Auto Put LD:")
+        autoput_label = QCheckBox("Auto Pull Account/Page Name")
+        clear_existing = QCheckBox("Clear Existing Names")
+        
         autoput.addWidget(autoput_label)
+        autoput.addWidget(clear_existing)
+        autoput.addStretch(1)
+        
         FBlocal = QHBoxLayout()
-        FBlocal_label = QLabel("FB Local LD:")
+        FBlocal_label = QCheckBox("FB Login")
+        FBlocal_value = QLineEdit()
+        FBlocal_value.setText(r"C:/path/to/FBlocal.txt")
+        FBlocal_browse = QPushButton("...")
+        FBlocal_browse.setStyleSheet("margin: 0px; padding: 2px 10px; ")
+        account_page_name = QCheckBox("Account/Page Name")
+        account_page_name_btn = QPushButton("@")
+        account_page_name_btn.setStyleSheet("margin: 0px; padding: 2px 10px; ")
         FBlocal.addWidget(FBlocal_label)
+        FBlocal.addWidget(FBlocal_value)
+        FBlocal.addWidget(FBlocal_browse)
+        FBlocal.addWidget(account_page_name)
+        FBlocal.addWidget(account_page_name_btn)
+        
         createpage = QHBoxLayout()
-        createpage_label = QLabel("Create Page LD:")
+        createpage_label = QCheckBox("Create Pages")
         createpage.addWidget(createpage_label)
         shutdownbottom = QHBoxLayout()
-        shutdownbottom_label = QLabel("Shutdown Bottom LD:")
+        shutdownbottom_label = QCheckBox("Shutdown PC When Finish")
         shutdownbottom.addWidget(shutdownbottom_label)
 
         ld_manage_manager_layout_bottom.addLayout(autoput)
@@ -1048,13 +1177,11 @@ class BobPrimeApp(QMainWindow):
         ld_manage_manager_layout_bottom.addStretch(1)
         ld_manage_manager_layout_bottom.setContentsMargins(10, 20, 0, 0)
 
-
-        ld_manage_group_boxtop.setStyleSheet("margin: 5; padding: 0;")
-        ld_manage_group_boxbottom.setStyleSheet("margin: 5; padding: 0;")
+        ld_manage_group_boxtop.setStyleSheet("margin: 8px;")
+        ld_manage_group_boxbottom.setStyleSheet("margin: 8px;")
 
         ld_manage_manager_layout.addWidget(ld_manage_group_boxtop)
         ld_manage_manager_layout.addWidget(ld_manage_group_boxbottom)
-        
         ld_manage_layout.addWidget(ld_manage_list, 3)
         ld_manage_layout.addWidget(ld_manage_manager, 7)
 
