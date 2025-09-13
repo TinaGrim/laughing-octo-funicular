@@ -97,86 +97,9 @@ class BobPrimeApp(QMainWindow):
         self.Grim = option()
         self.setWindowTitle("Girm Prime App")
         self.setGeometry(100, 100, 1500, 800)
-        self.setStyleSheet("""
-            QMainWindow, QWidget{
-            background-color: #292c3b;
-            color: white;
-            }
-            QCheckBox {
-                color: white;
-            }
-            QCheckBox::indicator {
-            width: 18px;
-            height: 18px;
-            }
-            QCheckBox::indicator:checked {
-            image: url(Logo/check1.png);
-            }
-
-            QLabel {
-                color: white;
-            }
-            QPushButton {
-                background-color: #13599d;
-                margin: 0px;
-                padding: 5px;
-
-            }
-            QPushButton::pressed {
-                background-color: #176ec3;
-                margin: 0px;
-                padding: 5px;
-            }
-            QTabBar::tab {
-                margin: 0px;
-                padding: 5px 30px;
-                background-color: #292c3b
-            }
-            QTabBar::tab:selected {
-                background-color: #176ec3;
-                border-radius: 5px;
-            }
-            QTabWidget::pane {
-                top: 0px;
-                margin: 0px;
-                padding: 0px;
-                border: 2px solid #808080;
-                border-radius: 5px;
-            }
-            QTabWidget > QWidget {
-                margin: 0px;
-                padding: 0px;
-            }
-            QGroupBox {
-                border: 2px solid gray;
-                border-radius: 5px;
-                margin: 0px;
-            }
-            QGroupBox::title {
-                subcontrol-origin: padding;
-                subcontrol-position: top left; 
-                background-color:#292c3b;
-                padding: 0px 0px;
-                margin: -13px 0px 20px 10px;
-                border-radius: 10px;
-                font-size: 12px;
-            }
-            QGroupBox::indicator {
-                width: 18px;
-                height: 18px;
-            }
-            QGroupBox::indicator:checked {
-                image: url(Logo/check1.png);
-            }
-            QHeaderView {
-                background-color: transparent;
-
-                border-radius: 5px;
-            }
-            QSpinBox {
-                margin: 0px;
-            }
-        """)
+        with open("style.qss") as f:
+            self.setStyleSheet(f.read())
+            
         
         self.logo = "Logo/logo_icon_big.png"
         if os.path.exists(self.logo):
