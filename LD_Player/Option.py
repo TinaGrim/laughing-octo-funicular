@@ -466,20 +466,9 @@ class Activity:
             print("proxies NONE.")
             return ""
         return ""
-    def MyProxy(self):
-        try:
-            r = requests.get("")
-            proxies = {
-                "http": f"socks5://{self.proxy()}",
-                "https": f"socks5://{self.proxy()}"
-            }
-        except Exception as e:
-            print(f"Error getting proxy: {e}")
-            return ""
+
         
-        
-        
-        
+         
     def __load_proxies(self):
         try:
 
