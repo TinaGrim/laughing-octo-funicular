@@ -339,8 +339,8 @@ class option:
         months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
         MONTH = random.choice(months)
         return MONTH
-    
-    def clear_app_data(self, device_name, package_name)-> None:
+
+    def clear_app_data(self, device_name: str, package_name: str) -> None:
         Clear = subprocess.run(["adb", "-s", device_name, "shell", "pm", "clear", package_name])
         print("[ \033[92mOK\033[0m ] " + "Clear out: ",Clear)
         
@@ -357,6 +357,7 @@ class option:
             
         find_pid_cmd = f'netstat -aon | findstr :{port}'
         line = []
+
         try:
             result = subprocess.check_output(find_pid_cmd, shell=True, text=True)
             line = result.strip().splitlines()
