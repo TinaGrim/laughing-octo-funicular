@@ -24,18 +24,15 @@ class LDPlayerRemote():
     def __init__(self, driverID: int):
         super().__init__()
 
-        self.driverID = driverID
-        self.emu = f"emulator-55{(self.driverID-1)*2+54}"
-        self.port = 4722 + self.driverID
-
         self.GET = option()
+        self.driverID = driverID
+        self.port = 4722 + self.driverID
         self.SELECTOR = self.GET.SELECTOR
         self.IMFORMATION = self.GET.IMFORMATION
+        self.emu = f"emulator-55{(self.driverID-1)*2+54}"
         self.activity = Activity(self.emu, self.driverID)
-        self.SELECTOR = self.GET.SELECTOR
-        self.IMFORMATION = self.GET.IMFORMATION
-        
         self.Driver = self.GET.cap(self.port, self.driverID)
+
         if self.Driver is None:
             print("Driver did not exist...")
             return 0
@@ -48,11 +45,15 @@ class LDPlayerRemote():
         try:
             func(*args, **kwargs)
         except (InvalidSessionIdException, MaxRetryError, ConnectionError) as e:
-            print("[ \033[91mClose\033[0m ] " + "Closing Appium server During Remote Driver =>", str(e))
+            print("[ \033[91mClose\033[0m ] " + "Closing Appium server During Remote Driver => ", str(e))
             self.activity.setActivity("No Action...")
             sys.exit(1)
-        except (NoSuchElementException, TimeoutException) as e:
+        except NoSuchElementException as e:
             print("[ \033[91mClose\033[0m ] " + "Found no element => " + str(e))
+            self.activity.setActivity("No Action...")
+            sys.exit(1)
+        except TimeoutException as e:
+            print(f"[ \033[91mClose\033[0m ] " + "Time out => " + str(e))
             self.activity.setActivity("No Action...")
             sys.exit(1)
         except WebDriverException as e:
@@ -73,8 +74,15 @@ class LDPlayerRemote():
         el.click()
         el.clear()
         el.send_keys(text)
-        return el  
-       
+        return el
+    
+    def action(self, label, func, *args, **kwargs):
+        try:
+            self.activity.setActivity(label)
+            return func(*args, **kwargs)
+        except Exception as e:
+            print(f"[ \033[91mERROR\033[0m ] {label}: {e}")
+            return None
     def ProxyConnect(self):
 
             if self.Driver is None:
@@ -82,14 +90,9 @@ class LDPlayerRemote():
                 return 0
             self.Driver.press_keycode(3)
             
-            try:
-                self.activity.setActivity("Open Proxy")
-                self.wait_and_click(self.GET.SELECTOR["Proxy"])
-            except Exception as e:
-                print(f"Error opening proxy: {e}")
-
-            self.activity.setActivity("Add New")
-            self.wait_and_click(self.GET.SELECTOR["addProxy"])
+            
+            self.action("Open Proxy", self.wait_and_click, self.GET.SELECTOR["Proxy"])
+            self.action("Add New Proxy", self.wait_and_click, self.GET.SELECTOR["addProxy"])
 
             try:
                 proxy = self.activity.proxy()
@@ -99,25 +102,11 @@ class LDPlayerRemote():
             except Exception as e:
                 print("[ \033[92mNot Found\033[0m ] " + f"Error getting proxy: {e}")
 
-            try:
-                self.activity.setActivity("Server")
 
-                self.wait_and_send_keys(self.GET.SELECTOR["server"], ip)
-            except Exception as e:
-                print(f"Error filling server: {e}")
-                
-            try:
-                self.activity.setActivity("Port")
-                self.wait_and_send_keys(self.GET.SELECTOR["port"], pot)
-            except Exception as e:
-                print(f"Error filling port: {e}")
-
-
-            self.activity.setActivity("Save Proxy")
-            self.wait_and_click(self.GET.SELECTOR["save"], 6)
-
-            self.activity.setActivity("Start Proxy")
-            self.wait_and_click(self.GET.SELECTOR["startProxy"], 6)
+            self.action("Server", self.wait_and_send_keys, self.GET.SELECTOR["server"], ip)
+            self.action("Port", self.wait_and_send_keys, self.GET.SELECTOR["port"], pot)
+            self.action("Save Proxy", self.wait_and_click, self.GET.SELECTOR["save"], 6)
+            self.action("Start Proxy", self.wait_and_click, self.GET.SELECTOR["startProxy"], 6)
 
             self.Driver.press_keycode(3)
             self.Driver.quit()
@@ -141,12 +130,9 @@ class LDPlayerRemote():
 
 
 
-            self.activity.setActivity("Start")
             
             self.GET.clear_app_data(self.emu, "com.facebook.orca")
-            self.activity.setActivity("Messenger")
-            
-            self.wait_and_click(self.GET.SELECTOR["Messenger"], 3)
+            self.action("Open Messenger", self.wait_and_click, self.GET.SELECTOR["Messenger"], 3)
 
             self.activity.setActivity("Cancel Button")
             time.sleep(8)
@@ -186,8 +172,7 @@ class LDPlayerRemote():
                 print(f"Error executing adb command: {e}")
                 
 
-            self.activity.setActivity("Create Account")
-            self.wait_and_click(self.GET.SELECTOR["createAccount"], 4)
+            self.action("Create Account", self.wait_and_click, self.GET.SELECTOR["createAccount"], 4)
 
 
             try:
@@ -195,21 +180,17 @@ class LDPlayerRemote():
             except Exception:
                 self.wait_and_click(self.GET.SELECTOR["getStarted2"], timeout=10)
 
-            try:
-                self.wait_and_click(self.GET.SELECTOR["permissionDeny"], timesleep=4,timeout=10)
-            except Exception:
-                pass
+            self.action("Deny Permission", self.wait_and_click, self.GET.SELECTOR["permissionDeny"], timesleep=4, timeout=10)
+
 
 
             #WebDriverWait(Driver, 10).until(EC.presence_of_element_located((By.XPATH, SELECTOR["startAfterDeny"]))).click()
 
-            self.wait_and_click(self.GET.SELECTOR["firstNameWidget"], 4).send_keys(self.IMFORMATION["firstName"])
+            self.action("Fill First Name", self.wait_and_send_keys, self.GET.SELECTOR["firstNameWidget"], self.IMFORMATION["firstName"], 4)
 
+            self.action("Fill Last Name", self.wait_and_send_keys, self.GET.SELECTOR["lastNameWidget"], self.IMFORMATION["lastName"], 4)
 
-
-            self.wait_and_click(self.GET.SELECTOR["lastNameWidget"], 4).send_keys(self.IMFORMATION["lastName"])
-
-            self.wait_and_click(self.GET.SELECTOR["afterNameFill"], 4)
+            self.action("After Name Fill", self.wait_and_click, self.GET.SELECTOR["afterNameFill"], 4)
 
             time.sleep(4)
 
@@ -282,23 +263,22 @@ class LDPlayerRemote():
 
 
 
-            self.wait_and_click(self.SELECTOR["setDate"], timesleep=4, timeout=30)
+            self.action("Set Date", self.wait_and_click, self.SELECTOR["setDate"], timesleep=4, timeout=30)
 
-            self.wait_and_click(self.SELECTOR["afterDate"], timesleep=4, timeout=30)
+            self.action("After Date", self.wait_and_click, self.SELECTOR["afterDate"], timesleep=4, timeout=30)
 
             Gender = self.IMFORMATION["gender"]
-            self.wait_and_click(f"""//android.widget.RadioButton[@content-desc="{Gender}"]/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup/android.widget.ImageView""", timesleep=4, timeout=30)
+            self.action("Select Gender", self.wait_and_click, f"""//android.widget.RadioButton[@content-desc="{Gender}"]/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup/android.widget.ImageView""", timesleep=4, timeout=30)
 
-            self.wait_and_click(self.SELECTOR["afterGender"], timesleep=4, timeout=30)
+            self.action("After Gender", self.wait_and_click, self.SELECTOR["afterGender"], timesleep=4, timeout=30)
 
-            self.activity.setActivity("sign in email")
-            self.wait_and_click(self.SELECTOR["signUpEmail"], timesleep=4, timeout=30)
+            self.action("Sign Up Email", self.wait_and_click, self.SELECTOR["signUpEmail"], timesleep=4, timeout=30)
             Mail = self.IMFORMATION["email"]
-            self.wait_and_send_keys(self.SELECTOR["emailWidget"], Mail, timesleep=4, timeout=30)
+            self.action("Enter Email", self.wait_and_send_keys, self.SELECTOR["emailWidget"], Mail, timesleep=4, timeout=30)
 
 
             time.sleep(4)
-            WebDriverWait(self.Driver, 30).until(EC.presence_of_element_located((By.XPATH, self.SELECTOR["confirmEmail"]))).click()
+            self.action("Confirm Email", self.wait_and_click, self.SELECTOR["confirmEmail"], timesleep=4, timeout=30)
 
             self.activity.setActivity("Save Data")
             time.sleep(1)

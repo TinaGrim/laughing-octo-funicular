@@ -76,6 +76,8 @@ class option:
         }
         self.number = Number
         self.URL = "http://127.0.0.1:5000/"
+        self.DIR_LD = "D:\\LDPlayer\\LDPlayer9"
+        self.ok = "[ \033[92mOK\033[0m ] "
         
 
     @timer
@@ -91,10 +93,10 @@ class option:
         SUP = self.__info(1)
         
         try:
-            LDPlayer_launcher_path = f'"D:\\LDPlayer\\LDPlayer9\\ldconsole.exe" launch --index {index}'
-            LDPlayer_setup_path = f'"D:\\LDPlayer\\LDPlayer9\\ldconsole.exe" modify --index {index} --resolution 300,600,160 --cpu 2 --memory 2048'
-            
-            subprocess.run(LDPlayer_setup_path, shell=True, startupinfo=SUP) 
+            LDPlayer_launcher_path = f'"{self.DIR_LD}\\ldconsole.exe" launch --index {index}'
+            LDPlayer_setup_path = f'"{self.DIR_LD}\\ldconsole.exe" modify --index {index} --resolution 300,600,160 --cpu 2 --memory 2048'
+
+            subprocess.run(LDPlayer_setup_path, shell=True, startupinfo=SUP)
             subprocess.Popen(LDPlayer_launcher_path, shell=True, startupinfo=SUP)
         except Exception as e:
             traceback.print_exc()
@@ -107,7 +109,7 @@ class option:
     def check_ld_in_list(self)->list[str]:
         
         try:
-            path = "D:\\LDPlayer\\LDPlayer9\\ldconsole.exe list"
+            path = f"{self.DIR_LD}\\ldconsole.exe list"
             self.ld_list_name = subprocess.run(path, shell = True,stdout=subprocess.PIPE, text=True)
 
         except:
@@ -122,7 +124,7 @@ class option:
         try:
             Datas = []
             for i in range(0, 5):
-                with open(f"D:\\LDPlayer\\LDPlayer9\\vms\\config\\leidian{i}.config") as f:
+                with open(f"{self.DIR_LD}\\vms\\config\\leidian{i}.config") as f:
                     lines = f.readlines()
                     for line in lines:
                         if FIND in line:
@@ -142,7 +144,7 @@ class option:
                 for w in pygetwindow.getAllWindows():
                     if w.title == LD_Name:
                         w.moveTo(index * 300,0)
-                        print("[ \033[92mOK\033[0m ] " + f"LDPlayer {index + 1} Arranged successfully")
+                        print(self.ok + f"LDPlayer {index + 1} Arranged successfully")
                         found = True
                         break
                 time.sleep(1)
@@ -186,7 +188,6 @@ class option:
             startupinfo.wShowWindow = Show
             return startupinfo
         else:
-            # currently only support Windows
             sys.exit(1)
     
     def wait_for_ldplayer_device(self, device_name: str, timeout=60):
@@ -216,7 +217,7 @@ class option:
                         text=True
                     )
                     if shell_result.returncode == 0 and "ok" in shell_result.stdout:
-                        print("[ \033[92mOK\033[0m ] " + f"{device_name} is fully ready.")
+                        print(self.ok + f"{device_name} is fully ready.")
                         return True
         print(f"Timeout: {device_name} did not appear in adb devices.")
         return False
@@ -232,7 +233,7 @@ class option:
         """Start Remote Driver"""   
         Driver_path = os.path.abspath(__file__)
         Driver_path = os.path.dirname(Driver_path) + f"\\Drivers.py"
-        print("[ \033[92mOK\033[0m ] " + f"Remote Driver Path: ", Driver_path)
+        print(self.ok + f"Remote Driver Path: ", Driver_path)
         subprocess.Popen(["python",Driver_path]) # Sample Remote using Driver in Path That Exists
 
     def Full_setup(self):
@@ -246,8 +247,11 @@ class option:
             if openLD:
                 self.clear_app_data(device_name, "com.scheler.superproxy")# Sample Wait Full setup and clear it up
                 time.sleep(2)
+            else:
+                print(f"Error: {device_name} not found in adb devices.")
+                continue
                 # self.clear_app_data(device_name,"com.facebook.orca")# Sample Wait Full setup  and clear it up
-
+    # Not Mine
     def GetCode(self, username: str, password: str, email):
         imap_server = "imap.yandex.ru"
         port = 993
@@ -289,7 +293,7 @@ class option:
     # password = "frshsghyvjqeiayv"  # Use app password if 2FA is enabled
     # filter_email = "tinagrim+001kh@yandex.com"
 
-    def opened_drivers(self)-> list[str]:
+    def current_ld(self)-> list[str]:
 
         Drivers_list_opened = []
         
@@ -342,7 +346,7 @@ class option:
 
     def clear_app_data(self, device_name: str, package_name: str) -> None:
         Clear = subprocess.run(["adb", "-s", device_name, "shell", "pm", "clear", package_name])
-        print("[ \033[92mOK\033[0m ] " + "Clear out: ",Clear)
+        print(self.ok + "Clear out: ",Clear)
         
         
     def KillAppium(self, port: int, ID:int) -> None:
@@ -353,7 +357,7 @@ class option:
             close_appium_response = r.json().get("scheduleClose",True) 
 
         except Exception as e:
-            print(f"Server Can Not Get Schedule status: {e}")
+            print(f"Can not kill appium: {e}")
             
         find_pid_cmd = f'netstat -aon | findstr :{port}'
         line = []
@@ -363,7 +367,7 @@ class option:
             line = result.strip().splitlines()
             
         except subprocess.CalledProcessError:
-            print("[ \033[92mOK\033[0m ] " + "Port Cleared")
+            print(self.ok + "Port Cleared")
         except Exception as e:
             print(f"Unexpected error: {e}")
 
@@ -398,6 +402,7 @@ class Activity:
         self.webproxy = ""
         self.TIMEOUT = 5
         self.stop_thread = False
+        self.ok = "[ \033[92mOK\033[0m ] "
 
 
 
@@ -421,7 +426,7 @@ class Activity:
             from_httpbin = requests.get(self.TEST_URL2, proxies=proxies, timeout=self.TIMEOUT)
             if self.stop_thread:
                 return
-            print("[ \033[92mOK\033[0m ] " + f"Proxy: {proxy} | IP API: {from_ip_api.status_code} | HTTPBin: {from_httpbin.status_code}")
+            print(self.ok + f"Proxy: {proxy} | IP API: {from_ip_api.status_code} | HTTPBin: {from_httpbin.status_code}")
             if from_httpbin.status_code == 200 and from_ip_api.status_code == 200:
                 data = from_httpbin.json()
                 ip = data.get("origin")
@@ -434,7 +439,7 @@ class Activity:
         proxies = []
         self.results = queue.Queue()
         proxies = self.__load_proxies()
-        print("[ \033[92mOK\033[0m ] " + f"Checking {len(proxies)} proxies using threads...")
+        print(self.ok + f"Checking {len(proxies)} proxies using threads...")
         threads = []
         
         for proxy in proxies:
@@ -449,8 +454,8 @@ class Activity:
             try:
                 proxy = self.results.get(timeout=0.1)
                 working.append((proxy))
-                if len(working) >= 5:
-                    print("[ \033[92mOK\033[0m ]" + f" Found {len(working)} working proxies.")
+                if len(working) >= 2:
+                    print(self.ok + f"Found {len(working)} working proxies.")
                     self.stop_thread = True
                     
                     proxy = random.choice(working)

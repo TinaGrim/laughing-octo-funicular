@@ -177,16 +177,16 @@ class BobPrimeApp(QMainWindow):
         self.scheduleClose = self.closeAppium.isChecked()
         return self.scheduleClose
 
-    def openLD(self):
+    def openLD(self) -> None:
         if not self.specific_ld_ID:
             return
         self.select_all_ld.setChecked(False)
         self.selected_LD.setText(f"{0} Selected")
         self.start_thread(LDPlayer().run, self.specific_ld_ID)
         
-    def check_activity(self):
+    def check_activity(self) -> list[str]:
         try:
-            self.drivers = self.Grim.opened_drivers()
+            self.drivers = self.Grim.current_ld()
             return self.drivers if self.drivers is not None else []
         except Exception as e:
             print(f"Error checking activity: {e}")
@@ -560,7 +560,7 @@ class BobPrimeApp(QMainWindow):
         screen_resolution_list.setCurrentIndex(1)
         devices_setting_box_layout_screen.addWidget(screen_resolution, alignment=Qt.AlignmentFlag.AlignCenter)
         devices_setting_box_layout_screen.addWidget(screen_resolution_list, alignment=Qt.AlignmentFlag.AlignCenter)
-        
+
 
         devices_setting_box_layout_startup = QHBoxLayout()
         label_startup = QCheckBox("Run at Startup")
@@ -1486,13 +1486,7 @@ class BobPrimeApp(QMainWindow):
 
 
 class Proxy(QProxyStyle):
-    def subControlRect(
-        self,
-        control: QStyle.ComplexControl,
-        opt: QStyleOptionSpinBox,
-        subControl: QStyle.SubControl,
-        widget: Optional[QSpinBox] = None,
-    ) -> QRect:
+    def subControlRect(self,control: QStyle.ComplexControl, opt: QStyleOptionSpinBox, subControl: QStyle.SubControl, widget: Optional[QSpinBox] = None,) -> QRect:
         rect = super().subControlRect(control, opt, subControl, widget)  # type: ignore
         if control == QStyle.ComplexControl.CC_SpinBox:
             total_w = widget.width() if widget is not None else rect.width()
