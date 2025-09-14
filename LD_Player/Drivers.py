@@ -83,9 +83,7 @@ class LDPlayerRemote():
             self.Driver.press_keycode(3)
             
             try:
-                time.sleep(2)
                 self.activity.setActivity("Open Proxy")
-                time.sleep(3)
                 self.wait_and_click(self.GET.SELECTOR["Proxy"])
             except Exception as e:
                 print(f"Error opening proxy: {e}")
