@@ -451,7 +451,6 @@ class Activity:
                 if len(working) >= 5:
                     print("[ \033[92mOK\033[0m ]" + f" Found {len(working)} working proxies.")
                     self.stop_thread = True
-                    print(self.stop_thread)
                     
                     proxy = random.choice(working)
                     return proxy if proxy else ""

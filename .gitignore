@@ -5,6 +5,9 @@ __pycache__/
 
 # C extensions
 *.so
+# File
+Data.txt
+XPATH.txt
 
 # Distribution / packaging
 .Python

@@ -32,7 +32,6 @@ class LDPlayerRemote():
         self.SELECTOR = self.GET.SELECTOR
         self.IMFORMATION = self.GET.IMFORMATION
         self.activity = Activity(self.emu, self.driverID)
-        self.GET = option()
         self.SELECTOR = self.GET.SELECTOR
         self.IMFORMATION = self.GET.IMFORMATION
         
@@ -42,12 +41,42 @@ class LDPlayerRemote():
             return 0
         
         time.sleep(2)
-        self.ProxyConnect()
-        self.driverRun(self.driverID)
-        
-        
-    def ProxyConnect(self):
+        self.safe_run(self.ProxyConnect)
+        self.safe_run(self.driverRun, self.driverID)
+
+    def safe_run(self, func, *args, **kwargs):
         try:
+            func(*args, **kwargs)
+        except (InvalidSessionIdException, MaxRetryError, ConnectionError) as e:
+            print("[ \033[91mClose\033[0m ] " + "Closing Appium server During Remote Driver =>", str(e))
+            self.activity.setActivity("No Action...")
+            sys.exit(1)
+        except (NoSuchElementException, TimeoutException) as e:
+            print("[ \033[91mClose\033[0m ] " + "Found no element => " + str(e))
+            self.activity.setActivity("No Action...")
+            sys.exit(1)
+        except WebDriverException as e:
+            print(f"[ \033[91mClose\033[0m ] " + "Server get error => " + str(e))
+            self.activity.setActivity("No Action...")
+            sys.exit(1)
+            
+            
+    def wait_and_click(self, xpath, timesleep=3, timeout=30):
+        time.sleep(timesleep)
+        el = WebDriverWait(self.Driver, timeout).until(EC.presence_of_element_located((By.XPATH, xpath)))
+        el.click()
+        return el
+
+    def wait_and_send_keys(self, xpath, text, timesleep=3, timeout=30):
+        time.sleep(timesleep)
+        el = WebDriverWait(self.Driver, timeout).until(EC.presence_of_element_located((By.XPATH, xpath)))
+        el.click()
+        el.clear()
+        el.send_keys(text)
+        return el  
+       
+    def ProxyConnect(self):
+
             if self.Driver is None:
                 print("Driver did not exist...")
                 return 0
@@ -57,13 +86,12 @@ class LDPlayerRemote():
                 time.sleep(2)
                 self.activity.setActivity("Open Proxy")
                 time.sleep(3)
-                WebDriverWait(self.Driver, 30).until(EC.presence_of_element_located((By.XPATH, self.GET.SELECTOR["Proxy"] ))).click()
+                self.wait_and_click(self.GET.SELECTOR["Proxy"])
             except Exception as e:
                 print(f"Error opening proxy: {e}")
 
             self.activity.setActivity("Add New")
-            time.sleep(3)
-            WebDriverWait(self.Driver, 30).until(EC.presence_of_element_located((By.XPATH, self.GET.SELECTOR["addProxy"] ))).click()
+            self.wait_and_click(self.GET.SELECTOR["addProxy"])
 
             try:
                 proxy = self.activity.proxy()
@@ -75,52 +103,33 @@ class LDPlayerRemote():
 
             try:
                 self.activity.setActivity("Server")
-                time.sleep(3)
-                clickserver = WebDriverWait(self.Driver, 30).until(EC.presence_of_element_located((By.XPATH, self.GET.SELECTOR["server"] )))
-                clickserver.click()
-                time.sleep(1)
-                clickserver.send_keys(ip)
+
+                self.wait_and_send_keys(self.GET.SELECTOR["server"], ip)
             except Exception as e:
                 print(f"Error filling server: {e}")
+                
             try:
                 self.activity.setActivity("Port")
-                time.sleep(3)
-                clickport = WebDriverWait(self.Driver, 30).until(EC.presence_of_element_located((By.XPATH, self.GET.SELECTOR["port"] )))
-                clickport.click()
-                time.sleep(1)
-                clickport.send_keys(pot)
+                self.wait_and_send_keys(self.GET.SELECTOR["port"], pot)
             except Exception as e:
                 print(f"Error filling port: {e}")
 
 
             self.activity.setActivity("Save Proxy")
-            time.sleep(6)
-            WebDriverWait(self.Driver, 30).until(EC.presence_of_element_located((By.XPATH, self.GET.SELECTOR["save"] ))).click()
+            self.wait_and_click(self.GET.SELECTOR["save"], 6)
 
             self.activity.setActivity("Start Proxy")
-            time.sleep(6)
-            WebDriverWait(self.Driver, 30).until(EC.presence_of_element_located((By.XPATH, self.GET.SELECTOR["startProxy"] ))).click()
+            self.wait_and_click(self.GET.SELECTOR["startProxy"], 6)
 
-
-
+            self.Driver.press_keycode(3)
+            self.Driver.quit()
             self.GET.KillAppium(self.port, self.driverID)
+            time.sleep(2)
 
-        except (InvalidSessionIdException, MaxRetryError, ConnectionError):
-            print("[ \033[91mClose\033[0m ] " + "Closing Appium server During Remote Driver")
-            self.activity.setActivity("No Action...")
-            sys.exit(1)
-        except (NoSuchElementException, TimeoutException):
-            print("[ \033[91mClose\033[0m ] " + "Found no element")
-            self.activity.setActivity("No Action...")
-            sys.exit(1)
-        except WebDriverException as e:
-            print(f"[ \033[91mClose\033[0m ] " + "Server get error")
-            self.activity.setActivity("No Action...")
-            sys.exit(1)
+
             
     def driverRun(self, driverID):
 
-        try:
             
             self.Driver = self.GET.cap(self.port, self.driverID)
             time.sleep(2)
@@ -136,11 +145,10 @@ class LDPlayerRemote():
 
             self.activity.setActivity("Start")
             
-            self.Driver.press_keycode(3)
             self.GET.clear_app_data(self.emu, "com.facebook.orca")
             self.activity.setActivity("Messenger")
-            time.sleep(3)
-            WebDriverWait(self.Driver, 30).until(EC.presence_of_element_located((By.XPATH,self.GET.SELECTOR["Messenger"] ))).click()
+            
+            self.wait_and_click(self.GET.SELECTOR["Messenger"], 3)
 
             self.activity.setActivity("Cancel Button")
             time.sleep(8)
@@ -174,45 +182,36 @@ class LDPlayerRemote():
                         break
                 if not passing:
                     print("[ \033[92mOK\033[0m ] " + "Found Cancel Button")
-                    WebDriverWait(self.Driver, 10).until(
-                        EC.presence_of_element_located((By.XPATH, self.GET.SELECTOR["cancelAuth"]))
-                    ).click()
+                    self.wait_and_click(self.GET.SELECTOR["cancelAuth"])
 
             except subprocess.CalledProcessError as e:
                 print(f"Error executing adb command: {e}")
                 
 
             self.activity.setActivity("Create Account")
-            time.sleep(4)
-            WebDriverWait(self.Driver, 30).until(EC.presence_of_element_located((By.XPATH, self.GET.SELECTOR["createAccount"]))).click()
+            self.wait_and_click(self.GET.SELECTOR["createAccount"], 4)
 
-            self.activity.setActivity("Create Account")
-            time.sleep(4)
-            
+
             try:
-                WebDriverWait(self.Driver, 10).until(EC.presence_of_element_located((By.XPATH, self.GET.SELECTOR["getStarted"]))).click()
+                self.wait_and_click(self.GET.SELECTOR["getStarted"], timeout=10)
             except Exception:
-                WebDriverWait(self.Driver, 10).until(EC.presence_of_element_located((By.XPATH, self.GET.SELECTOR["getStarted2"]))).click()
+                self.wait_and_click(self.GET.SELECTOR["getStarted2"], timeout=10)
 
-            time.sleep(4)
             try:
-                WebDriverWait(self.Driver, 10).until(EC.presence_of_element_located((By.XPATH, self.GET.SELECTOR["permissionDeny"]))).click()
+                self.wait_and_click(self.GET.SELECTOR["permissionDeny"], timesleep=4,timeout=10)
             except Exception:
                 pass
 
 
             #WebDriverWait(Driver, 10).until(EC.presence_of_element_located((By.XPATH, SELECTOR["startAfterDeny"]))).click()
 
-            time.sleep(4)
-            WebDriverWait(self.Driver, 30).until(EC.presence_of_element_located((By.XPATH, self.GET.SELECTOR["firstNameWidget"]))).send_keys(self.IMFORMATION["firstName"])
-            time.sleep(4)
+            self.wait_and_click(self.GET.SELECTOR["firstNameWidget"], 4).send_keys(self.IMFORMATION["firstName"])
 
 
 
-            WebDriverWait(self.Driver, 30).until(EC.presence_of_element_located((By.XPATH, self.GET.SELECTOR["lastNameWidget"]))).send_keys(self.IMFORMATION["lastName"])
-            time.sleep(4)
+            self.wait_and_click(self.GET.SELECTOR["lastNameWidget"], 4).send_keys(self.IMFORMATION["lastName"])
 
-            WebDriverWait(self.Driver, 30).until(EC.presence_of_element_located((By.XPATH, self.GET.SELECTOR["afterNameFill"]))).click()
+            self.wait_and_click(self.GET.SELECTOR["afterNameFill"], 4)
 
             time.sleep(4)
 
@@ -275,40 +274,29 @@ class LDPlayerRemote():
             
             try:
                 for Year in range(Year_Now,Year-1,-1):
-                    
-                    WebDriverWait(self.Driver, 5).until(EC.presence_of_element_located((By.XPATH, f"""//android.widget.Button[@text="{Year}"]"""))).click()
+
+                    self.wait_and_click(f"""//android.widget.Button[@text="{Year}"]""", timesleep=0, timeout=5)
                     time.sleep(1)
             except Exception:
-                WebDriverWait(self.Driver, 5).until(EC.presence_of_element_located((By.XPATH, f"""//android.widget.Button[@text="{Year+1}"]"""))).click()
+                self.wait_and_click(f"""//android.widget.Button[@text="{Year+1}"]""", timesleep=0, timeout=5)
                 time.sleep(1)
                 
 
 
 
-            time.sleep(4)
-            WebDriverWait(self.Driver, 30).until(EC.presence_of_element_located((By.XPATH, self.SELECTOR["setDate"]))).click()
+            self.wait_and_click(self.SELECTOR["setDate"], timesleep=4, timeout=30)
 
-            time.sleep(4)
-            WebDriverWait(self.Driver, 30).until(EC.presence_of_element_located((By.XPATH, self.SELECTOR["afterDate"]))).click()
-            
+            self.wait_and_click(self.SELECTOR["afterDate"], timesleep=4, timeout=30)
 
             Gender = self.IMFORMATION["gender"]
-            time.sleep(4)
-            WebDriverWait(self.Driver, 30).until(EC.presence_of_element_located((By.XPATH, f"""//android.widget.RadioButton[@content-desc="{Gender}"]/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup/android.widget.ImageView"""))).click()
+            self.wait_and_click(f"""//android.widget.RadioButton[@content-desc="{Gender}"]/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup/android.widget.ImageView""", timesleep=4, timeout=30)
 
-            time.sleep(4)
-            WebDriverWait(self.Driver, 30).until(EC.presence_of_element_located((By.XPATH, self.SELECTOR["afterGender"]))).click()
+            self.wait_and_click(self.SELECTOR["afterGender"], timesleep=4, timeout=30)
 
             self.activity.setActivity("sign in email")
-            time.sleep(4)
-            WebDriverWait(self.Driver, 30).until(EC.presence_of_element_located((By.XPATH, self.SELECTOR["signUpEmail"]))).click()
-
-            time.sleep(4)
-            Email = WebDriverWait(self.Driver, 30).until(EC.presence_of_element_located((By.XPATH, self.SELECTOR["emailWidget"])))
-            Email.click()
-
-            Mail = self.IMFORMATION["emailRan"]
-            Email.send_keys(Mail)
+            self.wait_and_click(self.SELECTOR["signUpEmail"], timesleep=4, timeout=30)
+            Mail = self.IMFORMATION["email"]
+            self.wait_and_send_keys(self.SELECTOR["emailWidget"], Mail, timesleep=4, timeout=30)
 
 
             time.sleep(4)
@@ -330,18 +318,7 @@ class LDPlayerRemote():
             self.activity.setActivity("No Action...")
             sys.exit(0)
 
-        except (InvalidSessionIdException, MaxRetryError, ConnectionError):
-            print("[ \033[91mClose\033[0m ] " + "Closing Appium server During Remote Driver")
-            self.activity.setActivity("No Action...")
-            sys.exit(1)
-        except (NoSuchElementException, TimeoutException):
-            print("[ \033[91mClose\033[0m ] " + "Found no element")
-            self.activity.setActivity("No Action...")
-            sys.exit(1)
-        except WebDriverException as e:
-            print(f"[ \033[91mClose\033[0m ] " + "Server get error")
-            self.activity.setActivity("No Action...")
-            sys.exit(1)
+
 
 if __name__ == "__main__":
     URL = "http://127.0.0.1:5000/"
