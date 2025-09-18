@@ -38,7 +38,7 @@ class LDPlayerRemote():
             return 0
         
         time.sleep(2)
-        self.safe_run(self.ProxyConnect)
+        # self.safe_run(self.ProxyConnect)
         self.safe_run(self.driverRun, self.driverID)
 
     def safe_run(self, func, *args, **kwargs):
@@ -112,15 +112,14 @@ class LDPlayerRemote():
             self.Driver.quit()
             self.GET.KillAppium(self.port, self.driverID)
             time.sleep(2)
+            self.Driver = self.GET.cap(self.port, self.driverID)
+            
 
 
             
     def driverRun(self, driverID):
 
-            
-            self.Driver = self.GET.cap(self.port, self.driverID)
-            time.sleep(2)
-            
+
             if self.Driver is None:
                 print("Driver did not exist...")
                 return 0

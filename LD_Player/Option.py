@@ -81,14 +81,13 @@ class option:
         
 
     @timer
-    def __Open_Appium(self, port):
+    def __Open_Appium(self, port: int):
         """Opening Cmd of Appium"""
         
         subprocess.Popen(f'start /MIN cmd /c appium --log-level debug --relaxed-security --port {port}', shell=True, startupinfo=self.__info(2))
-        time.sleep(0.5)
 
     @timer
-    def __LDPlayer(self, startupinfo, index):
+    def __LDPlayer(self, startupinfo, index: int):
         """Opening LDPlayer by cmd"""
         SUP = self.__info(1)
         
@@ -102,9 +101,7 @@ class option:
             traceback.print_exc()
             print(f"Error launching LDPlayer: {e}")
             return
-        time.sleep(0.5)
 
-        self.__Arrangment(index)
 
     def check_ld_in_list(self)->list[str]:
         
@@ -143,7 +140,7 @@ class option:
             while not found:
                 for w in pygetwindow.getAllWindows():
                     if w.title == LD_Name:
-                        w.moveTo(index * 300,0)
+                        w.moveTo(index * 300, 0)
                         print(self.ok + f"LDPlayer {index + 1} Arranged successfully")
                         found = True
                         break
@@ -160,6 +157,8 @@ class option:
                 options.set_capability(k, v)
 
             self.__Open_Appium(port=port)
+            time.sleep(0.5)
+            
             self.driver = WebDriver(f"http://localhost:{port}", options=options) 
         except Exception as e:
             print(f"Error initializing Appium driver: {e}")
@@ -228,6 +227,8 @@ class option:
             return
         for i in self.number:
             self.__LDPlayer(self.__info(1), index=i-1) # Sample Open Your LDName
+            time.sleep(0.5)
+            self.__Arrangment(index=i-1)
 
     def Remote_Driver(self) -> None:
         """Start Remote Driver"""   
