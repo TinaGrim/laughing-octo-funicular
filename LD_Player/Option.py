@@ -17,6 +17,7 @@ import subprocess
 import pygetwindow
 from typing import Optional
 from appium import webdriver
+from .runThread import Threader
 from email.header import decode_header
 from appium.options.android.uiautomator2.base import UiAutomator2Options
 from appium.options.common.base import AppiumOptions
@@ -225,10 +226,10 @@ class option:
         
         if not self.number:
             return
-        for i in self.number:
-            self.__LDPlayer(self.__info(1), index=i-1) # Sample Open Your LDName
+        for id in self.number:
+            self.__LDPlayer(self.__info(1), index=id-1) # Sample Open Your LDName
             time.sleep(0.5)
-            self.__Arrangment(index=i-1)
+            self.__Arrangment(index=id-1)
 
     def Remote_Driver(self) -> None:
         """Start Remote Driver"""   
@@ -240,10 +241,10 @@ class option:
     def Full_setup(self):
         if not self.number:
             return
-        for i in self.number:
+        for id in self.number:
 
-            device_name = f"emulator-55{((i-1)*2+54)}"
-            
+            device_name = f"emulator-55{((id-1)*2+54)}"
+
             openLD = self.wait_for_ldplayer_device(device_name)# Sample running test shell CMD in LD
             if openLD:
                 self.clear_app_data(device_name, "com.scheler.superproxy")# Sample Wait Full setup and clear it up
@@ -445,7 +446,7 @@ class Activity:
         
         for proxy in proxies:
 
-            t = threading.Thread(target=self.__check_proxy, args=(proxy,))
+            t = Threader(self.__check_proxy, proxy)
             t.daemon = True
             t.start()
             threads.append(t)
