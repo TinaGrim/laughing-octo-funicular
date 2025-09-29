@@ -6,9 +6,8 @@ import time
 import requests
 import threading
 import subprocess
-from Option import option
-from Option import Activity
 from datetime import datetime 
+from Option import option, Activity
 from selenium.webdriver.common.by import By
 from urllib3.exceptions import MaxRetryError
 from requests.exceptions import ConnectionError
