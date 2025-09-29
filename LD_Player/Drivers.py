@@ -272,7 +272,7 @@ class LDPlayerRemote():
             self.action("After Gender", self.wait_and_click, self.SELECTOR["afterGender"], timesleep=4, timeout=30)
 
             self.action("Sign Up Email", self.wait_and_click, self.SELECTOR["signUpEmail"], timesleep=4, timeout=30)
-            Mail = self.IMFORMATION["email"]
+            Mail = self.IMFORMATION["emailRan"]
             self.action("Enter Email", self.wait_and_send_keys, self.SELECTOR["emailWidget"], Mail, timesleep=4, timeout=30)
 
 

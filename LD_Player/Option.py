@@ -70,7 +70,7 @@ class option:
         "year": self.__Random_Year(),
         "month": self.__Random_Month(),
         "gender": self.__Random_Gender(),
-        "emailRan": self.__Get_Temp_Mail(),
+        "email": self.__Random_New_Email(),
         "lastName":self.__Random_last_Name(),
         "firstName":self.__Random_first_Name()
         }
@@ -327,8 +327,8 @@ class option:
         GENDER = ["Female","Male"]
         Gender = random.choice(GENDER)
         return Gender
-    
-    def __Get_Temp_Mail(self):
+
+    def __Random_New_Email(self):
 
         Mail = "tinagrim+"+ ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(6)) + "@yandex.com"
         return Mail
