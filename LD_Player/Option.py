@@ -17,7 +17,7 @@ import subprocess
 import pygetwindow
 from typing import Optional
 from appium import webdriver
-from .runThread import Threader
+from .MyThread import Threader
 from email.header import decode_header
 from appium.options.android.uiautomator2.base import UiAutomator2Options
 from appium.options.common.base import AppiumOptions
@@ -425,20 +425,17 @@ class Activity:
         }
         try:
             from_ip_api = requests.get(self.TEST_URL1, proxies=proxies, timeout=self.TIMEOUT)
+            if self.stop_thread: return
             from_httpbin = requests.get(self.TEST_URL2, proxies=proxies, timeout=self.TIMEOUT)
-            if self.stop_thread:
-                return
+            if self.stop_thread: return
             print(self.ok + f"Proxy: {proxy} | IP API: {from_ip_api.status_code} | HTTPBin: {from_httpbin.status_code}")
             if from_httpbin.status_code == 200 and from_ip_api.status_code == 200:
-                data = from_httpbin.json()
-                ip = data.get("origin")
                 self.results.put(proxy)
         except Exception:
             pass
 
 
-    def proxy(self) -> str:
-        proxies = []
+    def proxy(self, need: int = 5) -> str:
         self.results = queue.Queue()
         proxies = self.__load_proxies()
         print(self.ok + f"Checking {len(proxies)} proxies using threads...")
@@ -456,7 +453,7 @@ class Activity:
             try:
                 proxy = self.results.get(timeout=0.1)
                 working.append((proxy))
-                if len(working) >= 2:
+                if len(working) >= need:
                     print(self.ok + f"Found {len(working)} working proxies.")
                     self.stop_thread = True
                     
@@ -470,7 +467,7 @@ class Activity:
                 time.sleep(0.05)
 
         if not working:
-            print("proxies NONE.")
+            print("proxies NONE")
             return ""
         return ""
 
