@@ -8,77 +8,10 @@ import queue
 import random
 import time
 import subprocess
+mypro = Activity(emulator="emulator-5554", driverID=1)
 class test_proxy:
-    def __init__(self):
-        self.stop_thread = False
-        
-    def load_proxies(self):
-        try:
-
-            with open("LD_Player/proxies.txt", "r") as f:
-                return [line.strip() for line in f if line.strip()]
-        except Exception as e:
-            print(f"Error loading proxies: {e}")
-            return []
-
-    def check_proxy(self,proxy):
-        proxies = {
-            "http": f"socks5://{proxy}",
-            "https": f"socks5://{proxy}"
-        }
-        try:
-            from_ip_api = requests.get("http://ip-api.com/json", proxies=proxies, timeout=5)
-            from_httpbin = requests.get("https://httpbin.org/ip", proxies=proxies, timeout=5)
-            if self.stop_thread:
-                return
-            print("[ \033[92mOK\033[0m ] " + f"Proxy: {proxy} | IP API: {from_ip_api.status_code} | HTTPBin: {from_httpbin.status_code}")
-            if from_httpbin.status_code == 200 and from_ip_api.status_code == 200:
-                data = from_httpbin.json()
-                ip = data.get("origin")
-                self.results.put(proxy)
-        except Exception:
-            pass
-
-
     def proxy(self) -> str:
-
-        proxies = []
-        self.results = queue.Queue()
-        proxies = self.load_proxies()
-        print("[ \033[92mOK\033[0m ] " + f"Checking {len(proxies)} proxies using threads...")
-        threads = []
-        
-        for proxy in proxies:
-
-            t = threading.Thread(target=self.check_proxy, args=(proxy,))
-            t.daemon = True
-            t.start()
-            threads.append(t)
-
-        working = []
-        while True:
-            try:
-                proxy = self.results.get(timeout=0.1)
-                working.append((proxy))
-                if len(working) >= 1:
-                    print("[ \033[92mOK\033[0m ]" + f" Found {len(working)} working proxies.")
-                    self.stop_thread = True
-
-                    
-                    proxy = random.choice(working)
-                    return proxy if proxy else ""
-                    
-            except queue.Empty:
-                if all(not t.is_alive() for t in threads):
-                    print("No working proxy found.")
-                    break
-                time.sleep(0.05)
-
-        if not working:
-            print("proxies NONE.")
-            return ""
-        return ""
-
+        return mypro.proxy()
 
 def test_adb():
     result = subprocess.run(["adb"], capture_output=True, text=True)
