@@ -72,8 +72,8 @@ def LDActivity():
 
 
 RemainingID = []
-@server.route("/openOrder", methods=["GET", "POST"])
-def openOrder():
+@server.route("/Order", methods=["GET", "POST"])
+def Order():
 
     for btn in GUI.LD_Button_list_qp.buttons():
         btn.setChecked(False)
@@ -83,11 +83,11 @@ def openOrder():
         RemainingID.clear()
         RemainingID.extend(ID)
         print("[ \033[92mOK\033[0m ] " + "RemainingID after POST: ", RemainingID)
-        return jsonify(openOrder=RemainingID)
+        return jsonify(Order=RemainingID)
     elif request.method == "GET":
-        return jsonify(openOrder=RemainingID)
+        return jsonify(Order=RemainingID)
     else:
-        return jsonify(openOrder=[])
+        return jsonify(Order=[])
 
 class BobPrimeApp(QMainWindow):
     def __init__(self):

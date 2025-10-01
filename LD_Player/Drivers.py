@@ -38,7 +38,7 @@ class LDPlayerRemote():
         
         time.sleep(2)
         # self.safe_run(self.ProxyConnect)
-        self.safe_run(self.driverRun, self.driverID)
+        self.safe_run(self.driverRun)
 
     def safe_run(self, func, *args, **kwargs):
         try:
@@ -61,13 +61,13 @@ class LDPlayerRemote():
             sys.exit(1)
             
             
-    def wait_and_click(self, xpath, timesleep=3, timeout=30):
+    def wait_and_click_to(self, xpath, timesleep=3, timeout=30):
         time.sleep(timesleep)
         el = WebDriverWait(self.Driver, timeout).until(EC.presence_of_element_located((By.XPATH, xpath)))
         el.click()
         return el
 
-    def wait_and_send_keys(self, xpath, text, timesleep=3, timeout=30):
+    def wait_and_send_keys_to(self, xpath, text, timesleep=3, timeout=30):
         time.sleep(timesleep)
         el = WebDriverWait(self.Driver, timeout).until(EC.presence_of_element_located((By.XPATH, xpath)))
         el.click()
@@ -82,6 +82,7 @@ class LDPlayerRemote():
         except Exception as e:
             print(f"[ \033[91mERROR\033[0m ] {label}: {e}")
             return None
+        
     def ProxyConnect(self):
 
             if self.Driver is None:
@@ -90,33 +91,36 @@ class LDPlayerRemote():
             self.Driver.press_keycode(3)
             
             
-            self.action("Open Proxy", self.wait_and_click, self.GET.SELECTOR["Proxy"])
-            self.action("Add New Proxy", self.wait_and_click, self.GET.SELECTOR["addProxy"])
+            self.action("Open Proxy", self.wait_and_click_to, self.GET.SELECTOR["Proxy"])
+            self.action("Add New Proxy", self.wait_and_click_to, self.GET.SELECTOR["addProxy"])
 
-            try:
-                proxy = self.activity.proxy()
-                ip, pot = proxy.split(":") if proxy is not None else ("OK", "OK")
-
-                print("[ \033[92mOK\033[0m ] " + f"Using Proxy: {ip}:{pot}")
-            except Exception as e:
-                print("[ \033[92mNot Found\033[0m ] " + f"Error getting proxy: {e}")
-
-
-            self.action("Server", self.wait_and_send_keys, self.GET.SELECTOR["server"], ip)
-            self.action("Port", self.wait_and_send_keys, self.GET.SELECTOR["port"], pot)
-            self.action("Save Proxy", self.wait_and_click, self.GET.SELECTOR["save"], 6)
-            self.action("Start Proxy", self.wait_and_click, self.GET.SELECTOR["startProxy"], 6)
+            ip, pot = self._get_proxy()
+            
+            self.action("Server", self.wait_and_send_keys_to, self.GET.SELECTOR["server"], ip)
+            self.action("Port", self.wait_and_send_keys_to, self.GET.SELECTOR["port"], pot)
+            self.action("Save Proxy", self.wait_and_click_to, self.GET.SELECTOR["save"], 6)
+            self.action("Start Proxy", self.wait_and_click_to, self.GET.SELECTOR["startProxy"], 6)
 
             self.Driver.press_keycode(3)
             self.Driver.quit()
             self.GET.KillAppium(self.port, self.driverID)
             time.sleep(2)
+            # reconnect
             self.Driver = self.GET.cap(self.port, self.driverID)
             
+    def _get_proxy(self):
+        try:
+            proxy = self.activity.proxy()
+            ip, pot = proxy.split(":") if proxy is not None else ("OK", "OK")
 
+            print("[ \033[92mOK\033[0m ] " + f"Using Proxy: {ip}:{pot}")
+            return ip, pot
+        except Exception as e:
+            print("[ \033[92mNot Found\033[0m ] " + f"Error getting proxy: {e}")
+            return None, None
 
             
-    def driverRun(self, driverID):
+    def driverRun(self):
 
 
             if self.Driver is None:
@@ -124,71 +128,30 @@ class LDPlayerRemote():
                 return 0
             
 
-            # GET.KillAppium(port, driverID)
-
-
-
-            
             self.GET.clear_app_data(self.emu, "com.facebook.orca")
-            self.action("Open Messenger", self.wait_and_click, self.GET.SELECTOR["Messenger"], 3)
+            self.action("Open Messenger", self.wait_and_click_to, self.GET.SELECTOR["Messenger"], 3)
 
             self.activity.setActivity("Cancel Button")
             time.sleep(8)
+            self._find_cancel()
             
+            self.action("Create Account", self.wait_and_click_to, self.GET.SELECTOR["createAccount"], 4)
             try:
-                output = subprocess.check_output(f'adb -s {self.emu} shell dumpsys activity activities', shell=True).decode('utf-8')
-                Attempt = 0
-                passing = False
-                for line in output.splitlines():
-                    if re.match("Activities=", line.strip()):
-                        line = line.split("=", 1)
-                        act = line[1].strip("[]")
-                        print("[ \033[92mOK\033[0m ] " + f"Current Activity: {act}")
-                        break
-
-                while "AssistedSignInGET" not in act and "AssistedSignInActivity" not in act:
-
-                    if Attempt < 8:
-                        time.sleep(5)
-                        Attempt += 1
-                        output = subprocess.check_output(f'adb -s emulator-55{(driverID-1)*2+54} shell dumpsys activity activities', shell=True).decode('utf-8')
-                        for line in output.splitlines():
-                            if re.match("Activities=", line.strip()):
-                                line = line.split("=", 1)
-                                act = line[1].strip("[]")
-                                print("[ \033[92mOK\033[0m ] " + f"Current Activity: {act}")
-                                break
-                    else:
-                        print("Not found try pass")
-                        passing = True
-                        break
-                if not passing:
-                    print("[ \033[92mOK\033[0m ] " + "Found Cancel Button")
-                    self.wait_and_click(self.GET.SELECTOR["cancelAuth"])
-
-            except subprocess.CalledProcessError as e:
-                print(f"Error executing adb command: {e}")
-                
-
-            self.action("Create Account", self.wait_and_click, self.GET.SELECTOR["createAccount"], 4)
-
-
-            try:
-                self.wait_and_click(self.GET.SELECTOR["getStarted"], timeout=10)
+                self.wait_and_click_to(self.GET.SELECTOR["getStarted"], timeout=10)
             except Exception:
-                self.wait_and_click(self.GET.SELECTOR["getStarted2"], timeout=10)
+                self.wait_and_click_to(self.GET.SELECTOR["getStarted2"], timeout=10)
 
-            self.action("Deny Permission", self.wait_and_click, self.GET.SELECTOR["permissionDeny"], timesleep=4, timeout=10)
+            self.action("Deny Permission", self.wait_and_click_to, self.GET.SELECTOR["permissionDeny"], timesleep=4, timeout=10)
 
 
 
             #WebDriverWait(Driver, 10).until(EC.presence_of_element_located((By.XPATH, SELECTOR["startAfterDeny"]))).click()
 
-            self.action("Fill First Name", self.wait_and_send_keys, self.GET.SELECTOR["firstNameWidget"], self.IMFORMATION["firstName"], 4)
+            self.action("Fill First Name", self.wait_and_send_keys_to, self.GET.SELECTOR["firstNameWidget"], self.IMFORMATION["firstName"], 4)
 
-            self.action("Fill Last Name", self.wait_and_send_keys, self.GET.SELECTOR["lastNameWidget"], self.IMFORMATION["lastName"], 4)
+            self.action("Fill Last Name", self.wait_and_send_keys_to, self.GET.SELECTOR["lastNameWidget"], self.IMFORMATION["lastName"], 4)
 
-            self.action("After Name Fill", self.wait_and_click, self.GET.SELECTOR["afterNameFill"], 4)
+            self.action("After Name Fill", self.wait_and_click_to, self.GET.SELECTOR["afterNameFill"], 4)
 
             time.sleep(4)
 
@@ -252,63 +215,100 @@ class LDPlayerRemote():
             try:
                 for Year in range(Year_Now,Year-1,-1):
 
-                    self.wait_and_click(f"""//android.widget.Button[@text="{Year}"]""", timesleep=0, timeout=5)
+                    self.wait_and_click_to(f"""//android.widget.Button[@text="{Year}"]""", timesleep=0, timeout=5)
                     time.sleep(1)
             except Exception:
-                self.wait_and_click(f"""//android.widget.Button[@text="{Year+1}"]""", timesleep=0, timeout=5)
+                self.wait_and_click_to(f"""//android.widget.Button[@text="{Year+1}"]""", timesleep=0, timeout=5)
                 time.sleep(1)
                 
 
 
 
-            self.action("Set Date", self.wait_and_click, self.SELECTOR["setDate"], timesleep=4, timeout=30)
+            self.action("Set Date", self.wait_and_click_to, self.SELECTOR["setDate"], timesleep=4, timeout=30)
 
-            self.action("After Date", self.wait_and_click, self.SELECTOR["afterDate"], timesleep=4, timeout=30)
+            self.action("After Date", self.wait_and_click_to, self.SELECTOR["afterDate"], timesleep=4, timeout=30)
 
             Gender = self.IMFORMATION["gender"]
-            self.action("Select Gender", self.wait_and_click, f"""//android.widget.RadioButton[@content-desc="{Gender}"]/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup/android.widget.ImageView""", timesleep=4, timeout=30)
+            self.action("Select Gender", self.wait_and_click_to, f"""//android.widget.RadioButton[@content-desc="{Gender}"]/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup/android.widget.ImageView""", timesleep=4, timeout=30)
 
-            self.action("After Gender", self.wait_and_click, self.SELECTOR["afterGender"], timesleep=4, timeout=30)
+            self.action("After Gender", self.wait_and_click_to, self.SELECTOR["afterGender"], timesleep=4, timeout=30)
 
-            self.action("Sign Up Email", self.wait_and_click, self.SELECTOR["signUpEmail"], timesleep=4, timeout=30)
-            Mail = self.IMFORMATION["emailRan"]
-            self.action("Enter Email", self.wait_and_send_keys, self.SELECTOR["emailWidget"], Mail, timesleep=4, timeout=30)
+            self.action("Sign Up Email", self.wait_and_click_to, self.SELECTOR["signUpEmail"], timesleep=4, timeout=30)
+            Mail = self.IMFORMATION["email"]
+            self.action("Enter Email", self.wait_and_send_keys_to, self.SELECTOR["emailWidget"], Mail, timesleep=4, timeout=30)
 
 
             time.sleep(4)
-            self.action("Confirm Email", self.wait_and_click, self.SELECTOR["confirmEmail"], timesleep=4, timeout=30)
+            self.action("Confirm Email", self.wait_and_click_to, self.SELECTOR["confirmEmail"], timesleep=4, timeout=30)
 
             self.activity.setActivity("Save Data")
             time.sleep(1)
-            with open(f"Data.txt", "a") as file:
 
-                file.write("="*50 + "\nFirst Name: {First_Name} \nLast Name: {Last_Name} \nEmail: {Mail}\nDate of Birth: {Day}/{month}/{Year}\nGender: {Gender}\n".format(First_Name=self.IMFORMATION["firstName"],Last_Name=self.IMFORMATION["lastName"],Mail=Mail,Day=Day,month=Month,Year=Year,Gender=Gender))
+            self._save_data(Mail, Day, Month, Year, Gender)
 
             self.activity.setActivity("Close appium")
             time.sleep(1)
             self.Driver.quit()
-            self.GET.KillAppium(self.port, driverID)
+            self.GET.KillAppium(self.port, self.driverID)
 
             self.activity.setActivity("Done")
             time.sleep(1)
             self.activity.setActivity("No Action...")
             sys.exit(0)
+            
+    def _save_data(self, Mail, Day, Month, Year, Gender):
+        with open(f"Data.txt", "a") as file:
+            file.write("="*50 + "\nFirst Name: {First_Name} \nLast Name: {Last_Name} \nEmail: {Mail}\nDate of Birth: {Day}/{month}/{Year}\nGender: {Gender}\n".format(First_Name=self.IMFORMATION["firstName"],Last_Name=self.IMFORMATION["lastName"],Mail=Mail,Day=Day,month=Month,Year=Year,Gender=Gender))
+
+    def _find_cancel(self):
+            try:
+                output = subprocess.check_output(f'adb -s {self.emu} shell dumpsys activity activities', shell=True).decode('utf-8')
+                Attempt = 0
+                passing = False
+                for line in output.splitlines():
+                    if re.match("Activities=", line.strip()):
+                        line = line.split("=", 1)
+                        act = line[1].strip("[]")
+                        print("[ \033[92mOK\033[0m ] " + f"Current Activity: {act}")
+                        break
+
+                while "AssistedSignInGET" not in act and "AssistedSignInActivity" not in act:
+
+                    if Attempt < 8:
+                        time.sleep(5)
+                        Attempt += 1
+                        output = subprocess.check_output(f'adb -s emulator-55{(self.driverID-1)*2+54} shell dumpsys activity activities', shell=True).decode('utf-8')
+                        for line in output.splitlines():
+                            if re.match("Activities=", line.strip()):
+                                line = line.split("=", 1)
+                                act = line[1].strip("[]")
+                                print("[ \033[92mOK\033[0m ] " + f"Current Activity: {act}")
+                                break
+                    else:
+                        print("Not found try pass")
+                        passing = True
+                        break
+                if not passing:
+                    print("[ \033[92mOK\033[0m ] " + "Found Cancel Button")
+                    self.wait_and_click_to(self.GET.SELECTOR["cancelAuth"])
+
+            except subprocess.CalledProcessError as e:
+                print(f"Error executing adb command: {e}")
 
 
+URL = "http://127.0.0.1:5000/"
 
-if __name__ == "__main__":
-    URL = "http://127.0.0.1:5000/"
-    try:
-        r = requests.get(URL + "openOrder")
-        response = r.json()
-        LDId: list[int] = response.get("openOrder", False)
-        print("[ \033[92mOK\033[0m ]" ,"LDPlayer open => ", LDId)
-    except Exception as e:
-        print(f"Server Error: {e}")
+try:
+    get_order = requests.get(URL + "Order")
+    response = get_order.json()
+    order_IDs: list[int] = response.get("Order", False)
+    print("[ \033[92mOK\033[0m ]" ,"LDPlayer open => ", order_IDs)
+except Exception as e:
+    print(f"Server Error: {e}")
 
-    if LDId:
-        for i in LDId:
-            Mythread = threading.Thread(
-                target=lambda ID=i: LDPlayerRemote(ID))
-            Mythread.start()
+if order_IDs:
+    for i in order_IDs:
+        Mythread = threading.Thread(
+            target=lambda ID=i: LDPlayerRemote(ID))
+        Mythread.start()
 
