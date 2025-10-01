@@ -17,12 +17,15 @@ import subprocess
 import pygetwindow
 from typing import Optional
 from appium import webdriver
-from .MyThread import Threader
 from email.header import decode_header
 from appium.options.android.uiautomator2.base import UiAutomator2Options
 from appium.options.common.base import AppiumOptions
 from appium.webdriver.common.appiumby import AppiumBy
 from appium.webdriver.webdriver import WebDriver
+try:
+    from .MyThread import Threader 
+except ImportError:
+    from MyThread import Threader 
 
 
 
@@ -141,7 +144,7 @@ class option:
             while not found:
                 for w in pygetwindow.getAllWindows():
                     if w.title == LD_Name:
-                        w.moveTo(index * 300, 0)
+                        w.moveTo(index * 330, 0)
                         print(self.ok + f"LDPlayer {index + 1} Arranged successfully")
                         found = True
                         break
@@ -245,8 +248,8 @@ class option:
 
             device_name = f"emulator-55{((id-1)*2+54)}"
 
-            openLD = self.wait_for_ldplayer_device(device_name)# Sample running test shell CMD in LD
-            if openLD:
+            wait_for_ld = self.wait_for_ldplayer_device(device_name)# Sample running test shell CMD in LD
+            if wait_for_ld:
                 self.clear_app_data(device_name, "com.scheler.superproxy")# Sample Wait Full setup and clear it up
                 time.sleep(2)
             else:
