@@ -9,24 +9,20 @@ import requests
 import platform
 import threading
 import webbrowser
+from server.server_routes import init
 from LD_Player import *
 from typing import Optional
 from threading import Thread
-from flask import Flask, jsonify , request, url_for
 from PySide6.QtGui import QColor, QFont,QIcon
 from PySide6.QtCore import Qt, QTimer,QSize, QRect
+from flask import Flask, jsonify , request, url_for, render_template, blueprints
 from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QMainWindow, QHBoxLayout, QListWidget,QGroupBox,QMenu,QTabWidget,QLineEdit,QTableWidget,QTableWidgetItem,QBoxLayout,QCheckBox,QHeaderView,QPushButton, QButtonGroup,QSpinBox,QSizePolicy,QStyle,QProxyStyle,QStyleOptionSpinBox, QFileDialog, QComboBox, QGridLayout
-
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 dotenv.load_dotenv(dotenv_path=".env")
 
 
 
-server = Flask(__name__)
-Thread(target=lambda: server.run(port=5000),daemon=True).start()
-
-
-
+server = Flask(__name__, template_folder='server', static_folder='style')
 
 
 class NoLog(logging.Filter):
@@ -45,49 +41,9 @@ def index():
     for rule in server.url_map.iter_rules():
         if "GET" in getattr(rule, "methods", set()) and len(rule.arguments) == 0:
             links.append(f'<li><a href="{url_for(rule.endpoint)}">{url_for(rule.endpoint)}</a></li>')
-    links.pop(0)  
-    return f"<ul>{''.join(links)}</ul>"
-
-
-LDActivity_data = {}
-@server.route("/schedule")
-def scheduleFunc():
-    return jsonify(scheduleClose=GUI.scheduleCheck())
-
-@server.route("/LDActivity", methods=["GET", "POST"])
-def LDActivity():
-
-    if request.method == "POST":
-        data = request.get_json()
-
-        for key in data.keys():
-            LDActivity_data[key] = data[key]
-        
-        return jsonify(LDActivity=data)
-    elif request.method == "GET":
-        
-        return jsonify(LDActivity=LDActivity_data)
-    else:
-        return jsonify(LDActivity=[])
-
-
-RemainingID = []
-@server.route("/Order", methods=["GET", "POST"])
-def Order():
-
-    for btn in GUI.LD_Button_list_qp.buttons():
-        btn.setChecked(False)
-        
-    if request.method == "POST":
-        ID = request.get_json()
-        RemainingID.clear()
-        RemainingID.extend(ID)
-        print("[ \033[92mOK\033[0m ] " + "RemainingID after POST: ", RemainingID)
-        return jsonify(Order=RemainingID)
-    elif request.method == "GET":
-        return jsonify(Order=RemainingID)
-    else:
-        return jsonify(Order=[])
+    links.pop(0)
+    # return f"<ul>{''.join(links)}</ul>"
+    return render_template("index.html", links=links)
 
 class BobPrimeApp(QMainWindow):
     def __init__(self):
@@ -97,7 +53,7 @@ class BobPrimeApp(QMainWindow):
         self.Grim = option()
         self.setWindowTitle("Girm Prime App")
         self.setGeometry(100, 100, 1900, 800)
-        with open("style.qss") as f:
+        with open("style/style.qss") as f:
             self.setStyleSheet(f.read())
             
         
@@ -207,9 +163,20 @@ class BobPrimeApp(QMainWindow):
     def update_activity_table(self)->QTableWidget:
         driver_list = self.check_activity()
 
-        activity = requests.get("http://127.0.0.1:5000/LDActivity", {})
-        activityData = activity.json()['LDActivity']
-
+        try:
+            activity = requests.get("http://127.0.0.1:5000/LDActivity", timeout=5)
+            if activity.status_code == 200:
+                activity_jason = activity.json()
+                activityData = activity_jason.get('LDActivity', {})
+            else:
+                print(f"Server returned status code: {activity.status_code}")
+                activityData = {}
+        except requests.exceptions.ConnectionError:
+            activityData = {}
+        except Exception as e:
+            print(f"Error connecting to server: {e}")
+            activityData = {}
+            
         if not hasattr(self,'table') or self.table is None:
             self.table = QTableWidget(0, 4)
  
@@ -230,7 +197,7 @@ class BobPrimeApp(QMainWindow):
         self.update_exist_activity_table(driver_list, activityData)
         return self.table
 
-    def update_exist_activity_table(self, driver_list: list[str], activityData: list[dict]):
+    def update_exist_activity_table(self, driver_list: list[str], activityData: dict):
 
         if not driver_list:
             self.table.setRowCount(0)
@@ -1684,6 +1651,10 @@ if __name__ == "__main__":
     QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
     app = QApplication(sys.argv)
     app.setStyle(Proxy())
-    window = BobPrimeApp()  
+    window = BobPrimeApp()
+    
+    init(server, window)
+    Thread(target=lambda: server.run(port=5000),daemon=True).start()
+    
     window.show()
     sys.exit(app.exec())
