@@ -53,17 +53,8 @@ class BobPrimeApp(QMainWindow):
         self.Grim = option()
         self.setWindowTitle("Girm Prime App")
         self.setGeometry(100, 100, 1900, 800)
-        with open("style/style.qss") as f:
-            self.setStyleSheet(f.read())
-            
-        
         self.logo = "Logo/logo_icon_big.png"
-        if os.path.exists(self.logo):
-            icon = QIcon(self.logo)
-            self.setWindowIcon(icon)
-        else:
-            print("Some logo not found")
-            sys.exit(1)
+        
         #setup widgets
         self.time_label = QLabel()
         self.timer = QTimer()
@@ -128,7 +119,17 @@ class BobPrimeApp(QMainWindow):
         #Init
         self.update_time()
         self.init()
-
+    def _load(self):
+        
+        if os.path.exists(self.logo):
+            icon = QIcon(self.logo)
+            self.setWindowIcon(icon)
+        else:
+            print("Some logo not found")
+            sys.exit(1)
+        
+        with open("style/style.qss") as f:
+            self.setStyleSheet(f.read())
 
     def scheduleCheck(self) -> bool:
         self.scheduleClose = self.closeAppium.isChecked()
