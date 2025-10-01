@@ -77,3 +77,4 @@ QHeaderView {
 QSpinBox {
     margin: 0px;
 }
+
