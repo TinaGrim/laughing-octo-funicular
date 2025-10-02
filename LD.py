@@ -54,7 +54,10 @@ class BobPrimeApp(QMainWindow):
         self.setWindowTitle("Girm Prime App")
         self.setGeometry(100, 100, 1900, 800)
         self.logo = "Logo/logo_icon_big.png"
-        
+        self._load()
+        self.headers = {
+            "Content-Type": "application/json",
+        }
         #setup widgets
         self.time_label = QLabel()
         self.timer = QTimer()
@@ -119,6 +122,7 @@ class BobPrimeApp(QMainWindow):
         #Init
         self.update_time()
         self.init()
+        
     def _load(self):
         
         if os.path.exists(self.logo):
@@ -165,7 +169,7 @@ class BobPrimeApp(QMainWindow):
         driver_list = self.check_activity()
 
         try:
-            activity = requests.get("http://127.0.0.1:5000/LDActivity", timeout=5)
+            activity = requests.get("http://127.0.0.1:5000/LDActivity", headers=self.headers, timeout=5)
             if activity.status_code == 200:
                 activity_jason = activity.json()
                 activityData = activity_jason.get('LDActivity', {})

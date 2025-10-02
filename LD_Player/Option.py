@@ -80,6 +80,10 @@ class option:
         }
         self.number = Number
         self.URL = "http://127.0.0.1:5000/"
+        self.headers = {
+            "Content-Type": "application/json",
+        }
+        
         self.DIR_LD = "D:\\LDPlayer\\LDPlayer9"
         self.ok = "[ \033[92mOK\033[0m ] "
         
@@ -357,9 +361,9 @@ class option:
     def KillAppium(self, port: int, ID:int) -> None:
         
         try:
-        
-            r = requests.get(self.URL + "schedule")
-            close_appium_response = r.json().get("scheduleClose",True) 
+
+            r = requests.get(self.URL + "schedule", headers=self.headers)
+            close_appium_response = r.json().get("scheduleClose",True)
 
         except Exception as e:
             print(f"Can not kill appium: {e}")
@@ -418,9 +422,12 @@ class Activity:
                 "status": status
             }
         }
-        requests.post(self.URL + "LDActivity", json=body)
-        
-                
+        header = {
+            "Content-Type": "application/json",
+        }
+        requests.post(self.URL + "LDActivity", json=body, headers=header)
+
+
     def __check_proxy(self,proxy):
         proxies = {
             "http": f"socks5://{proxy}",

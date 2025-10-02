@@ -7,52 +7,81 @@ GUI = None
 
 @grim.route("/schedule")
 def scheduleFunc():
-    print("[ DEBUG ] Schedule route called")
     if GUI is None:
         return jsonify(scheduleClose=True)
-    return jsonify(scheduleClose=GUI.scheduleClose)
+    
+    if request.headers.get('Content-Type') == 'application/json':
+        return jsonify(template="schedule.html", scheduleClose=GUI.scheduleClose)
+    
+    return render_template("schedule.html", scheduleClose=GUI.scheduleClose)
 
 @grim.route("/LDActivity", methods=["GET", "POST"])
 def LDActivity():
+    if GUI is None:
+        return jsonify(LDActivity=[])
 
     if request.method == "POST":
         data = request.get_json()
 
         for key in data.keys():
             LDActivity_data[key] = data[key]
-        
-        return jsonify(LDActivity=data)
+        if request.headers.get('Content-Type') == 'application/json':
+            return jsonify(LDActivity=LDActivity_data)
+        return render_template("LDActivity.html", LDActivity=data)
     elif request.method == "GET":
-        
-        return jsonify(LDActivity=LDActivity_data)
+        if request.headers.get('Content-Type') == 'application/json':
+            return jsonify(LDActivity=LDActivity_data)
+        return render_template("LDActivity.html", LDActivity=LDActivity_data)
     else:
-        return jsonify(LDActivity=[])
+        return render_template("LDActivity.html", LDActivity=[])
 
 
 @grim.route("/Order", methods=["GET", "POST"])
 def Order():
     if GUI is None:
         return jsonify(Order=[])
+    
     for btn in GUI.LD_Button_list_qp.buttons():
         btn.setChecked(False)
+    
+    # if request.method == "POST":
         
+    #     ID = request.get_json()
+    #     RemainingID.clear()
+    #     RemainingID.extend(ID)
+        
+        
+    #     print("[ \033[92mOK\033[0m ] " + "RemainingID after POST: ", RemainingID)
+        
+    #     return render_template("Order.html", Order=RemainingID)
     if request.method == "POST":
         ID = request.get_json()
         RemainingID.clear()
         RemainingID.extend(ID)
-        print("[ \033[92mOK\033[0m ] " + "RemainingID after POST: ", RemainingID)
-        return jsonify(Order=RemainingID)
+        
+        if request.headers.get('Content-Type') == 'application/json':
+            print("[ \033[92mOK\033[0m ] " + "RemainingID after POST: ", RemainingID)
+            return jsonify(Order=RemainingID)
+        return render_template("Order.html", Order=RemainingID)
     elif request.method == "GET":
-        return jsonify(Order=RemainingID)
+        if request.headers.get('Content-Type') == 'application/json':
+            print("[ \033[92mOK\033[0m ] " + "RemainingID after GET: ", RemainingID)
+            return jsonify(Order=RemainingID)
+        return render_template("Order.html", Order=RemainingID)
     else:
-        return jsonify(Order=[])
+        return render_template("Order.html", Order=[])
 
 @grim.route("/DevicesList")
 def DevicesList():
     if GUI is None:
         return jsonify(DevicesList=[])
+    
     devices = GUI.Grim.check_ld_in_list()
-    return jsonify(DevicesList=devices)
+    if request.headers.get('Content-Type') == 'application/json':
+        print("[ \033[92mOK\033[0m ] " + "DevicesList: ", devices)
+        return jsonify(DevicesList=devices)
+    
+    return render_template("DevicesList.html", DevicesList=devices)
 
 def init(server, window):
     global GUI

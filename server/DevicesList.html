@@ -3,11 +3,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Device List</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='DevicesList.css') }}">
 </head>
 <body>
     <div>
-        <h1>Device List Page</h1>
+        <div class="header">
+            <h1>Device List Page</h1>
+        </div>
+        <div class="devices">
+            <ul class="device-list">
+                {% for device in DevicesList %}
+                    <li>{{ device }}</li>
+                {% endfor %}
+            </ul>
+
+        </div>
     </div>
 </body>
 </html>

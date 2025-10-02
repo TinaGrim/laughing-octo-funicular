@@ -299,7 +299,7 @@ class LDPlayerRemote():
 URL = "http://127.0.0.1:5000/"
 
 try:
-    get_order = requests.get(URL + "Order")
+    get_order = requests.get(URL + "Order", headers={"Content-Type": "application/json"})
     response = get_order.json()
     order_IDs: list[int] = response.get("Order", False)
     print("[ \033[92mOK\033[0m ]" ,"LDPlayer open => ", order_IDs)

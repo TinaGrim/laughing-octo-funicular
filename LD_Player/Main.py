@@ -7,6 +7,12 @@ from .Option import option as Get
 from selenium.webdriver.common.by import By
 
 class LDPlayer():
+    def __init__(self):
+        self.URL = "http://127.0.0.1:5000"
+        self.headers = {
+            "Content-Type": "application/json",
+        }
+        
     def run(self, Number: list[int]):
         
         if platform.system() == "Windows":
@@ -18,10 +24,26 @@ class LDPlayer():
             print("Limit only 10 LD ;(")
             return 0
 
-        r = requests.get("http://127.0.0.1:5000/LDActivity")
+        remainLD = self.get_LD_of(Number)
+
+        print("Remaining LD: ", remainLD)
+        requests.post(f"{self.URL}/Order", json=remainLD, headers=self.headers)
+        
+        
+        GET = Get(remainLD)
+        print("Starting...\n")
+            
+        GET.Open_LD()
+        GET.Full_setup()
+        GET.Remote_Driver()
+        
+    def get_LD_of(self, Number):
+        response = requests.get(f"{self.URL}/LDActivity", headers=self.headers)
+
         remainLD: list[int] = []
-        if r.status_code == 200:
-            response = r.json()
+        
+        if response.status_code == 200:
+            response = response.json()
             LDActivity = response.get('LDActivity', {})
             print("LDActivity Response: ", LDActivity)
 
@@ -31,19 +53,9 @@ class LDPlayer():
                     if status == "No Action...":
                         remainLD.append(number)# sample [1, 2, 3]
         else:
-            print("Error:", r.status_code)
+            print("Error:", response.status_code)
             sys.exit(1)
 
-        print("Remaining LD: ", remainLD)
-        requests.post("http://127.0.0.1:5000/Order", json=remainLD)
-        
-        
-        GET = Get(remainLD)
-        print("Starting...\n")
-            
-        GET.Open_LD()
-        GET.Full_setup()
-        GET.Remote_Driver()
 
 
 
