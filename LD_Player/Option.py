@@ -42,9 +42,9 @@ def timer(func):
         print(time_get)
         return result
     return wrapper
-        
+
 class option:
-    def __init__(self, Number: Optional[list[int]] = []):
+    def __init__(self, Number: list[int] = []):
         self.SELECTOR = {
         "Proxy": """//android.widget.TextView[@content-desc="Super Proxy"]""",
         "addProxy": """//android.widget.Button[@content-desc="Add proxy"]""",
@@ -122,7 +122,7 @@ class option:
             return []
         self.ld_list_name = (self.ld_list_name.stdout.split("\n"))
         self.ld_list_name.pop()
-        return self.ld_list_name #Sample [LDPlayer-1, LDPlayer-2]
+        return self.ld_list_name # Sample [LDPlayer-1, LDPlayer-2]
     
     def LD_devieces_detail(self, FIND) -> list[str]:
         
@@ -232,11 +232,12 @@ class option:
     def Open_LD(self):
         
         if not self.number:
-            return
+            return False
         for id in self.number:
             self.__LDPlayer(self.__info(1), index=id-1) # Sample Open Your LDName
             time.sleep(0.5)
             self.__Arrangment(index=id-1)
+        return True
 
     def Remote_Driver(self) -> None:
         """Start Remote Driver"""   
@@ -246,20 +247,17 @@ class option:
         subprocess.Popen(["python",Driver_path]) # Sample Remote using Driver in Path That Exists
 
     def Full_setup(self):
+        """Aware of any command not working"""
         if not self.number:
-            return
-        for id in self.number:
+            return False
+        done = all(self.wait_for_ldplayer_device(f"emulator-55{(id-1)*2 + 54}") for id in self.number)
+        return done
+        # for id in self.number:
 
-            device_name = f"emulator-55{((id-1)*2+54)}"
+        #     device_name = f"emulator-55{((id-1)*2+54)}"
 
-            wait_for_ld = self.wait_for_ldplayer_device(device_name)# Sample running test shell CMD in LD
-            if wait_for_ld:
-                self.clear_app_data(device_name, "com.scheler.superproxy")# Sample Wait Full setup and clear it up
-                time.sleep(2)
-            else:
-                print(f"Error: {device_name} not found in adb devices.")
-                continue
-                # self.clear_app_data(device_name,"com.facebook.orca")# Sample Wait Full setup  and clear it up
+        #     self.wait_for_ldplayer_device(device_name)# Sample running test shell CMD in LD
+
     # Not Mine
     def GetCode(self, username: str, password: str, email):
         imap_server = "imap.yandex.ru"
@@ -368,26 +366,27 @@ class option:
         except Exception as e:
             print(f"Can not kill appium: {e}")
             
-        find_pid_cmd = f'netstat -aon | findstr :{port}'
-        line = []
+        if not close_appium_response:
+            return
+        
 
         try:
+            find_pid_cmd = f'netstat -aon | findstr :{port}'
             result = subprocess.check_output(find_pid_cmd, shell=True, text=True)
             line = result.strip().splitlines()
+            if not line:
+                return
+            pid = line[0].split()[-1]
+
+            os.kill(int(pid), signal.SIGTERM)
+            print("[ \033[92mOK\033[0m ] " + "Kill Appium server: ", ID)
+  
             
         except subprocess.CalledProcessError:
             print(self.ok + "Port Cleared")
         except Exception as e:
             print(f"Unexpected error: {e}")
 
-        
-        if close_appium_response:
-            if line:
-                pid = line[0].split()[-1]
-
-                os.kill(int(pid), signal.SIGTERM)
-                print("[ \033[92mOK\033[0m ] " + "Kill Appium server: ", ID)
-                
                 
 class Activity:
     def __init__(self, emulator:str, driverID: int):

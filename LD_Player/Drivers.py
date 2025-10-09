@@ -44,19 +44,19 @@ class LDPlayerRemote():
             func(*args, **kwargs)
         except (InvalidSessionIdException, MaxRetryError, ConnectionError) as e:
             print("[ \033[91mClose\033[0m ] " + "Closing Appium server During Remote Driver => ", str(e))
-            self.activity.setActivity("No Action...")
+            self.action("No Action...")
             sys.exit(1)
         except NoSuchElementException as e:
             print("[ \033[91mClose\033[0m ] " + "Found no element => " + str(e))
-            self.activity.setActivity("No Action...")
+            self.action("No Action...")
             sys.exit(1)
         except TimeoutException as e:
             print(f"[ \033[91mClose\033[0m ] " + "Time out => " + str(e))
-            self.activity.setActivity("No Action...")
+            self.action("No Action...")
             sys.exit(1)
         except WebDriverException as e:
             print(f"[ \033[91mClose\033[0m ] " + "Server get error => " + str(e))
-            self.activity.setActivity("No Action...")
+            self.action("No Action...")
             sys.exit(1)
             
             
@@ -74,8 +74,11 @@ class LDPlayerRemote():
         el.send_keys(text)
         return el
     
-    def action(self, label, func, *args, **kwargs):
+    def action(self, label, func = None, *args, **kwargs):
         try:
+            if not func:
+                self.activity.setActivity(label)
+                return
             self.activity.setActivity(label)
             return func(*args, **kwargs)
         except Exception as e:
@@ -88,8 +91,8 @@ class LDPlayerRemote():
                 print("Driver did not exist...")
                 return 0
             self.Driver.press_keycode(3)
-            
-            
+
+            self.GET.clear_app_data(self.emu, "com.scheler.superproxy")
             self.action("Open Proxy", self.wait_and_click_to, self.GET.SELECTOR["Proxy"])
             self.action("Add New Proxy", self.wait_and_click_to, self.GET.SELECTOR["addProxy"])
 
@@ -106,7 +109,7 @@ class LDPlayerRemote():
             time.sleep(2)
             # reconnect
             self.Driver = self.GET.cap(self.port, self.driverID)
-            
+
     def _get_proxy(self):
         try:
             proxy = self.activity.proxy()
@@ -130,7 +133,7 @@ class LDPlayerRemote():
             self.GET.clear_app_data(self.emu, "com.facebook.orca")
             self.action("Open Messenger", self.wait_and_click_to, self.GET.SELECTOR["Messenger"], 3)
 
-            self.activity.setActivity("Cancel Button")
+            self.action("Cancel Button")
             time.sleep(8)
             self._find_cancel()
             
@@ -240,20 +243,20 @@ class LDPlayerRemote():
             time.sleep(4)
             self.action("Confirm Email", self.wait_and_click_to, self.SELECTOR["confirmEmail"], timesleep=4, timeout=30)
 
-            self.activity.setActivity("Save Data")
+            self.action("Save Data")
             time.sleep(1)
 
             self._save_data(Mail, Day, Month, Year, Gender)
 
-            self.activity.setActivity("Close appium")
+            self.action("Close appium")
             time.sleep(1)
             self.Driver.quit()
             time.sleep(1)
             self.GET.KillAppium(self.port, self.driverID)
 
-            self.activity.setActivity("Done")
+            self.action("Done")
             time.sleep(1)
-            self.activity.setActivity("No Action...")
+            self.action("No Action...")
             sys.exit(0)
             
     def _save_data(self, Mail, Day, Month, Year, Gender):
