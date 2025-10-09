@@ -9,17 +9,20 @@ import requests
 import platform
 import threading
 import webbrowser
-from server.server_routes import init
 from LD_Player import *
 from typing import Optional
 from threading import Thread
+from server.server_routes import init
+from LD_Player_gui.Active import Active
+from LD_Player_gui.Devices import Devices
+from LD_Player_gui.Manage import Manage
+from LD_Player_gui.Auto_Post import Auto_Post
 from PySide6.QtGui import QColor, QFont,QIcon
 from PySide6.QtCore import Qt, QTimer,QSize, QRect
 from flask import Flask, jsonify , request, url_for, render_template, blueprints
 from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QMainWindow, QHBoxLayout, QListWidget,QGroupBox,QMenu,QTabWidget,QLineEdit,QTableWidget,QTableWidgetItem,QBoxLayout,QCheckBox,QHeaderView,QPushButton, QButtonGroup,QSpinBox,QSizePolicy,QStyle,QProxyStyle,QStyleOptionSpinBox, QFileDialog, QComboBox, QGridLayout
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 dotenv.load_dotenv(dotenv_path=".env")
-
 
 
 server = Flask(__name__, template_folder='server', static_folder='style')
@@ -68,16 +71,17 @@ class BobPrimeApp(QMainWindow):
         self.scheduleClose = False
         self.checkBox = QCheckBox()
         self.Check_Box_LD_Name = []
-        self.Check_Box_List_Devices = []
+
         self.LD_Button_list_qp = QButtonGroup(self)
         self.LD_Button_list_qp.setExclusive(False)
-        self.devices_list_qp = QButtonGroup(self)
-        self.devices_list_qp.setExclusive(False)
+
         self.specific_ld_ID = []
         self.specific_list_devices_ID = []
         self.activity_LD = {}
         self.timeline_table_list = []
-
+        self.Devices = Devices(self)
+        self.Manage = Manage(self)
+        
 
         #widgets
         self.Open_ld = QPushButton("➕")
@@ -105,13 +109,13 @@ class BobPrimeApp(QMainWindow):
         self.LD_Button_list_qp.idToggled.connect(self.Select_LDPlayer)
         
         #table devices
-        self.DevicesTimer.timeout.connect(self.update_devices_table)
+        self.DevicesTimer.timeout.connect(self.Devices.update_devices_table)
         self.DevicesTimer.start(30000)
 
         #table devices list
-        self.DeviceList.timeout.connect(self.update_devices_list)
+        self.DeviceList.timeout.connect(self.Manage.update_devices_list)
         self.DeviceList.start(30000)
-        self.devices_list_qp.idToggled.connect(self.Select_list_devices)
+        self.Manage.devices_list_qp.idToggled.connect(self.Manage.Select_list_devices)
         
         #trigger
         self.Open_ld.clicked.connect(lambda: self.openLD())
@@ -181,7 +185,6 @@ class BobPrimeApp(QMainWindow):
         except Exception as e:
             print(f"Error connecting to server: {e}")
             activityData = {}
-            
         if not hasattr(self,'table') or self.table is None:
             self.table = QTableWidget(0, 4)
  
@@ -208,10 +211,11 @@ class BobPrimeApp(QMainWindow):
             self.table.setRowCount(0)
             return
         for i, driverName in enumerate(driver_list):
-            status = "No Action..."
             
             if driverName in activityData:
                 status = activityData[driverName].get('status', 'No Action...')
+            else:
+                status = "No Action..."
             
             self.table.setRowCount(len(driver_list))
             self.table.setItem(i,0, QTableWidgetItem(str(i+1)))
@@ -222,34 +226,7 @@ class BobPrimeApp(QMainWindow):
 
         
     #=============================================================================================
-    def update_devices_list(self) -> QWidget:
-        list_devices = self.Grim.check_ld_in_list()  # Sample [<LD Name>]
-        if not hasattr(self, "devices_list") or self.devices_list is None:
-            self.devices_list = QTableWidget(0, 2)
-            self.devices_list.setHorizontalHeaderLabels(["ID", "LD Name"])
-            self.devices_list.verticalHeader().setVisible(False)
-            self.devices_list.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
-            self.devices_list.setAutoFillBackground(False)
-            self.devices_list.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-            self.devices_list.resizeColumnsToContents()
-            self.devices_list.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)  
-            self.devices_list.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
-        if getattr(self, "select_all_devices", None):
-            self.select_all_devices.setChecked(False)
-            self.selected_Devices.setText(f"{0} Selected")
-        self.update_exist_devices_list(list_devices)
-        return self.devices_list
 
-    def update_exist_devices_list(self, list_devices: list[str]) -> None:
-        if not self.devices_list:
-            return
-        for i in range(0, len(list_devices)):
-            self.devices_list.setRowCount(len(list_devices))
-            self.list_devices_checkBox = QCheckBox(str(i+1))
-            self.devices_list_qp.addButton(self.list_devices_checkBox, i+1)
-            self.devices_list.setCellWidget(i, 0, self.list_devices_checkBox)
-            self.devices_list.setItem(i, 1, QTableWidgetItem(list_devices[i]))
-            self.Check_Box_List_Devices.append(self.list_devices_checkBox)
             
     #==================================================================================================
     def update_active_table(self) -> QTableWidget:
@@ -370,39 +347,7 @@ class BobPrimeApp(QMainWindow):
             self.timeline_table.setItem(i, 5, QTableWidgetItem(self.timeline_table_list[i][5]))
         return self.timeline_table
     #===================================================================================================
-    def update_devices_table(self) -> QTableWidget:
-        
-        list_devices = self.Grim.check_ld_in_list()  # Sample [<LD Name>]
-        MacS = self.Grim.LD_devieces_detail("propertySettings.macAddress")  # Sample ["00:11:22:33:44:55"]
-        Models = self.Grim.LD_devieces_detail("propertySettings.phoneModel")  # Sample ["Model1", "Model2"]
-        Manufacturers = self.Grim.LD_devieces_detail("propertySettings.phoneManufacturer")  # Sample ["Manufacturer1", "Manufacturer2"]
-        
-        if not hasattr(self, "devices_table") or self.devices_table is None:
-            self.devices_table = QTableWidget(0, 5)
-            self.devices_table.setHorizontalHeaderLabels(["ID", "LD Name", "MAC", "Model", "M.facturer"])
-            self.devices_table.verticalHeader().setVisible(False)
-            self.devices_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
-            self.devices_table.setAutoFillBackground(False)
-            self.devices_table.resizeColumnsToContents()
-            self.devices_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)  
-            self.devices_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch) 
-            self.devices_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch) 
-            self.devices_table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch) 
-            self.devices_table.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch) 
-            self.update_exist_devices_table(list_devices, MacS, Models, Manufacturers)
-        return self.devices_table
 
-    def update_exist_devices_table(self, list_devices: list[str], MacS: list[str], Models: list[str], Manufacturers: list[str]) -> None:
-        if not self.devices_table:
-            return
-
-        for i in range(0, len(list_devices)):
-            self.devices_table.setRowCount(len(list_devices))
-            self.devices_table.setItem(i, 0, QTableWidgetItem(str(i+1)))
-            self.devices_table.setItem(i, 1, QTableWidgetItem(list_devices[i]))
-            self.devices_table.setItem(i, 2, QTableWidgetItem(MacS[i] if i < len(MacS) else ""))
-            self.devices_table.setItem(i, 3, QTableWidgetItem(Models[i] if i < len(Models) else ""))
-            self.devices_table.setItem(i, 4, QTableWidgetItem(Manufacturers[i] if i < len(Manufacturers) else ""))
 
 
     def init(self) -> None:
@@ -438,10 +383,10 @@ class BobPrimeApp(QMainWindow):
         cornerContainer.setStyleSheet("margin: 0px;")
 
         self.Tabs = QTabWidget()
-        self.Tabs.addTab(self.Tab_Devices(), "Devices")
+        self.Tabs.addTab(self.Devices.Tab_Devices(), "Devices")
         self.Tabs.addTab(self.Tab_Active(), "Active")
         self.Tabs.addTab(self.Tab_auto_post(), "Auto Post")
-        self.Tabs.addTab(self.Tab_manage(), "Manage")
+        self.Tabs.addTab(self.Manage.Tab_manage(), "Manage")
         self.Tabs.setCornerWidget(cornerContainer) 
         """End Tabs"""
         
@@ -452,227 +397,7 @@ class BobPrimeApp(QMainWindow):
         main_widget.setLayout(main_layout)
         self.setCentralWidget(main_widget)
 
-    def Tab_Devices(self) -> QWidget:
-        devices_widget = QWidget()
-        devices_widget_layout = QVBoxLayout(devices_widget)
-        #Top
-        devices_browser_widget = QWidget()
-        devices_browser_widget_layout = QHBoxLayout(devices_browser_widget)
-        
-        devices_locate_widget = QWidget()
-        devices_locate_widget_layout = QVBoxLayout(devices_locate_widget)
-        
-        devices_locate_widget_layout_top = QHBoxLayout()
 
-        labeltop1 = QLabel("LDplayer Location")
-        self.ldplayer_directory_box_top = QLineEdit(r"C:/Program Files/ldplayer")
-        labeltop3 = QPushButton("Browse")
-        
-        
-        devices_locate_widget_layout_top.addWidget(labeltop1)
-        devices_locate_widget_layout_top.addWidget(self.ldplayer_directory_box_top)
-        devices_locate_widget_layout_top.addWidget(labeltop3)
-        
-        
-        devices_locate_widget_layout_bottom = QHBoxLayout()
-
-        labelbottom1 = QLabel("System Location")
-        self.system_directory_box_bottom = QLineEdit(r"C:/Program Files/ldplayer")
-        labelbottom3 = QPushButton("Browse")
-        
-        devices_locate_widget_layout_bottom.addWidget(labelbottom1)
-        devices_locate_widget_layout_bottom.addWidget(self.system_directory_box_bottom)
-        devices_locate_widget_layout_bottom.addWidget(labelbottom3)
-        
-        devices_locate_widget_layout.addLayout(devices_locate_widget_layout_top)
-        devices_locate_widget_layout.addLayout(devices_locate_widget_layout_bottom)
-
-        devices_upload = QPushButton("Upload")
-
-        devices_upload.setStyleSheet("margin: 0px; padding: 40px 60px; ")
-        devices_browser_widget_layout.addWidget(devices_locate_widget, 8)
-        devices_browser_widget_layout.addWidget(devices_upload, 2)
-        devices_browser_widget_layout.setContentsMargins(0, 0, 0, 0)
-
-        #Bottom
-        devices_information_widget = QWidget()
-        devices_information_widget_layout = QVBoxLayout(devices_information_widget)
-        
-        devices_information_widget_layout_top_widget = QWidget()
-        devices_information_widget_layout_top = QHBoxLayout(devices_information_widget_layout_top_widget)
-        QLabel("LDplayer")
-        label1 = QLabel("Number of active LD")
-        label1_value = QSpinBox()
-        label1_value.setValue(1)
-        label2 = QLabel("Wait after LD Boot")
-        label2_value = QSpinBox()
-        label2_value.setValue(30)
-        label3 = QCheckBox("Between LD Start")
-        label3_value = QSpinBox()
-        label3_value.setValue(30)
-        
-        self.Gpu_box = QGroupBox()
-        self.Gpu_vbox = QVBoxLayout(self.Gpu_box)
-        label4 = QCheckBox("Hardware Accel")
-        label5 = QCheckBox("NVIDIA GPU")
-        self.Gpu_vbox.addWidget(label4)
-        self.Gpu_vbox.addWidget(label5)
-        label6 = QPushButton("App")
-        devices_information_widget_layout_top.addWidget(label1)
-        devices_information_widget_layout_top.addWidget(label1_value)
-        devices_information_widget_layout_top.addStretch(1)
-        devices_information_widget_layout_top.addWidget(label2)
-        devices_information_widget_layout_top.addWidget(label2_value)
-        devices_information_widget_layout_top.addStretch(1)
-        devices_information_widget_layout_top.addWidget(label3)
-        devices_information_widget_layout_top.addWidget(label3_value)
-        devices_information_widget_layout_top.addStretch(1)
-        devices_information_widget_layout_top.addWidget(self.Gpu_box)
-        devices_information_widget_layout_top.addWidget(label6)
-        devices_information_widget_layout_top.setAlignment(Qt.AlignmentFlag.AlignVertical_Mask)
-
-        devices_information_widget_layout_bottom_widget = QWidget()
-        devices_information_widget_layout_bottom = QHBoxLayout(devices_information_widget_layout_bottom_widget)
-        
-        devices_setting_box = QGroupBox("LDPlayer Setting")
-        devices_setting_box_layout = QVBoxLayout(devices_setting_box)
-        
-        devices_setting_box_layout_IP = QHBoxLayout()
-        self.Checkbox = QCheckBox("Check IP")
-        self.GPS = QCheckBox("GPS/TimeZone")
-        self.BlockIP = QCheckBox("Block IP")
-        devices_setting_box_layout_IP.addWidget(self.Checkbox)
-        devices_setting_box_layout_IP.addWidget(self.GPS)
-        devices_setting_box_layout_IP.addWidget(self.BlockIP)
-        
-        devices_setting_box_layout_auto_config = QHBoxLayout()
-        label_auto_config = QCheckBox("Auto LDplayer Advanced Configuration")
-        devices_setting_box_layout_auto_config.addWidget(label_auto_config)
-        
-        devices_setting_box_layout_cpu = QHBoxLayout()
-        label_cpu = QLabel("CPU")
-        label_cpu_list = QComboBox()
-        label_cpu_list.addItems(["1 core","2 cores","3 cores","4 cores","5 cores","6 cores","7 cores","8 cores"])
-        label_cpu_list.setCurrentIndex(1)
-        label_ram = QLabel("RAM")
-        label_ram_list = QComboBox()
-        label_ram_list.addItems(["512MB","1GB","2GB","3GB","4GB"])
-        
-        devices_setting_box_layout_cpu.addWidget(label_cpu, alignment=Qt.AlignmentFlag.AlignCenter)
-        devices_setting_box_layout_cpu.addWidget(label_cpu_list)
-        devices_setting_box_layout_cpu.addWidget(label_ram, alignment=Qt.AlignmentFlag.AlignCenter)
-        devices_setting_box_layout_cpu.addWidget(label_ram_list)
-
-        devices_setting_box_layout_arrange = QHBoxLayout()
-        label_arrange = QCheckBox("Arrange LDplayer")
-        label_arrange_value = QSpinBox()
-        label_arrange_value.setValue(5)
-        label_arrange_value.setStyleSheet("margin: 0px;")
-        Auto_fit = QCheckBox("Auto Fit")
-        devices_setting_box_layout_arrange.addWidget(label_arrange)
-        devices_setting_box_layout_arrange.addWidget(label_arrange_value)
-        devices_setting_box_layout_arrange.addWidget(Auto_fit)
-        
-
-        devices_setting_box_layout_screen = QHBoxLayout()
-
-        screen_resolution = QLabel("Screen")
-        screen_resolution_list = QComboBox()
-        screen_resolution_list.addItems(["1280x720","1920x1080","2560x1440","3840x2160"])
-        screen_resolution_list.setCurrentIndex(1)
-        devices_setting_box_layout_screen.addWidget(screen_resolution, alignment=Qt.AlignmentFlag.AlignCenter)
-        devices_setting_box_layout_screen.addWidget(screen_resolution_list, alignment=Qt.AlignmentFlag.AlignCenter)
-
-
-        devices_setting_box_layout_startup = QHBoxLayout()
-        label_startup = QCheckBox("Run at Startup")
-        label_startup_value = QSpinBox()
-        label_startup_value.setValue(30)
-        label_startup_value.setStyleSheet("margin: 0px;")
-        label_startup_second = QLabel("Seconds")
-        devices_setting_box_layout_startup.addWidget(label_startup)
-        devices_setting_box_layout_startup.addWidget(label_startup_value)
-        devices_setting_box_layout_startup.addWidget(label_startup_second)
-        
-        devices_setting_box_layout_autostop = QHBoxLayout()
-        label_autostop = QCheckBox("Auto Stop at")
-        label_autostop_value = QSpinBox()
-        label_autostop_value.setValue(30)
-        label_autostop_value.setStyleSheet("margin: 0px;")  
-        label_autostop_second = QLabel("Minutes")
-        label_autostop_shutdown = QCheckBox("Shutdown")
-        
-        devices_setting_box_layout_autostop.addWidget(label_autostop)
-        devices_setting_box_layout_autostop.addWidget(label_autostop_value)
-        devices_setting_box_layout_autostop.addWidget(label_autostop_second)
-        devices_setting_box_layout_autostop.addWidget(label_autostop_shutdown)
-
-        devices_setting_box_layout_clearcache = QHBoxLayout()
-        label_clearcache = QCheckBox("Clear cache every run counts")
-        label_clearcache_value = QSpinBox()
-        label_clearcache_value.setValue(200)
-        label_clearcache_value.setStyleSheet("margin: 0px;")
-        devices_setting_box_layout_clearcache.addWidget(label_clearcache)
-        devices_setting_box_layout_clearcache.addWidget(label_clearcache_value)
-        
-        devices_setting_box_layout_iffbexceed = QHBoxLayout()
-        label_iffbexceed = QCheckBox("Clear FB user data if exceeds 900 MB")
-        devices_setting_box_layout_iffbexceed.addWidget(label_iffbexceed)
-        devices_setting_box_layout_ifldexceed = QHBoxLayout()
-        label_ifldexceed = QCheckBox("Clear LDPlayer if exceeds ")
-        label_ifldexceed_value = QSpinBox()
-        label_ifldexceed_value.setValue(2)
-        label_ifldexceed_value.setStyleSheet("margin: 0px;")
-        label_ifldexceed_MB = QLabel("GB")
-        devices_setting_box_layout_ifldexceed.addWidget(label_ifldexceed)
-        devices_setting_box_layout_ifldexceed.addWidget(label_ifldexceed_value)
-        devices_setting_box_layout_ifldexceed.addWidget(label_ifldexceed_MB)
-        
-        devices_setting_box_layout_closeld = QHBoxLayout()
-        label_closeld = QCheckBox("Close all LD when stop")
-        devices_setting_box_layout_closeld.addWidget(label_closeld)
-
-        devices_setting_box_layout.addLayout(devices_setting_box_layout_IP)
-        devices_setting_box_layout.addStretch(1)
-        devices_setting_box_layout.addLayout(devices_setting_box_layout_auto_config)
-        devices_setting_box_layout.addStretch(1)
-        devices_setting_box_layout.addLayout(devices_setting_box_layout_cpu)
-        devices_setting_box_layout.addStretch(1)
-        devices_setting_box_layout.addLayout(devices_setting_box_layout_arrange)
-        devices_setting_box_layout.addStretch(1)
-        devices_setting_box_layout.addLayout(devices_setting_box_layout_screen)
-        devices_setting_box_layout.addStretch(1)
-        devices_setting_box_layout.addLayout(devices_setting_box_layout_startup)
-        devices_setting_box_layout.addStretch(1)
-        devices_setting_box_layout.addLayout(devices_setting_box_layout_autostop)
-        devices_setting_box_layout.addStretch(1)
-        devices_setting_box_layout.addLayout(devices_setting_box_layout_clearcache)
-        devices_setting_box_layout.addStretch(1)
-        devices_setting_box_layout.addLayout(devices_setting_box_layout_iffbexceed)
-        devices_setting_box_layout.addStretch(1)
-        devices_setting_box_layout.addLayout(devices_setting_box_layout_ifldexceed)
-        devices_setting_box_layout.addStretch(1)
-        devices_setting_box_layout.addLayout(devices_setting_box_layout_closeld)
-        devices_setting_box_layout.addStretch(1)
-
-        devices_setting_box.setStyleSheet("margin: 5px; padding: 0;")
-        devices_setting_box_layout.setContentsMargins(10, 20, 0, 0)
-
-
-        
-        devices_information_widget_layout_bottom.addWidget(self.update_devices_table(), 6)
-        devices_information_widget_layout_bottom.addWidget(devices_setting_box, 4)
-        
-        devices_information_widget_layout.addWidget(devices_information_widget_layout_top_widget, 1)
-        devices_information_widget_layout.addWidget(devices_information_widget_layout_bottom_widget, 9)
-        devices_information_widget_layout.setContentsMargins(0, 0, 0, 0)
-        LDLabel = QLabel("LDplayer Setup")
-        LDLabel.setStyleSheet("font-size: 40px; color: gray;margin: 10px 0px 10px 10px;")
-        devices_widget_layout.addWidget(devices_browser_widget, 1)
-        devices_widget_layout.addWidget(LDLabel, 1)
-        devices_widget_layout.addWidget(devices_information_widget, 9)
-        devices_widget_layout.setContentsMargins(30, 5, 5, 5)
-        return devices_widget
     
     def Tab_Active(self) -> QWidget:
         active_widget = QWidget()
@@ -987,150 +712,7 @@ class BobPrimeApp(QMainWindow):
         active_layout.addWidget(active_table_widget, 2)
         return active_widget
 
-    def Tab_manage(self) -> QWidget:
-        ld_manage_widget = QWidget()
-        ld_manage_layout = QHBoxLayout(ld_manage_widget)
-        ld_manage_layout.setContentsMargins(0, 0, 0, 0)
-        ld_manage_layout.setSpacing(5)
-        #
-        #left
-        #
-        ld_manage_list = QWidget()
-        manage_list_layout = QVBoxLayout(ld_manage_list)
-        
 
-        
-        manage_list_layout.addWidget(self.update_devices_list(),9)
-        manage_list_layout.addWidget(self.selected_list_devices(), 1)
-        manage_list_layout.setContentsMargins(5, 20, 0, 0)
-        #
-        #right
-        #
-        ld_manage_manager = QWidget()
-        ld_manage_manager_layout = QVBoxLayout(ld_manage_manager)
-        ld_manage_manager_layout.setContentsMargins(0, 10, 0, 0)
-
-        ld_manage_group_boxtop = QGroupBox("Enable LDPlayer Manager")
-        ld_manage_group_boxtop.setCheckable(True)
-        ld_manage_group_boxtop.setChecked(True)
-        ld_manage_manager_layout_top = QVBoxLayout(ld_manage_group_boxtop)
-        
-        number_active = QHBoxLayout()
-        number = QLabel("Number of Active Batch")
-        number_value = QSpinBox()
-        number_value.setStyleSheet("margin: 0px;")
-        
-        number_value.setValue(1)
-        number_active.addWidget(number)
-        number_active.addWidget(number_value)
-        number_active.addStretch(1)
-
-        new_ld = QHBoxLayout()
-        new_ld_label = QCheckBox("Add New LDPlayers")
-        new_ld_value = QSpinBox()
-        new_ld_value.setValue(1)
-        new_ld_value.setStyleSheet("margin: 0px;")
-
-        copy_from = QCheckBox("Copy From")
-        copy_from_value = QComboBox()
-        copy_from_value.addItems(self.Grim.check_ld_in_list())
-        copy_from_value.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
-        
-        
-        new_ld.addWidget(new_ld_label)
-        new_ld.addWidget(new_ld_value)
-        new_ld.addWidget(copy_from)
-        new_ld.addWidget(copy_from_value)
-        
-        backup = QHBoxLayout()
-        backup_label = QCheckBox("Backup LDPlayer To")
-        backup_value = QLineEdit()
-        backup_value.setText(r"C:/path/to/backup.zip")
-        backup_browse = QPushButton("...")
-        backup_browse.setStyleSheet("margin: 0px; padding: 2px 10px; ")
-        
-        backup.addWidget(backup_label)
-        backup.addWidget(backup_value)
-        backup.addWidget(backup_browse)
-        
-        restore = QHBoxLayout()
-        restore_label = QCheckBox("Restore LDPlayer From")
-        restore_value = QLineEdit()
-        restore_value.setText(r"C:/path/to/backup.zip")
-        restore_browse = QPushButton("...")
-        restore_browse.setStyleSheet("margin: 0px; padding: 2px 10px; ")
-        
-        restore.addWidget(restore_label)
-        restore.addWidget(restore_value)
-        restore.addWidget(restore_browse)
-        
-        remove = QHBoxLayout()
-        remove_label = QCheckBox("Remove LDPlayer")
-        remove.addWidget(remove_label)
-        shutdown = QHBoxLayout()
-        shutdown_label = QCheckBox("Shutdown PC When Finish")
-        shutdown.addWidget(shutdown_label)
-        
-        ld_manage_manager_layout_top.addLayout(number_active)
-        ld_manage_manager_layout_top.addLayout(new_ld)
-        ld_manage_manager_layout_top.addLayout(backup)
-        ld_manage_manager_layout_top.addLayout(restore)
-        ld_manage_manager_layout_top.addLayout(remove)
-        ld_manage_manager_layout_top.addLayout(shutdown)
-        ld_manage_manager_layout_top.addStretch(1)
-
-        ld_manage_manager_layout_top.setContentsMargins(10, 20, 0, 0)
-        
-        ld_manage_group_boxbottom = QGroupBox("Enable LDPlayer Manager")
-        ld_manage_group_boxbottom.setCheckable(True)
-        ld_manage_group_boxbottom.setChecked(True)
-        ld_manage_manager_layout_bottom = QVBoxLayout(ld_manage_group_boxbottom)
-        autoput = QHBoxLayout()
-        autoput_label = QCheckBox("Auto Pull Account/Page Name")
-        clear_existing = QCheckBox("Clear Existing Names")
-        
-        autoput.addWidget(autoput_label)
-        autoput.addWidget(clear_existing)
-        autoput.addStretch(1)
-        
-        FBlocal = QHBoxLayout()
-        FBlocal_label = QCheckBox("FB Login")
-        FBlocal_value = QLineEdit()
-        FBlocal_value.setText(r"C:/path/to/FBlocal.txt")
-        FBlocal_browse = QPushButton("...")
-        FBlocal_browse.setStyleSheet("margin: 0px; padding: 2px 10px; ")
-        account_page_name = QCheckBox("Account/Page Name")
-        account_page_name_btn = QPushButton("@")
-        account_page_name_btn.setStyleSheet("margin: 0px; padding: 2px 10px; ")
-        FBlocal.addWidget(FBlocal_label)
-        FBlocal.addWidget(FBlocal_value)
-        FBlocal.addWidget(FBlocal_browse)
-        FBlocal.addWidget(account_page_name)
-        FBlocal.addWidget(account_page_name_btn)
-        
-        createpage = QHBoxLayout()
-        createpage_label = QCheckBox("Create Pages")
-        createpage.addWidget(createpage_label)
-        shutdownbottom = QHBoxLayout()
-        shutdownbottom_label = QCheckBox("Shutdown PC When Finish")
-        shutdownbottom.addWidget(shutdownbottom_label)
-
-        ld_manage_manager_layout_bottom.addLayout(autoput)
-        ld_manage_manager_layout_bottom.addLayout(FBlocal)
-        ld_manage_manager_layout_bottom.addLayout(createpage)
-        ld_manage_manager_layout_bottom.addLayout(shutdownbottom)
-        ld_manage_manager_layout_bottom.addStretch(1)
-        ld_manage_manager_layout_bottom.setContentsMargins(10, 20, 0, 0)
-
-        ld_manage_group_boxtop.setStyleSheet("margin: 8px;")
-        ld_manage_group_boxbottom.setStyleSheet("margin: 8px;")
-
-        ld_manage_manager_layout.addWidget(ld_manage_group_boxtop)
-        ld_manage_manager_layout.addWidget(ld_manage_group_boxbottom)
-        ld_manage_layout.addWidget(ld_manage_list, 3)
-        ld_manage_layout.addWidget(ld_manage_manager, 7)
-
-        return ld_manage_widget
     
 
     def Tab_auto_post(self) -> QWidget:
@@ -1349,104 +931,6 @@ class BobPrimeApp(QMainWindow):
                 item = self.LDName_table.item(id-1, 1)
                 if item is not None:
                     item.setBackground(QColor("#292c3b"))
-                    
-    def Select_list_devices(self,id: int, checked: bool) -> None:
-        count = 0
-        for checkbox in self.devices_list_qp.buttons():
-            if checkbox.isChecked():
-                count += 1
-        if (checked):
-            self.select_all_devices.setChecked(all(btn.isChecked() for btn in self.devices_list_qp.buttons()))
-        else:
-            self.select_all_devices.setChecked(False)
-        self.device_count = count
-        self.selected_Devices.setText(f"{self.device_count} Selected")
-        self.specific_list_devices_ID = [self.devices_list_qp.id(b) for b in self.devices_list_qp.buttons() if b.isChecked()]
-        
-        if checked:
-            if self.devices_table.item(id-1, 1):
-                item = self.devices_table.item(id-1, 1)
-                if item is not None:
-                    item.setBackground(QColor("#07417a"))
-        else:
-            if self.devices_table.item(id-1, 1):
-                item = self.devices_table.item(id-1, 1)
-                if item is not None:
-                    item.setBackground(QColor("#292c3b"))
-    
-    def selected_list_devices(self)-> QWidget:
-        select_list_devices_widget = QWidget()
-        select_list_devices_layout = QVBoxLayout(select_list_devices_widget)
-
-        select_list_devices_layout_top = QHBoxLayout()
-        select_list_devices_layout_bottom = QHBoxLayout()
-        
-        #top
-        self.selected_Devices = QLabel("0 Selected")
-        self.select_all_devices = QCheckBox("Select All")
-        self.select_all_devices.stateChanged.connect(lambda: self.select_all_devices_changed(self.select_all_devices.isChecked()))
-        
-        select_list_devices_layout_top.addWidget(self.selected_Devices)
-        select_list_devices_layout_top.addStretch(1)
-        select_list_devices_layout_top.addWidget(self.select_all_devices)
-        try:
-            MAX = len(self.Grim.check_ld_in_list())
-        except: 
-            print(f"cannot get a max value for spinBox Raise")
-        #bottom
-        
-        
-        self.spinBox_select_all_list_devices_start = QSpinBox(self)
-        self.spinBox_select_all_list_devices_start.setRange(1, MAX)
-        self.spinBox_select_all_list_devices_start.setValue(1)
-        
-        toLabel = QLabel("To")
-        toLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        
-        self.spinBox_select_all_list_devices_end = QSpinBox(self)
-        self.spinBox_select_all_list_devices_end.setRange(1, MAX)
-        self.spinBox_select_all_list_devices_end.setValue(MAX)
-        self.spinBox_select_all_list_devices_end.valueChanged.connect(lambda v: self.selectRange("end",v))
-        self.spinBox_select_all_list_devices_start.valueChanged.connect(lambda v: self.selectRange("start",v))
-
-        confirm = QPushButton("☑︎")
-        confirm.clicked.connect(lambda: self.confirmSelectRange_list_devices(self.spinBox_select_all_list_devices_start.value(), self.spinBox_select_all_list_devices_end.value()))
-        confirm.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
-        
-        select_list_devices_layout_bottom.addWidget(self.spinBox_select_all_list_devices_start)
-        select_list_devices_layout_bottom.addWidget(toLabel)
-        select_list_devices_layout_bottom.addWidget(self.spinBox_select_all_list_devices_end)
-        select_list_devices_layout_bottom.addWidget(confirm, 0)
-        
-
-
-        select_list_devices_layout.addLayout(select_list_devices_layout_top)
-        select_list_devices_layout.addLayout(select_list_devices_layout_bottom)
-        
-        select_list_devices_layout.setContentsMargins(5, 0, 0, 0)
-        return select_list_devices_widget
-    
-    def confirmSelectRange_list_devices(self,start: int, end: int) -> None:
-        self.select_all_devices_ld = all(btn.isChecked() for btn in self.devices_list_qp.buttons())
-        count = 0 
-        for i in range(start, end+1):
-            btn = self.devices_list_qp.button(i)
-            if btn:
-                btn.setChecked(True)
-        for checkbox in self.devices_list_qp.buttons():
-            count += 1 if checkbox.isChecked() else 0
-        self.list_devices_count = count
-        self.select_all_devices.setChecked(self.select_all_devices_ld)
-        self.selected_Devices.setText(f"{self.list_devices_count} Selected")
-        self.specific_list_devices_ID = [self.devices_list_qp.id(b) for b in self.devices_list_qp.buttons() if b.isChecked()]
-
-    def select_all_devices_changed(self, checked: bool) -> None:
-        self.select_all_devices_ld: bool = all(btn.isChecked() for btn in self.devices_list_qp.buttons())
-        if checked:
-            self.confirmSelectRange_list_devices(1, len(self.Grim.check_ld_in_list()))
-            self.select_all_devices.setChecked(True)
-        else:
-            self.select_all_devices.setChecked(False)
     
     def selected_LD_name(self) -> QWidget:
         select_ld_name_widget = QWidget()
