@@ -26,7 +26,7 @@ class LDPlayer():
 
         remainLD = self.get_LD_of(Number)
 
-        print("Remaining LD: ", remainLD)
+        print("No Action LD: ", remainLD)
         requests.post(f"{self.URL}/Order", json=remainLD, headers=self.headers)
         
         
@@ -36,7 +36,7 @@ class LDPlayer():
         GET.Open_LD()
         GET.Full_setup()
         GET.Remote_Driver()
-        
+
     def get_LD_of(self, Number):
         response = requests.get(f"{self.URL}/LDActivity", headers=self.headers)
 
@@ -55,6 +55,7 @@ class LDPlayer():
         else:
             print("Error:", response.status_code)
             sys.exit(1)
+        return remainLD
 
 
 

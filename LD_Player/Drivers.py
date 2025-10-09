@@ -21,7 +21,6 @@ from selenium.webdriver.support import expected_conditions as EC
 
 class LDPlayerRemote():
     def __init__(self, driverID: int):
-        super().__init__()
 
         self.GET = option()
         self.driverID = driverID
@@ -249,6 +248,7 @@ class LDPlayerRemote():
             self.activity.setActivity("Close appium")
             time.sleep(1)
             self.Driver.quit()
+            time.sleep(1)
             self.GET.KillAppium(self.port, self.driverID)
 
             self.activity.setActivity("Done")
