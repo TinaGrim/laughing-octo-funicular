@@ -94,9 +94,11 @@ class Auto_Post():
         self.enable_post = QCheckBox("Enable Post")
         self.enable_post.setChecked(False)
         page_setup_name = QLabel("Page Name")
-        page_setup_name_value = QLineEdit("Grim")
+        page_setup_name_value = QLineEdit()
+        page_setup_name_value.setText("Grim")
         page_setup_app = QLabel("App")
-        page_setup_app_value = QLineEdit("com.facebook.katana")
+        page_setup_app_value = QLineEdit()
+        page_setup_app_value.setText("com.facebook.katana")
         page_setup_header.addWidget(self.enable_post)
         page_setup_header.addWidget(page_setup_name)
         page_setup_header.addWidget(page_setup_name_value)
@@ -245,15 +247,13 @@ class Auto_Post():
 
     
         if checked:
-            if self.LDName_table.item(id-1, 1):
-                item = self.LDName_table.item(id-1, 1)
-                if item is not None:
-                    item.setBackground(QColor("#07417a"))
+            item = self.LDName_table.item(id-1, 1)
+            if item is not None:
+                item.setBackground(QColor("#07417a"))
         else:
-            if self.LDName_table.item(id-1, 1):
-                item = self.LDName_table.item(id-1, 1)
-                if item is not None:
-                    item.setBackground(QColor("#292c3b"))
+            item = self.LDName_table.item(id-1, 1)
+            if item is not None:
+                item.setBackground(QColor("#292c3b"))
     
     def selected_LD_name(self) -> QWidget:
         select_ld_name_widget = QWidget()

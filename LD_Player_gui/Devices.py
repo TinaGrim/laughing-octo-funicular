@@ -7,36 +7,66 @@ class Devices():
     def __init__(self, GUI):
         self.GUI = GUI
         self.opt = option()
-        
+        self.config = {
+            "LD_loc": self.GUI.config["Devices"]["LD_loc"],
+            "Sys_loc": self.GUI.config["Devices"]["Sys_loc"],
+            "Number_Of_Active_LD": self.get_int("Number_Of_Active_LD"),
+            "Wait_After_LD_Boot": self.get_int("Wait_After_LD_Boot"),
+            "Between_LD_Minutes": self.get_int("Between_LD_Minutes"),
+            "Hardware_Acceleration": self.get_bool("Hardware_Acceleration"),
+            "NVIDIA_GPU": self.get_bool("NVIDIA_GPU"),
+            "Check_Ip": self.get_bool("Check_Ip"),
+            "GPS_Timezone": self.get_bool("GPS_Timezone"),
+            "Block_Ip": self.get_bool("Block_Ip"),
+            "Auto_Advance_config": self.get_bool("Auto_Advance_config"),
+            "CPU_Count": self.get_int("CPU_Count"),
+            "RAM_Count": self.get_int("RAM_Count"),
+            "Arangement": self.get_bool("Arangement"),
+            "Arangement_Count": self.get_int("Arangement_Count"),
+            "Auto_Fit": self.get_bool("Auto_Fit"),
+            "Screen_Resolution": self.GUI.config["Devices"]["Screen_Resolution"],
+            "Run_At_Startup": self.get_bool("Run_At_Startup"),
+            "Run_At_Startup_Seconds": self.get_int("Run_At_Startup_Seconds"),
+            "Auto_Stop": self.get_bool("Auto_Stop"),
+            "Auto_Stop_Minutes": self.get_int("Auto_Stop_Minutes"),
+            "Shutdown": self.get_bool("Shutdown"),
+            "Clear_Cache": self.get_bool("Clear_Cache"),
+            "Clear_Cache_Count": self.get_int("Clear_Cache_Count"),
+            "Clear_FB": self.get_bool("Clear_FB"),
+            "Clear_LD": self.get_bool("Clear_LD"),
+            "Clear_LD_GB": self.get_int("Clear_LD_GB"),
+            "Close_All_When_Stop": self.get_bool("Close_All_When_Stop")
+            
+        }
         
         # Widgets
-        self.LD_loc = QLineEdit(self.GUI.config["Devices"]["LD_loc"])
+        self.LD_loc = QLineEdit(self.config["LD_loc"])
         self.browse_LD = QPushButton("Browse")
         
-        self.Sys_loc = QLineEdit(self.GUI.config["Devices"]["Sys_loc"])
+        self.Sys_loc = QLineEdit(self.config["Sys_loc"])
         self.browse_Sys = QPushButton("Browse")
         
         self.Number_Of_Active_LD = QSpinBox()
-        self.Number_Of_Active_LD.setValue(self.get_int("Number_Of_Active_LD"))
+        self.Number_Of_Active_LD.setValue(self.config["Number_Of_Active_LD"])
         self.Wait_After_LD_Boot = QSpinBox()
-        self.Wait_After_LD_Boot.setValue(self.get_int("Wait_After_LD_Boot"))
+        self.Wait_After_LD_Boot.setValue(self.config["Wait_After_LD_Boot"])
         self.Between_LD_Start = QSpinBox()
-        self.Between_LD_Start.setValue(self.get_int("Between_LD_Minutes"))
+        self.Between_LD_Start.setValue(self.config["Between_LD_Minutes"])
         
         self.Hardware_Accel = QCheckBox("Hardware Accel")
-        self.Hardware_Accel.setChecked(self.get_bool("Hardware_Acceleration"))
+        self.Hardware_Accel.setChecked(self.config["Hardware_Acceleration"])
         self.NVIDIA_GPU = QCheckBox("NVIDIA GPU")
-        self.NVIDIA_GPU.setChecked(self.get_bool("NVIDIA_GPU"))
+        self.NVIDIA_GPU.setChecked(self.config["NVIDIA_GPU"])
     
         self.Checkip = QCheckBox("Check IP")
         self.GPS = QCheckBox("GPS/TimeZone")
         self.BlockIP = QCheckBox("Block IP")
-        self.Checkip.setChecked(self.get_bool("Check_Ip"))
-        self.GPS.setChecked(self.get_bool("GPS_Timezone"))
-        self.BlockIP.setChecked(self.get_bool("Block_Ip"))
+        self.Checkip.setChecked(self.config["Check_Ip"])
+        self.GPS.setChecked(self.config["GPS_Timezone"])
+        self.BlockIP.setChecked(self.config["Block_Ip"])
         
         self.Auto_Advance_config = QCheckBox("Auto LDplayer Advanced Configuration")
-        self.Auto_Advance_config.setChecked(self.get_bool("Auto_Advance_config"))
+        self.Auto_Advance_config.setChecked(self.config["Auto_Advance_config"])
         
         self.CPU_Count = QComboBox()
         self.CPU_Count.addItems(["1 core","2 cores","3 cores","4 cores","5 cores","6 cores","7 cores","8 cores"])
@@ -50,43 +80,43 @@ class Devices():
         self.Arangement_Count.setValue(self.get_int("Arangement_Count"))
         self.Arangement_Count.setStyleSheet("margin: 0px;")
         self.Auto_Fit = QCheckBox("Auto Fit")
-        self.Auto_Fit.setChecked(self.get_bool("Auto_Fit"))
+        self.Auto_Fit.setChecked(self.config["Auto_Fit"])
         
         self.Screen_Resolution = QComboBox()
         self.Screen_Resolution.addItems(["1280x720","1920x1080","2560x1440","3840x2160"])
         self.Screen_Resolution.setCurrentIndex(next((i for i in range(self.Screen_Resolution.count()) if self.Screen_Resolution.itemText(i) == self.GUI.config["Devices"]["Screen_Resolution"]), 0))
         
         self.Run_At_Startup = QCheckBox("Run at Startup")
-        self.Run_At_Startup.setChecked(self.get_bool("Run_At_Startup"))
+        self.Run_At_Startup.setChecked(self.config["Run_At_Startup"])
         self.Run_At_Startup_Seconds = QSpinBox()
         self.Run_At_Startup_Seconds.setValue(self.get_int("Run_At_Startup_Seconds"))
         self.Run_At_Startup_Seconds.setStyleSheet("margin: 0px;")
         
         self.Auto_Stop = QCheckBox("Auto Stop at")
-        self.Auto_Stop.setChecked(self.get_bool("Auto_Stop"))
+        self.Auto_Stop.setChecked(self.config["Auto_Stop"])
         self.Auto_Stop_Minutes = QSpinBox()
         self.Auto_Stop_Minutes.setValue(self.get_int("Auto_Stop_Minutes"))
         self.Auto_Stop_Minutes.setStyleSheet("margin: 0px;")
         
         self.Shutdown = QCheckBox("Shutdown")
-        self.Shutdown.setChecked(self.get_bool("Shutdown"))
+        self.Shutdown.setChecked(self.config["Shutdown"])
         
         self.Clear_Cache = QCheckBox("Clear cache every run counts")
-        self.Clear_Cache.setChecked(self.get_bool("Clear_Cache"))
+        self.Clear_Cache.setChecked(self.config["Clear_Cache"])
         self.Clear_Cache_Count = QSpinBox()
         self.Clear_Cache_Count.setValue(self.get_int("Clear_Cache_Count"))
         self.Clear_Cache_Count.setStyleSheet("margin: 0px;")
         
         self.Clear_FB = QCheckBox("Clear FB user data if exceeds 900 MB")
-        self.Clear_FB.setChecked(self.get_bool("Clear_FB"))
+        self.Clear_FB.setChecked(self.config["Clear_FB"])
         self.Clear_LD = QCheckBox("Clear LDPlayer if exceeds ")
-        self.Clear_LD.setChecked(self.get_bool("Clear_LD"))
+        self.Clear_LD.setChecked(self.config["Clear_LD"])
         self.Clear_LD_GB = QSpinBox()
         self.Clear_LD_GB.setValue(self.get_int("Clear_LD_GB"))
         self.Clear_LD_GB.setStyleSheet("margin: 0px;")
         
         self.Close_All_When_Stop = QCheckBox("Close all LD when stop")
-        self.Close_All_When_Stop.setChecked(self.get_bool("Close_All_When_Stop"))
+        self.Close_All_When_Stop.setChecked(self.config["Close_All_When_Stop"])
         
         # trigger
         self.browse_LD.clicked.connect(self.LD_dir)
@@ -281,11 +311,12 @@ class Devices():
         if dir:
             print("Selected directory:", dir)
             self.Sys_loc.setText(dir)
-            
+
     def get_bool(self, value) -> bool:
         return self.GUI.config["Devices"][value] in [True, 'True', 'true', 1, '1']
     def get_int(self, value) -> int:
         return int(self.GUI.config["Devices"][value])
+    
     def update_devices_table(self) -> QTableWidget:
         
         list_devices = self.opt.check_ld_in_list()  # Sample [<LD Name>]
