@@ -7,7 +7,94 @@ class Devices():
     def __init__(self, GUI):
         self.GUI = GUI
         self.opt = option()
+        
+        
+        # Widgets
+        self.LD_loc = QLineEdit(self.GUI.config["Devices"]["LD_loc"])
+        self.browse_LD = QPushButton("Browse")
+        
+        self.Sys_loc = QLineEdit(self.GUI.config["Devices"]["Sys_loc"])
+        self.browse_Sys = QPushButton("Browse")
+        
+        self.Number_Of_Active_LD = QSpinBox()
+        self.Number_Of_Active_LD.setValue(self.get_int("Number_Of_Active_LD"))
+        self.Wait_After_LD_Boot = QSpinBox()
+        self.Wait_After_LD_Boot.setValue(self.get_int("Wait_After_LD_Boot"))
+        self.Between_LD_Start = QSpinBox()
+        self.Between_LD_Start.setValue(self.get_int("Between_LD_Minutes"))
+        
+        self.Hardware_Accel = QCheckBox("Hardware Accel")
+        self.Hardware_Accel.setChecked(self.get_bool("Hardware_Acceleration"))
+        self.NVIDIA_GPU = QCheckBox("NVIDIA GPU")
+        self.NVIDIA_GPU.setChecked(self.get_bool("NVIDIA_GPU"))
     
+        self.Checkip = QCheckBox("Check IP")
+        self.GPS = QCheckBox("GPS/TimeZone")
+        self.BlockIP = QCheckBox("Block IP")
+        self.Checkip.setChecked(self.get_bool("Check_Ip"))
+        self.GPS.setChecked(self.get_bool("GPS_Timezone"))
+        self.BlockIP.setChecked(self.get_bool("Block_Ip"))
+        
+        self.Auto_Advance_config = QCheckBox("Auto LDplayer Advanced Configuration")
+        self.Auto_Advance_config.setChecked(self.get_bool("Auto_Advance_config"))
+        
+        self.CPU_Count = QComboBox()
+        self.CPU_Count.addItems(["1 core","2 cores","3 cores","4 cores","5 cores","6 cores","7 cores","8 cores"])
+        self.CPU_Count.setCurrentIndex(self.get_int("CPU_Count")-1)
+        self.RAM_MB = QComboBox()
+        self.RAM_MB.addItems(["512MB","1GB","2GB","3GB","4GB"])
+        self.RAM_MB.setCurrentIndex(self.get_int("RAM_Count")-1)
+        
+        self.Arangement = QCheckBox("Arrange LDplayer")
+        self.Arangement_Count = QSpinBox()
+        self.Arangement_Count.setValue(self.get_int("Arangement_Count"))
+        self.Arangement_Count.setStyleSheet("margin: 0px;")
+        self.Auto_Fit = QCheckBox("Auto Fit")
+        self.Auto_Fit.setChecked(self.get_bool("Auto_Fit"))
+        
+        self.Screen_Resolution = QComboBox()
+        self.Screen_Resolution.addItems(["1280x720","1920x1080","2560x1440","3840x2160"])
+        self.Screen_Resolution.setCurrentIndex(next((i for i in range(self.Screen_Resolution.count()) if self.Screen_Resolution.itemText(i) == self.GUI.config["Devices"]["Screen_Resolution"]), 0))
+        
+        self.Run_At_Startup = QCheckBox("Run at Startup")
+        self.Run_At_Startup.setChecked(self.get_bool("Run_At_Startup"))
+        self.Run_At_Startup_Seconds = QSpinBox()
+        self.Run_At_Startup_Seconds.setValue(self.get_int("Run_At_Startup_Seconds"))
+        self.Run_At_Startup_Seconds.setStyleSheet("margin: 0px;")
+        
+        self.Auto_Stop = QCheckBox("Auto Stop at")
+        self.Auto_Stop.setChecked(self.get_bool("Auto_Stop"))
+        self.Auto_Stop_Minutes = QSpinBox()
+        self.Auto_Stop_Minutes.setValue(self.get_int("Auto_Stop_Minutes"))
+        self.Auto_Stop_Minutes.setStyleSheet("margin: 0px;")
+        
+        self.Shutdown = QCheckBox("Shutdown")
+        self.Shutdown.setChecked(self.get_bool("Shutdown"))
+        
+        self.Clear_Cache = QCheckBox("Clear cache every run counts")
+        self.Clear_Cache.setChecked(self.get_bool("Clear_Cache"))
+        self.Clear_Cache_Count = QSpinBox()
+        self.Clear_Cache_Count.setValue(self.get_int("Clear_Cache_Count"))
+        self.Clear_Cache_Count.setStyleSheet("margin: 0px;")
+        
+        self.Clear_FB = QCheckBox("Clear FB user data if exceeds 900 MB")
+        self.Clear_FB.setChecked(self.get_bool("Clear_FB"))
+        self.Clear_LD = QCheckBox("Clear LDPlayer if exceeds ")
+        self.Clear_LD.setChecked(self.get_bool("Clear_LD"))
+        self.Clear_LD_GB = QSpinBox()
+        self.Clear_LD_GB.setValue(self.get_int("Clear_LD_GB"))
+        self.Clear_LD_GB.setStyleSheet("margin: 0px;")
+        
+        self.Close_All_When_Stop = QCheckBox("Close all LD when stop")
+        self.Close_All_When_Stop.setChecked(self.get_bool("Close_All_When_Stop"))
+        
+        # trigger
+        self.browse_LD.clicked.connect(self.LD_dir)
+        self.browse_Sys.clicked.connect(self.Sys_dir)
+        
+        
+        
+        
     def Tab_Devices(self) -> QWidget:
         devices_widget = QWidget()
         devices_widget_layout = QVBoxLayout(devices_widget)
@@ -21,25 +108,21 @@ class Devices():
         devices_locate_widget_layout_top = QHBoxLayout()
 
         labeltop1 = QLabel("LDplayer Location")
-        self.ldplayer_directory_box_top = QLineEdit(r"C:/Program Files/ldplayer")
-        labeltop3 = QPushButton("Browse")
         
         
         devices_locate_widget_layout_top.addWidget(labeltop1)
-        devices_locate_widget_layout_top.addWidget(self.ldplayer_directory_box_top)
-        devices_locate_widget_layout_top.addWidget(labeltop3)
+        devices_locate_widget_layout_top.addWidget(self.LD_loc)
+        devices_locate_widget_layout_top.addWidget(self.browse_LD)
         
         
         devices_locate_widget_layout_bottom = QHBoxLayout()
 
         labelbottom1 = QLabel("System Location")
-        self.system_directory_box_bottom = QLineEdit(r"C:/Program Files/ldplayer")
-        labelbottom3 = QPushButton("Browse")
         
         devices_locate_widget_layout_bottom.addWidget(labelbottom1)
-        devices_locate_widget_layout_bottom.addWidget(self.system_directory_box_bottom)
-        devices_locate_widget_layout_bottom.addWidget(labelbottom3)
-        
+        devices_locate_widget_layout_bottom.addWidget(self.Sys_loc)
+        devices_locate_widget_layout_bottom.addWidget(self.browse_Sys)
+
         devices_locate_widget_layout.addLayout(devices_locate_widget_layout_top)
         devices_locate_widget_layout.addLayout(devices_locate_widget_layout_bottom)
 
@@ -58,32 +141,25 @@ class Devices():
         devices_information_widget_layout_top = QHBoxLayout(devices_information_widget_layout_top_widget)
         QLabel("LDplayer")
         label1 = QLabel("Number of active LD")
-        label1_value = QSpinBox()
-        label1_value.setValue(1)
         label2 = QLabel("Wait after LD Boot")
-        label2_value = QSpinBox()
-        label2_value.setValue(30)
         label3 = QCheckBox("Between LD Start")
-        label3_value = QSpinBox()
-        label3_value.setValue(30)
+
+        Gpu_box = QGroupBox()
+        Gpu_vbox = QVBoxLayout(Gpu_box)
+        Gpu_vbox.addWidget(self.Hardware_Accel)
+        Gpu_vbox.addWidget(self.NVIDIA_GPU)
         
-        self.Gpu_box = QGroupBox()
-        self.Gpu_vbox = QVBoxLayout(self.Gpu_box)
-        label4 = QCheckBox("Hardware Accel")
-        label5 = QCheckBox("NVIDIA GPU")
-        self.Gpu_vbox.addWidget(label4)
-        self.Gpu_vbox.addWidget(label5)
         label6 = QPushButton("App")
         devices_information_widget_layout_top.addWidget(label1)
-        devices_information_widget_layout_top.addWidget(label1_value)
+        devices_information_widget_layout_top.addWidget(self.Number_Of_Active_LD)
         devices_information_widget_layout_top.addStretch(1)
         devices_information_widget_layout_top.addWidget(label2)
-        devices_information_widget_layout_top.addWidget(label2_value)
+        devices_information_widget_layout_top.addWidget(self.Wait_After_LD_Boot)
         devices_information_widget_layout_top.addStretch(1)
         devices_information_widget_layout_top.addWidget(label3)
-        devices_information_widget_layout_top.addWidget(label3_value)
+        devices_information_widget_layout_top.addWidget(self.Between_LD_Start)
         devices_information_widget_layout_top.addStretch(1)
-        devices_information_widget_layout_top.addWidget(self.Gpu_box)
+        devices_information_widget_layout_top.addWidget(Gpu_box)
         devices_information_widget_layout_top.addWidget(label6)
         devices_information_widget_layout_top.setAlignment(Qt.AlignmentFlag.AlignVertical_Mask)
 
@@ -94,99 +170,64 @@ class Devices():
         devices_setting_box_layout = QVBoxLayout(devices_setting_box)
         
         devices_setting_box_layout_IP = QHBoxLayout()
-        self.Checkbox = QCheckBox("Check IP")
-        self.GPS = QCheckBox("GPS/TimeZone")
-        self.BlockIP = QCheckBox("Block IP")
-        devices_setting_box_layout_IP.addWidget(self.Checkbox)
+
+        devices_setting_box_layout_IP.addWidget(self.Checkip)
         devices_setting_box_layout_IP.addWidget(self.GPS)
         devices_setting_box_layout_IP.addWidget(self.BlockIP)
         
         devices_setting_box_layout_auto_config = QHBoxLayout()
-        label_auto_config = QCheckBox("Auto LDplayer Advanced Configuration")
-        devices_setting_box_layout_auto_config.addWidget(label_auto_config)
-        
+        devices_setting_box_layout_auto_config.addWidget(self.Auto_Advance_config)
+
         devices_setting_box_layout_cpu = QHBoxLayout()
         label_cpu = QLabel("CPU")
-        label_cpu_list = QComboBox()
-        label_cpu_list.addItems(["1 core","2 cores","3 cores","4 cores","5 cores","6 cores","7 cores","8 cores"])
-        label_cpu_list.setCurrentIndex(1)
         label_ram = QLabel("RAM")
-        label_ram_list = QComboBox()
-        label_ram_list.addItems(["512MB","1GB","2GB","3GB","4GB"])
-        
         devices_setting_box_layout_cpu.addWidget(label_cpu, alignment=Qt.AlignmentFlag.AlignCenter)
-        devices_setting_box_layout_cpu.addWidget(label_cpu_list)
+        devices_setting_box_layout_cpu.addWidget(self.CPU_Count)
         devices_setting_box_layout_cpu.addWidget(label_ram, alignment=Qt.AlignmentFlag.AlignCenter)
-        devices_setting_box_layout_cpu.addWidget(label_ram_list)
+        devices_setting_box_layout_cpu.addWidget(self.RAM_MB)
 
         devices_setting_box_layout_arrange = QHBoxLayout()
-        label_arrange = QCheckBox("Arrange LDplayer")
-        label_arrange_value = QSpinBox()
-        label_arrange_value.setValue(5)
-        label_arrange_value.setStyleSheet("margin: 0px;")
-        Auto_fit = QCheckBox("Auto Fit")
-        devices_setting_box_layout_arrange.addWidget(label_arrange)
-        devices_setting_box_layout_arrange.addWidget(label_arrange_value)
-        devices_setting_box_layout_arrange.addWidget(Auto_fit)
+
+        devices_setting_box_layout_arrange.addWidget(self.Arangement)
+        devices_setting_box_layout_arrange.addWidget(self.Arangement_Count)
+        devices_setting_box_layout_arrange.addWidget(self.Auto_Fit)
         
 
         devices_setting_box_layout_screen = QHBoxLayout()
 
         screen_resolution = QLabel("Screen")
-        screen_resolution_list = QComboBox()
-        screen_resolution_list.addItems(["1280x720","1920x1080","2560x1440","3840x2160"])
-        screen_resolution_list.setCurrentIndex(1)
-        devices_setting_box_layout_screen.addWidget(screen_resolution, alignment=Qt.AlignmentFlag.AlignCenter)
-        devices_setting_box_layout_screen.addWidget(screen_resolution_list, alignment=Qt.AlignmentFlag.AlignCenter)
+        
+        devices_setting_box_layout_screen.addWidget(screen_resolution, alignment=Qt.AlignmentFlag.AlignRight)
+        devices_setting_box_layout_screen.addWidget(self.Screen_Resolution, alignment=Qt.AlignmentFlag.AlignLeft)
 
 
         devices_setting_box_layout_startup = QHBoxLayout()
-        label_startup = QCheckBox("Run at Startup")
-        label_startup_value = QSpinBox()
-        label_startup_value.setValue(30)
-        label_startup_value.setStyleSheet("margin: 0px;")
         label_startup_second = QLabel("Seconds")
-        devices_setting_box_layout_startup.addWidget(label_startup)
-        devices_setting_box_layout_startup.addWidget(label_startup_value)
+        devices_setting_box_layout_startup.addWidget(self.Run_At_Startup)
+        devices_setting_box_layout_startup.addWidget(self.Run_At_Startup_Seconds)
         devices_setting_box_layout_startup.addWidget(label_startup_second)
         
         devices_setting_box_layout_autostop = QHBoxLayout()
-        label_autostop = QCheckBox("Auto Stop at")
-        label_autostop_value = QSpinBox()
-        label_autostop_value.setValue(30)
-        label_autostop_value.setStyleSheet("margin: 0px;")  
         label_autostop_second = QLabel("Minutes")
-        label_autostop_shutdown = QCheckBox("Shutdown")
-        
-        devices_setting_box_layout_autostop.addWidget(label_autostop)
-        devices_setting_box_layout_autostop.addWidget(label_autostop_value)
+        devices_setting_box_layout_autostop.addWidget(self.Auto_Stop)
+        devices_setting_box_layout_autostop.addWidget(self.Auto_Stop_Minutes)
         devices_setting_box_layout_autostop.addWidget(label_autostop_second)
-        devices_setting_box_layout_autostop.addWidget(label_autostop_shutdown)
+        devices_setting_box_layout_autostop.addWidget(self.Shutdown)
 
         devices_setting_box_layout_clearcache = QHBoxLayout()
-        label_clearcache = QCheckBox("Clear cache every run counts")
-        label_clearcache_value = QSpinBox()
-        label_clearcache_value.setValue(200)
-        label_clearcache_value.setStyleSheet("margin: 0px;")
-        devices_setting_box_layout_clearcache.addWidget(label_clearcache)
-        devices_setting_box_layout_clearcache.addWidget(label_clearcache_value)
+        devices_setting_box_layout_clearcache.addWidget(self.Clear_Cache)
+        devices_setting_box_layout_clearcache.addWidget(self.Clear_Cache_Count)
         
         devices_setting_box_layout_iffbexceed = QHBoxLayout()
-        label_iffbexceed = QCheckBox("Clear FB user data if exceeds 900 MB")
-        devices_setting_box_layout_iffbexceed.addWidget(label_iffbexceed)
+        devices_setting_box_layout_iffbexceed.addWidget(self.Clear_FB)
         devices_setting_box_layout_ifldexceed = QHBoxLayout()
-        label_ifldexceed = QCheckBox("Clear LDPlayer if exceeds ")
-        label_ifldexceed_value = QSpinBox()
-        label_ifldexceed_value.setValue(2)
-        label_ifldexceed_value.setStyleSheet("margin: 0px;")
         label_ifldexceed_MB = QLabel("GB")
-        devices_setting_box_layout_ifldexceed.addWidget(label_ifldexceed)
-        devices_setting_box_layout_ifldexceed.addWidget(label_ifldexceed_value)
+        devices_setting_box_layout_ifldexceed.addWidget(self.Clear_LD)
+        devices_setting_box_layout_ifldexceed.addWidget(self.Clear_LD_GB)
         devices_setting_box_layout_ifldexceed.addWidget(label_ifldexceed_MB)
         
         devices_setting_box_layout_closeld = QHBoxLayout()
-        label_closeld = QCheckBox("Close all LD when stop")
-        devices_setting_box_layout_closeld.addWidget(label_closeld)
+        devices_setting_box_layout_closeld.addWidget(self.Close_All_When_Stop)
 
         devices_setting_box_layout.addLayout(devices_setting_box_layout_IP)
         devices_setting_box_layout.addStretch(1)
@@ -230,6 +271,21 @@ class Devices():
         devices_widget_layout.setContentsMargins(30, 5, 5, 5)
         return devices_widget
     
+    def LD_dir(self) -> None:
+        dir = QFileDialog.getExistingDirectory(self.GUI, "Select LDPlayer Directory", "")
+        if dir:
+            print("Selected directory:", dir)
+            self.LD_loc.setText(dir)
+    def Sys_dir(self) -> None:
+        dir = QFileDialog.getExistingDirectory(self.GUI, "Select System Directory", "")
+        if dir:
+            print("Selected directory:", dir)
+            self.Sys_loc.setText(dir)
+            
+    def get_bool(self, value) -> bool:
+        return self.GUI.config["Devices"][value] in [True, 'True', 'true', 1, '1']
+    def get_int(self, value) -> int:
+        return int(self.GUI.config["Devices"][value])
     def update_devices_table(self) -> QTableWidget:
         
         list_devices = self.opt.check_ld_in_list()  # Sample [<LD Name>]

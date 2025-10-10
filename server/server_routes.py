@@ -1,9 +1,9 @@
 from flask import Flask, jsonify , request, url_for, render_template, blueprints
-
+from typing import Optional, Any
 grim = blueprints.Blueprint('grim', __name__)
 RemainingID = []
 LDActivity_data = {}
-GUI = None
+GUI: Optional[Any] = None
 
 @grim.route("/schedule")
 def scheduleFunc():
@@ -38,11 +38,13 @@ def LDActivity():
 
 @grim.route("/Order", methods=["GET", "POST"])
 def Order():
-    if GUI is None:
+    if GUI is None and not hasattr(GUI, "Auto_Post"):
         return jsonify(Order=[])
-    
-    for btn in GUI.LD_Button_list_qp.buttons():
-        btn.setChecked(False)
+
+    auto_post = getattr(getattr(GUI, "Auto_Post", None), "LD_Button_list_qp", None)
+    if auto_post is not None:
+        for btn in auto_post.buttons():
+            btn.setChecked(False)
     
     # if request.method == "POST":
         

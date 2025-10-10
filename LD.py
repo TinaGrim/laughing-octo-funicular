@@ -17,13 +17,12 @@ from LD_Player_gui.Active import Active
 from LD_Player_gui.Devices import Devices
 from LD_Player_gui.Manage import Manage
 from LD_Player_gui.Auto_Post import Auto_Post
-from PySide6.QtGui import QColor, QFont,QIcon
+from PySide6.QtGui import QCloseEvent, QColor, QFont,QIcon
 from PySide6.QtCore import Qt, QTimer,QSize, QRect
 from flask import Flask, jsonify , request, url_for, render_template, blueprints
 from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QMainWindow, QHBoxLayout, QListWidget,QGroupBox,QMenu,QTabWidget,QLineEdit,QTableWidget,QTableWidgetItem,QBoxLayout,QCheckBox,QHeaderView,QPushButton, QButtonGroup,QSpinBox,QSizePolicy,QStyle,QProxyStyle,QStyleOptionSpinBox, QFileDialog, QComboBox, QGridLayout
 signal.signal(signal.SIGINT, signal.SIG_DFL)
-dotenv.load_dotenv(dotenv_path=".env")
-
+from configparser import ConfigParser
 
 server = Flask(__name__, template_folder='server', static_folder='style')
 
@@ -45,7 +44,6 @@ def index():
         if "GET" in getattr(rule, "methods", set()) and len(rule.arguments) == 0:
             links.append(f'<li><a href="{url_for(rule.endpoint)}">{url_for(rule.endpoint)}</a></li>')
     links.pop(0)
-    # return f"<ul>{''.join(links)}</ul>"
     return render_template("index.html", links=links)
 
 class BobPrimeApp(QMainWindow):
@@ -68,11 +66,8 @@ class BobPrimeApp(QMainWindow):
         self.DevicesTimer = QTimer()
         self.LDNameTimer = QTimer()
         self.DeviceList = QTimer()
-        self.scheduleClose = False
+        self.scheduleClose = True
         self.checkBox = QCheckBox()
-
-
-
         self.specific_ld_ID = []
         self.specific_list_devices_ID = []
         self.activity_LD = {}
@@ -119,6 +114,8 @@ class BobPrimeApp(QMainWindow):
         self.init()
         
     def _load(self):
+        self.config = ConfigParser()
+        self.config.read('config.ini')
         
         if os.path.exists(self.logo):
             icon = QIcon(self.logo)
@@ -129,6 +126,14 @@ class BobPrimeApp(QMainWindow):
         
         with open("style/style.qss") as f:
             self.setStyleSheet(f.read())
+        self.remove_underline(self)
+        
+    def remove_underline(self, widget) -> None:
+        for chile in widget.findChildren(QLineEdit):
+            font = chile.font()
+            font.setUnderline(False)
+            chile.setFrame(False)
+            chile.setFont(font)
 
 
         
@@ -323,7 +328,16 @@ class BobPrimeApp(QMainWindow):
 
         except Exception as e:
             print(f"Error opening QR code: {e}")
-    
+            
+
+    def closeEvent(self, event: QCloseEvent) -> None:
+        self.save_settings()
+        event.accept()
+         
+    def save_settings(self) -> None:
+        with open('config.ini', 'w') as configfile:
+            self.config.write(configfile)
+        print("Settings saved")
 
 
     def start_thread(self, func, *args, **kwargs) -> None:
@@ -340,17 +354,19 @@ class Proxy(QProxyStyle):
             total_h = rect.height()
             if subControl == QStyle.SubControl.SC_SpinBoxUp:
                 rect.setLeft(total_w - 30)
-                rect.setRight(total_w)
-                rect.setBottom(total_h - 13)
+                rect.setRight(total_w - 2)
+                rect.setBottom(total_h - 14)
 
             elif subControl == QStyle.SubControl.SC_SpinBoxDown:
-                rect.setTop(total_h - 13)
+                rect.setTop(total_h - 14)
                 rect.setLeft(total_w - 30)
-                rect.setRight(total_w)
+                rect.setRight(total_w - 2)
+                rect.setBottom(total_h - 2)
 
             elif subControl == QStyle.SubControl.SC_SpinBoxEditField:
                 rect.setLeft(25)
                 rect.setRight(total_w - 40)
+
 
         return rect
 
