@@ -59,10 +59,17 @@ class BobPrimeApp(QMainWindow):
         self.headers = {
             "Content-Type": "application/json",
         }
+        self.resume = True
+        self.stop = False
+        self.LDPlayers = []
+        self.LDPlayer_indexs = []
+        
+        
         #setup widgets
         self.time_label = QLabel()
         self.timer = QTimer()
         self.activityTimer = QTimer()
+        self.LDPlayer_time = QTimer()
         self.DevicesTimer = QTimer()
         self.LDNameTimer = QTimer()
         self.DeviceList = QTimer()
@@ -71,7 +78,10 @@ class BobPrimeApp(QMainWindow):
         self.specific_ld_ID = []
         self.specific_list_devices_ID = []
         self.activity_LD = {}
+        self.play = QPushButton()
+        self.pause = QPushButton()
 
+        
         self.Devices = Devices(self)
         self.Manage = Manage(self)
         self.Active = Active(self)
@@ -87,6 +97,9 @@ class BobPrimeApp(QMainWindow):
         self.starttime = time.time()
         self.timer.timeout.connect(self.update_time)
         self.timer.start(500)
+        
+        self.LDPlayer_time.timeout.connect(self.New_LDPlayer_Detect)
+        self.LDPlayer_time.start(3000)
         
         #table activity
         self.activityTimer.timeout.connect(self.update_activity_table)
@@ -107,12 +120,18 @@ class BobPrimeApp(QMainWindow):
         self.Manage.devices_list_qp.idToggled.connect(self.Manage.Select_list_devices)
         
 
+        
+        # trigger
+        self.pause.clicked.connect(lambda: self.Stop_LDPlayer(True))
+        self.play.clicked.connect(lambda: self.Stop_LDPlayer(False))
+        
+        # Auto Post
 
-
+        
         #Init
         self.update_time()
         self.init()
-        
+    
     def _load(self):
         self.config = ConfigParser()
         self.config.read('config.ini')
@@ -135,15 +154,64 @@ class BobPrimeApp(QMainWindow):
             chile.setFrame(False)
             chile.setFont(font)
 
-
+    def Stop_LDPlayer(self, stop) -> None:
+        if stop:
+            for LDPlayer in self.LDPlayers:
+                LDPlayer.stop()
+        else:
+            for LDPlayer in self.LDPlayers:
+                LDPlayer.resume()
+        self.resume = not stop
+        print(self.resume)
         
-    def check_activity(self) -> list[str]:
+    def LDPlayer_Start(self, IDs: list[int]) -> None:
+        self.Auto_Post.select_all_ld.setChecked(False)
+        self.Auto_Post.selected_LD.setText(f"{0} Selected")
+        for btn in self.Auto_Post.LD_Button_list_qp.buttons():
+            btn.setChecked(False)
+        print("Starting LD Players: ", IDs)
+        if not IDs:
+            return
+        for ID in IDs:
+            if not any(ldplayer.ID == ID for ldplayer in self.LDPlayers):
+                ldplayer = LDPlayer(self, ID)
+                self.LDPlayers.append(ldplayer)
+        print("LDPlayers: ", self.LDPlayers)
+        
+
+        threading.Thread(target=self.LDPlayer_Process,args=(IDs,)).start()
+
+
+    def New_LDPlayer_Detect(self) -> None:
         try:
-            self.drivers = self.Grim.current_ld()
-            return self.drivers if self.drivers is not None else []
+            ids = self.Grim.current_ld_ids()
+            print(self.LDPlayer_indexs, ids)
+            if self.LDPlayer_indexs == ids :
+                return
+            else:
+                self.LDPlayer_indexs = ids
+                for index, ID in enumerate(self.LDPlayer_indexs):
+                    
+                    self.Grim.Arrangment(ID, index)
+                    time.sleep(1)
+    
         except Exception as e:
-            print(f"Error checking activity: {e}")
-            return []
+            print(f"Error arranging LDPlayer windows: {e}")
+
+    def LDPlayer_Process(self, IDs: list[int]) -> None:
+        steps = [
+            lambda ld: ld.open(),
+            lambda ld: time.sleep(5),
+            lambda ld: ld.check_command(),
+            lambda ld: ld.remote()
+        ]
+        
+        for step in steps:
+            for ld in self.LDPlayers:
+                if ld.ID in IDs:
+                    step(ld)
+                    if step == steps[0]:
+                        time.sleep(5)
         
     def update_time(self) -> None:
         """Update the time label with current time using replace"""
@@ -151,14 +219,13 @@ class BobPrimeApp(QMainWindow):
         hours = elapsed // 3600
         minutes = (elapsed % 3600) // 60
         seconds = elapsed % 60
-        self.time_label.setText(f'<div style="font-size: 50px;">{hours:02}:{minutes:02}:{seconds:02}</div>')
+        self.time_label.setText(f'<span >{hours:02}:{minutes:02}:{seconds:02}</span>')
         
-        
+
         
     #======================================================================================================
     def update_activity_table(self)->QTableWidget:
-        driver_list = self.check_activity()
-
+        driver_list = self.Grim.current_ld_names()
         try:
             activity = requests.get("http://127.0.0.1:5000/LDActivity", headers=self.headers, timeout=5)
             if activity.status_code == 200:
@@ -203,7 +270,6 @@ class BobPrimeApp(QMainWindow):
                 status = activityData[driverName].get('status', 'No Action...')
             else:
                 status = "No Action..."
-            
             self.table.setRowCount(len(driver_list))
             self.table.setItem(i,0, QTableWidgetItem(str(i+1)))
             self.table.setItem(i,1, QTableWidgetItem(driverName))
@@ -268,9 +334,18 @@ class BobPrimeApp(QMainWindow):
         
         """"Header"""
         Head_left_panel = QHBoxLayout()
-        Head_left_panel.addWidget(QLabel('<div style="font-size: 100px;">▶️</div>'))
-        Head_left_panel.addWidget(QLabel('<div style="font-size: 100px;">⏹️</div>'))
-        Head_left_panel.addWidget(self.time_label)  
+        self.play.setIcon(QIcon("Logo/play.png"))
+        self.play.setIconSize(QSize(100, 100))
+        self.play.setStyleSheet("background-color: none; border: none;")
+        self.pause.setIcon(QIcon("Logo/pause.png"))
+        self.pause.setIconSize(QSize(100, 100))
+        self.pause.setStyleSheet("background-color: none; border: none;")
+        font = QFont()
+        font.setPointSize(40)
+        self.time_label.setFont(font)
+        Head_left_panel.addWidget(self.play)
+        Head_left_panel.addWidget(self.pause)
+        Head_left_panel.addWidget(self.time_label)
         """End Header"""
 
         
@@ -332,6 +407,7 @@ class BobPrimeApp(QMainWindow):
 
     def closeEvent(self, event: QCloseEvent) -> None:
         self.save_settings()
+        self.stop = True
         event.accept()
          
     def save_settings(self) -> None:

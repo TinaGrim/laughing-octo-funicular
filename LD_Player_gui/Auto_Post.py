@@ -13,6 +13,7 @@ class Auto_Post():
         self.LD_Button_list_qp.setExclusive(False)
         self.Check_Box_LD_Name = []
         self.timeline_table_list = []
+        self.specific_ld_ID = []
         # widgets
         self.Open_ld = QPushButton("➕")
         self.Open_ld.setStyleSheet("margin: 0px 0px 10px 0px;")
@@ -25,20 +26,13 @@ class Auto_Post():
         self.closeAppium.setChecked(True)
         
         #trigger
-        self.Open_ld.clicked.connect(lambda: self.openLD())
+        self.Open_ld.clicked.connect(lambda: self.GUI.LDPlayer_Start(self.specific_ld_ID))
         self.closeAppium.stateChanged.connect(lambda: self.scheduleCheck())
         
     def scheduleCheck(self) -> bool:
         self.scheduleClose = self.closeAppium.isChecked()
         return self.scheduleClose
-
-    def openLD(self) -> None:
-        if not self.specific_ld_ID:
-            return
-        self.select_all_ld.setChecked(False)
-        self.selected_LD.setText(f"{0} Selected")
-        self.GUI.start_thread(LDPlayer().run, self.specific_ld_ID)
-        
+              
     def Tab_auto_post(self) -> QWidget:
 
         auto_post_widget = QWidget()

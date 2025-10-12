@@ -95,21 +95,28 @@ class option:
         subprocess.Popen(f'start /MIN cmd /c appium --log-level debug --relaxed-security --port {port}', shell=True, startupinfo=self.__info(2))
 
     @timer
-    def __LDPlayer(self, startupinfo, index: int):
+    def LDPlayer(self, index: int):
         """Opening LDPlayer by cmd"""
         SUP = self.__info(1)
         
         try:
             LDPlayer_launcher_path = f'"{self.DIR_LD}\\ldconsole.exe" launch --index {index}'
-            LDPlayer_setup_path = f'"{self.DIR_LD}\\ldconsole.exe" modify --index {index} --resolution 300,600,160 --cpu 2 --memory 2048'
 
-            subprocess.run(LDPlayer_setup_path, shell=True, startupinfo=SUP)
-            subprocess.Popen(LDPlayer_launcher_path, shell=True, startupinfo=SUP)
+
+            subprocess.run(LDPlayer_launcher_path, shell=True, startupinfo=SUP)
         except Exception as e:
             traceback.print_exc()
             print(f"Error launching LDPlayer: {e}")
             return
-
+        
+    def modify_LD(self, index: int) -> None:
+        try:
+            
+            LDPlayer_setup_path = f'"{self.DIR_LD}\\ldconsole.exe" modify --index {index} --resolution 300,600,160 --cpu 2 --memory 2048'
+            subprocess.run(LDPlayer_setup_path, shell=True, startupinfo=self.__info(1))
+        except Exception as e:
+            print(f"Error modifying LDPlayer: {e}")
+            return
 
     def check_ld_in_list(self)->list[str]:
         
@@ -140,26 +147,27 @@ class option:
             print("LDPlayer config file not found.")
             return []
 
-    def __Arrangment(self, index: int) -> None:
+    def Arrangment(self, ID: int, index: int) -> None:
         """Arranging LDPlayer windows"""
         try:
-            LD_Name = f"LDPlayer" if index == 0 else f"LDPlayer-{index}"
+            ID = ID - 1
+            LD_Name = f"LDPlayer" if ID == 0 else f"LDPlayer-{ID}"
             found = False
             while not found:
                 for w in pygetwindow.getAllWindows():
                     if w.title == LD_Name:
-                        w.moveTo(index * 330, 0)
-                        print(self.ok + f"LDPlayer {index + 1} Arranged successfully")
+                        w.moveTo(index * 360, 0)
+                        print(self.ok + f"LDPlayer {ID + 1} Arranged successfully")
                         found = True
                         break
-                time.sleep(1)
+
                 
         except Exception as e:
             print(f"Error moving window: {e}")
 
-    def cap(self,port: int,choose: int)-> WebDriver:
+    def cap(self,port: int,ID: int)-> WebDriver:
         try:
-            desired_caps = self.__get_des_cap(choose)
+            desired_caps = self.__get_des_cap(ID)
             options = UiAutomator2Options()
             for k, v in desired_caps.items():
                 options.set_capability(k, v)
@@ -197,10 +205,11 @@ class option:
         else:
             sys.exit(1)
     
-    def wait_for_ldplayer_device(self, device_name: str, timeout=60):
+    def wait_for_ldplayer_device(self, ID: int, timeout=60):
         """check if LDPlayer fully opened"""
-        start_time = time.time()
+        device_name = f"emulator-55{(ID-1)*2 + 54}"
         
+        start_time = time.time()
         while time.time() - start_time < timeout:
             # Check if command is available
             try:
@@ -234,9 +243,9 @@ class option:
         if not self.number:
             return False
         for id in self.number:
-            self.__LDPlayer(self.__info(1), index=id-1) # Sample Open Your LDName
+            self.LDPlayer(index=id-1) # Sample Open Your LDName
             time.sleep(0.5)
-            self.__Arrangment(index=id-1)
+            # self.Arrangment(index=id-1)
         return True
 
     def Remote_Driver(self) -> None:
@@ -246,11 +255,11 @@ class option:
         print(self.ok + f"Remote Driver Path: ", Driver_path)
         subprocess.Popen(["python",Driver_path]) # Sample Remote using Driver in Path That Exists
 
-    def Full_setup(self):
+    def Full_setup(self, IDs: Optional[list[int]] = None) -> bool:
         """Aware of any command not working"""
-        if not self.number:
+        if not IDs:
             return False
-        done = all(self.wait_for_ldplayer_device(f"emulator-55{(id-1)*2 + 54}") for id in self.number)
+        done = all(self.wait_for_ldplayer_device(id) for id in IDs)
         return done
         # for id in self.number:
 
@@ -300,7 +309,7 @@ class option:
     # password = "frshsghyvjqeiayv"  # Use app password if 2FA is enabled
     # filter_email = "tinagrim+001kh@yandex.com"
 
-    def current_ld(self)-> list[str]:
+    def current_ld_names(self)-> list[str]:
 
         Drivers_list_opened = []
         
@@ -320,9 +329,30 @@ class option:
             if "emulator" in line:
                 driver_name: str = line.split("\t")[0]
                 Drivers_list_opened.append(driver_name)
+        return Drivers_list_opened if Drivers_list_opened else [] # sample [emulator-5554, emulator-5556] is open
+    
+    def current_ld_ids(self)-> list[int]:
 
-        return Drivers_list_opened # sample [emulator-5554, emulator-5556] is open
+        Drivers_list_opened = []
+        
+        try:
+            result = subprocess.run(
+                ['adb', 'devices'],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True
+            )
+        except Exception as e:
+            print(f"not found adb.exe: {e}")
+            return Drivers_list_opened
 
+        """Activity Check"""
+        for line in result.stdout.splitlines():
+            if "emulator" in line:
+                driver_name: str = line.split("\t")[0]
+                Drivers_list_opened.append(driver_name)
+        Drivers_list_opened = [((int(name[-2:]) - 54) // 2) + 1 for name in Drivers_list_opened]
+        return Drivers_list_opened if Drivers_list_opened else [] # sample [1,2] is open
     def __Random_first_Name(self)-> str:
         NAME = names.get_first_name()
         return NAME

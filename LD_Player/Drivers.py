@@ -7,7 +7,10 @@ import requests
 import threading
 import subprocess
 from datetime import datetime 
-from Option import option, Activity
+try:
+    from .Option import option, Activity
+except ImportError:
+    from LD_Player.Option import option, Activity
 from selenium.webdriver.common.by import By
 from urllib3.exceptions import MaxRetryError
 from requests.exceptions import ConnectionError
@@ -17,20 +20,21 @@ from selenium.common.exceptions import WebDriverException
 from selenium.common.exceptions import  NoSuchElementException
 from selenium.common.exceptions import InvalidSessionIdException
 from selenium.webdriver.support import expected_conditions as EC
-
-
+from appium.webdriver.common.appiumby import AppiumBy
 class LDPlayerRemote():
-    def __init__(self, driverID: int):
+    def __init__(self, LDPlayer):
 
         self.GET = option()
-        self.driverID = driverID
+        self.LDPlayer = LDPlayer
+        self.driverID = LDPlayer.ID
         self.port = 4722 + self.driverID
         self.SELECTOR = self.GET.SELECTOR
         self.IMFORMATION = self.GET.IMFORMATION
         self.emu = f"emulator-55{(self.driverID-1)*2+54}"
         self.activity = Activity(self.emu, self.driverID)
         self.Driver = self.GET.cap(self.port, self.driverID)
-
+        print(self.port, self.driverID)
+        self.pause = False
         if self.Driver is None:
             print("Driver did not exist...")
             return 0
@@ -59,21 +63,26 @@ class LDPlayerRemote():
             self.action("No Action...")
             sys.exit(1)
             
-            
+    def is_pause(self):
+        if hasattr(self.LDPlayer, 'resume_event'):
+            self.LDPlayer.resume_event.wait()
     def wait_and_click_to(self, xpath, timesleep=3, timeout=30):
+        self.is_pause()
+            
         time.sleep(timesleep)
         el = WebDriverWait(self.Driver, timeout).until(EC.presence_of_element_located((By.XPATH, xpath)))
         el.click()
         return el
 
     def wait_and_send_keys_to(self, xpath, text, timesleep=3, timeout=30):
+        self.is_pause()
         time.sleep(timesleep)
         el = WebDriverWait(self.Driver, timeout).until(EC.presence_of_element_located((By.XPATH, xpath)))
         el.click()
         el.clear()
         el.send_keys(text)
         return el
-    
+
     def action(self, label, func = None, *args, **kwargs):
         try:
             if not func:
@@ -121,7 +130,52 @@ class LDPlayerRemote():
             print("[ \033[92mNot Found\033[0m ] " + f"Error getting proxy: {e}")
             return None, None
 
-            
+    # def scroll_into_view(self, by, locator, container=None, timeout=15):
+        
+    #     try:
+    #         return WebDriverWait(self.Driver, 2).until(EC.presence_of_element_located((by, locator)))
+    #     except Exception:
+    #         pass
+
+    #     size = self.Driver.get_window_size()
+    #     args = {"direction": "down", "percent": 0.85}
+    #     if container is not None:
+    #         args["elementId"] = container.id
+    #     else:
+    #         args.update({"left": 5, "top": 5, "width": max(1, size["width"] - 10), "height": max(1, size["height"] - 10)})
+
+    #     for _ in range(6):
+    #         self.Driver.execute_script("mobile: scrollGesture", args)
+    #         try:
+    #             return WebDriverWait(self.Driver, 1.5).until(EC.presence_of_element_located((by, locator)))
+    #         except Exception:
+    #             continue
+
+    #     try:
+    #         self.Driver.find_element(
+    #             AppiumBy.ANDROID_UIAUTOMATOR,
+    #             'new UiScrollable(new UiSelector().scrollable(true)).scrollForward()'
+    #         )
+    #         return WebDriverWait(self.Driver, 2).until(EC.presence_of_element_located((by, locator)))
+    #     except Exception:
+    #         raise
+    
+    def scroll_region(self, top: int, left: int, height: int, direction: str = "down", percent: float = 1.0):
+        
+        # size = self.Driver.get_window_size()
+        args = {
+            "left": left,
+            "top": top,
+            "width": 10,
+            "height": max(1, height),
+            "direction": direction,
+            "percent": percent,
+        }
+        try:
+            self.Driver.execute_script("mobile: swipeGesture", args)
+        except Exception:
+            self.Driver.execute_script("mobile: scrollGesture", args)
+
     def driverRun(self):
 
 
@@ -129,7 +183,10 @@ class LDPlayerRemote():
                 print("Driver did not exist...")
                 return 0
             
+            self.scroll_region(top=0, left=0, height=400, direction="down", percent=1.0)
 
+            
+            
             self.GET.clear_app_data(self.emu, "com.facebook.orca")
             self.action("Open Messenger", self.wait_and_click_to, self.GET.SELECTOR["Messenger"], 3)
 
@@ -298,20 +355,20 @@ class LDPlayerRemote():
             except subprocess.CalledProcessError as e:
                 print(f"Error executing adb command: {e}")
 
+if __name__ == "__main__":
+    URL = "http://127.0.0.1:5000/"
 
-URL = "http://127.0.0.1:5000/"
+    try:
+        get_order = requests.get(URL + "Order", headers={"Content-Type": "application/json"})
+        response = get_order.json()
+        order_IDs: list[int] = response.get("Order", False)
+        print("[ \033[92mOK\033[0m ]" ,"LDPlayer open => ", order_IDs)
+    except Exception as e:
+        print(f"Server Error: {e}")
 
-try:
-    get_order = requests.get(URL + "Order", headers={"Content-Type": "application/json"})
-    response = get_order.json()
-    order_IDs: list[int] = response.get("Order", False)
-    print("[ \033[92mOK\033[0m ]" ,"LDPlayer open => ", order_IDs)
-except Exception as e:
-    print(f"Server Error: {e}")
-
-if order_IDs:
-    for i in order_IDs:
-        Mythread = threading.Thread(
-            target=lambda ID=i: LDPlayerRemote(ID))
-        Mythread.start()
+    if order_IDs:
+        for i in order_IDs:
+            Mythread = threading.Thread(
+                target=lambda ID=i: LDPlayerRemote(ID))
+            Mythread.start()
 

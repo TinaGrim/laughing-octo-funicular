@@ -22,7 +22,6 @@ class Manage():
         #
         ld_manage_list = QWidget()
         manage_list_layout = QVBoxLayout(ld_manage_list)
-        
 
         
         manage_list_layout.addWidget(self.update_devices_list(),9)
