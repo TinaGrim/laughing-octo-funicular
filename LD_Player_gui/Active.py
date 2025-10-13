@@ -3,10 +3,307 @@ from PySide6.QtGui import QColor, QFont,QIcon
 from PySide6.QtCore import Qt, QTimer,QSize, QRect
 from LD_Player import option
 class Active():
-    def __init__(self, Grim) -> None:
-        self.Grim = Grim
+    def __init__(self, GUI) -> None:
+        self.GUI = GUI
         self.opt = option()
         
+        #
+        # notify action
+        #
+        self.check_primary_location = QCheckBox("Check Primary Location")
+        self.check_primary_location.setChecked(False)
+        self.check_notification = QCheckBox("Check Notification")
+        self.check_notification.setChecked(False)
+        self.check_notification_time = QSpinBox()
+        self.check_notification_time.setValue(0)
+
+        #
+        # scroll action
+        #
+        self.scroll_feed = QCheckBox("Scroll News Feed")
+        self.scroll_feed.setChecked(False)
+        self.scroll_feed_start = QSpinBox()
+        self.scroll_feed_start.setValue(0)
+        self.scroll_feed_end = QSpinBox()
+        self.scroll_feed_end.setValue(0)
+        self.scroll_feed_widget = QWidget()
+        self.scroll_feed_layout = QHBoxLayout(self.scroll_feed_widget)
+        self.scroll_feed_layout.addWidget(self.scroll_feed_end)
+        self.scroll_feed_layout.addWidget(QLabel("Minutes"))
+        self.scroll_feed_layout.setContentsMargins(0, 0, 0, 0)
+
+        self.scroll_video = QCheckBox("Scroll Video")
+        self.scroll_video.setChecked(False)
+        self.scroll_video_start = QSpinBox()
+        self.scroll_video_start.setValue(0)
+        self.scroll_video_end = QSpinBox()
+        self.scroll_video_end.setValue(0)
+        self.scroll_video_widget = QWidget()
+        self.scroll_video_layout = QHBoxLayout(self.scroll_video_widget)
+        self.scroll_video_layout.addWidget(self.scroll_video_end)
+        self.scroll_video_layout.addWidget(QLabel("Minutes"))
+        self.scroll_video_layout.setContentsMargins(0, 0, 0, 0)
+
+        self.scroll_reel = QCheckBox("Scroll Reels")
+        self.scroll_reel.setChecked(False)
+        self.scroll_reel_start = QSpinBox()
+        self.scroll_reel_start.setValue(0)
+        self.scroll_reel_end = QSpinBox()
+        self.scroll_reel_end.setValue(0)
+        self.scroll_reel_widget = QWidget()
+        self.scroll_reel_layout = QHBoxLayout(self.scroll_reel_widget)
+        self.scroll_reel_layout.addWidget(self.scroll_reel_end)
+        self.scroll_reel_layout.addWidget(QLabel("Minutes"))
+        self.scroll_reel_layout.setContentsMargins(0, 0, 0, 0)
+
+        #
+        # confirm action
+        #
+        self.confirm_friend = QCheckBox("Confirm Friend")
+        self.confirm_friend.setChecked(False)
+        self.confirm_friend_time = QSpinBox()
+        self.confirm_friend_time.setValue(0)
+        self.add_friend = QCheckBox("Add Friend")
+        self.add_friend.setChecked(False)
+        self.add_friend_time = QSpinBox()
+        self.add_friend_time.setValue(0)
+
+        #
+        # post action
+        #
+        self.react_post = QCheckBox("React Post")
+        self.react_post.setChecked(False)
+
+        #
+        # check message action
+        #
+        self.check_message = QCheckBox("Check Message")
+        self.check_message.setChecked(False)
+        self.check_message_time = QSpinBox()
+        self.check_message_time.setValue(0)
+        self.reply = QCheckBox("Reply")
+        self.reply.setChecked(False)
+        self.reply_text = QLineEdit()
+        self.reply_text.setText(r"{Hi|Hello|Hey|How are you}")
+
+        #
+        # create post action
+        #
+        self.check_post = QCheckBox("Create Post")
+        self.check_post.setChecked(False)
+        self.check_post_time = QSpinBox()
+        self.check_post_time.setValue(0)
+        self.photo = QCheckBox("Photo")
+        self.photo.setChecked(False)
+        self.photo_loc = QLineEdit()
+        self.photo_loc.setPlaceholderText(r"C:/path/to/photo.jpg")
+        self.photo_browse = QPushButton("...")
+        self.photo_browse.setStyleSheet("margin: 0px; padding: 2px 10px; ")
+
+        #
+        # story action
+        #
+        self.check_story = QCheckBox("Check Story")
+        self.check_story.setChecked(False)
+        self.check_story_time = QSpinBox()
+        self.check_story_time.setValue(0)
+        self.video_loc = QLineEdit()
+        self.video_loc.setPlaceholderText(r"C:/path/to/video.mp4")
+        self.story_video_browse = QPushButton("...")
+        self.story_video_browse.setStyleSheet("margin: 0px; padding: 2px 10px; ")
+
+        #
+        # comment action
+        #
+        self.comment_post = QCheckBox("Comment Post")
+        self.comment_post.setChecked(False)
+        self.comment_post_time = QSpinBox()
+        self.comment_post_time.setValue(0)
+        self.comment_text = QLineEdit()
+        self.comment_text.setPlaceholderText(r"comment1, comment2, comment3")
+
+        #
+        # share action
+        #
+        self.share_to_gp = QCheckBox("Share Post to Group")
+        self.share_to_gp.setChecked(False)
+        self.share_to_gp_time = QSpinBox()
+        self.share_to_gp_time.setValue(0)
+        self.profile = QCheckBox("Profile")
+        self.profile_link = QLineEdit()
+        self.profile_link.setPlaceholderText(r"profile link1, profile link2, profile link3")
+
+        #
+        # loop action
+        #
+        self.active_loop = QSpinBox()
+        self.active_loop.setValue(1)
+        self.active_between = QCheckBox("Active Between Time")
+        self.active_between.setChecked(False)
+        self.active_between_start = QSpinBox()
+        self.active_between_start.setValue(0)
+        self.active_between_end = QSpinBox()
+        self.active_between_end.setValue(0)
+
+        #
+        # install apk action
+        #
+        self.install_apk = QCheckBox("Install APK")
+        self.install_apk.setChecked(False)
+        self.apk_loc = QLineEdit()
+        self.apk_loc.setPlaceholderText(r"C:/path/to/app.apk")
+        self.install_apk_browse = QPushButton("...")
+        self.install_apk_browse.setStyleSheet("margin: 0px; padding: 2px 10px; ")
+
+        #
+        # shutdown action
+        #
+        self.shutdown = QCheckBox("Shutdown when finish")
+        self.shutdown.setChecked(False)
+
+        
+        
+        def _get(key, default=None):
+            return self.GUI.config["Active"][key]
+        def _bool(key, default=False):
+            v = _get(key, default)
+            if isinstance(v, bool): return v
+            return str(v).lower() in ("true", "1", "yes", "on")
+        def _int(key, default=0):
+            try: return int(_get(key, default))
+            except Exception: return default
+        def _str(key, default=""):
+            v = _get(key, default)
+            return str(v if v is not None else default)
+
+        self.config = {
+
+            "check_notification": _bool("check_notification"),
+            "check_notification_time": _int("check_notification_time"),
+            "check_primary_location": _bool("check_primary_location", False),
+
+            "scroll_feed": _bool("scroll_feed"),
+            "scroll_feed_start": _int("scroll_feed_start"),
+            "scroll_feed_end": _int("scroll_feed_end"),
+
+            "scroll_video": _bool("scroll_video"),
+            "scroll_video_start": _int("scroll_video_start"),
+            "scroll_video_end": _int("scroll_video_end"),
+
+            "scroll_reel": _bool("scroll_reel"),
+            "scroll_reel_start": _int("scroll_reel_start"),
+            "scroll_reel_end": _int("scroll_reel_end"),
+
+            "confirm_firend": _bool("confirm_firend"),
+            "confirm_firend_time": _int("confirm_firend_time"),
+
+            "add_friend": _bool("add_friend"),
+            "add_friend_time": _int("add_friend_time"),
+
+            "react_post": _bool("react_post"),
+
+            "check_message": _bool("check_message"),
+            "check_message_time": _int("check_message_time"),
+
+            "reply": _bool("reply"),
+            "reply_text": _str("reply_text", "{Hi|Hello|Hey|How are you}"),
+
+            "check_post": _bool("check_post"),
+            "check_post_time": _int("check_post_time"),
+
+            "photo": _bool("photo"),
+            "photo_loc": _str("photo_loc", "C:/path/to/photo.jpg"),
+
+            "check_story": _bool("check_story"),
+            "check_story_time": _int("check_story_time"),
+
+            "video_loc": _str("video_loc", "C:/path/to/video.mp4"),
+
+            "comment_post": _bool("comment_post"),
+            "comment_post_time": _int("comment_post_time"),
+            "comment_text": _str("comment_text", ""),
+
+            "share_to_gp": _bool("share_to_gp"),
+            "share_to_gp_time": _int("share_to_gp_time"),
+
+            "profile": _bool("profile"),
+            "profile_link": _str("profile_link", ""),
+
+            "active_loop": _int("active_loop"),
+            "active_between": _bool("active_between"),
+            "active_between_start": _int("active_between_start"),
+            "active_between_end": _int("active_between_end"),
+
+            "shutdown": _bool("shutdown"),
+
+            "install_apk": _bool("install_apk"),
+            "apk_loc": _str("apk_loc", "C:/path/to/app.apk"),
+
+            "facebook_app_number": _int("facebook_app_number"),
+            "switch_account": _int("switch_account"),
+        }
+        # trigger
+        # ---- Toggles  ----
+        for name in [
+            "check_notification",
+            "check_primary_location",
+            "scroll_feed",
+            "scroll_video",
+            "scroll_reel",
+            "confirm_friend",
+            "add_friend",
+            "react_post",
+            "check_message",
+            "reply",
+            "check_post",
+            "photo",
+            "check_story",
+            "comment_post",
+            "share_to_gp",
+            "profile",
+            "active_between",
+            "shutdown",
+            "install_apk"
+        ]:
+            widget = getattr(self, name)
+            widget.toggled.connect(lambda state, n=name: self.GUI.change_config("Active", n, str(state)))
+
+        # ---- spinbox ----
+        for name in [
+            "check_notification_time",
+            "scroll_feed_start",
+            "scroll_feed_end",
+            "scroll_video_start",
+            "scroll_video_end",
+            "scroll_reel_start",
+            "scroll_reel_end",
+            "confirm_friend_time",
+            "add_friend_time",
+            "check_message_time",
+            "check_post_time",
+            "comment_post_time",
+            "share_to_gp_time",
+            "active_loop",
+            "active_between_start",
+            "active_between_end",
+            # "facebook_app_number",
+            # "switch_account"
+        ]:
+            widget = getattr(self, name)
+            widget.valueChanged.connect(lambda value, n=name: self.GUI.change_config("Active", n, str(value)))
+
+        # ---- Text ----
+        for name in [
+            "reply_text",
+            "photo_loc",
+            "video_loc",
+            "comment_text",
+            "profile_link",
+            "apk_loc"
+        ]:
+            widget = getattr(self, name)
+            widget.textChanged.connect(lambda text, n=name: self.GUI.change_config("Active", n, text))
+
     def Tab_Active(self) -> QWidget:
         active_widget = QWidget()
         active_layout = QHBoxLayout(active_widget)
@@ -23,236 +320,71 @@ class Active():
         active_layout_main_top = QGridLayout(active_widget_main_top)
         active_layout_main_top.setContentsMargins(10, 10, 0, 0)
         
-        #
-        #notify action
-        #
-
-        self.check_primary_location = QCheckBox("Check Primary Location")
-        self.check_primary_location.setChecked(False)
-        self.check_notification = QCheckBox("Check Notification")
-        self.check_notification.setChecked(False)
-        self.check_notification_value = QSpinBox()
-        self.check_notification_value.setValue(0)
-        #
-        #scroll action
-        #
-        self.scroll_newsfeed = QCheckBox("Scroll News Feed")
-        self.scroll_newsfeed.setChecked(False)
-        self.scroll_newsfeed_start_value = QSpinBox()
-        self.scroll_newsfeed_start_value.setValue(0)
-        self.scroll_newsfeed_widget = QWidget()
-        self.scroll_newsfeed_layout = QHBoxLayout(self.scroll_newsfeed_widget)
-        self.scroll_newsfeed_end_value = QSpinBox()
-        self.scroll_newsfeed_end_value.setValue(0)
-        self.scroll_newsfeed_layout.addWidget(self.scroll_newsfeed_end_value)
-        self.scroll_newsfeed_layout.addWidget(QLabel("Minutes"))
-        self.scroll_newsfeed_layout.setContentsMargins(0, 0, 0, 0)
-        
-        self.scroll_video = QCheckBox("Scroll Video")
-        self.scroll_video.setChecked(False)
-        self.scroll_video_start_value = QSpinBox()
-        self.scroll_video_start_value.setValue(0)
-        self.scroll_video_widget = QWidget()
-        self.scroll_video_layout = QHBoxLayout(self.scroll_video_widget)
-        self.scroll_video_end_value = QSpinBox()
-        self.scroll_video_end_value.setValue(0)
-        self.scroll_video_layout.addWidget(self.scroll_video_end_value)
-        self.scroll_video_layout.addWidget(QLabel("Minutes"))
-        self.scroll_video_layout.setContentsMargins(0, 0, 0, 0)
-        
-        self.scroll_reels = QCheckBox("Scroll Reels")
-        self.scroll_reels.setChecked(False)
-        self.scroll_reels_start_value = QSpinBox()
-        self.scroll_reels_start_value.setValue(0)
-        self.scroll_reels_widget = QWidget()
-        self.scroll_reels_layout = QHBoxLayout(self.scroll_reels_widget)
-        self.scroll_reels_end_value = QSpinBox()
-        self.scroll_reels_end_value.setValue(0)
-        self.scroll_reels_layout.addWidget(self.scroll_reels_end_value)
-        self.scroll_reels_layout.addWidget(QLabel("Minutes"))
-        self.scroll_reels_layout.setContentsMargins(0, 0, 0, 0)
-        
-        #
-        #confirm action
-        #
-        self.confirm_friend = QCheckBox("Confirm Friend")
-        self.confirm_friend.setChecked(False)
-        self.confirm_friend_value = QSpinBox()
-        self.confirm_friend_value.setValue(0)
-        self.add_friend = QCheckBox("Add Friend")
-        self.add_friend.setChecked(False)
-        self.add_friend_value = QSpinBox()
-        self.add_friend_value.setValue(0)
-        #
-        # post action
-        #
-        self.reaction_post = QCheckBox("Reaction Post")
-        self.reaction_post.setChecked(False)
-        self.reaction_post_value = QSpinBox()
-        self.reaction_post_value.setValue(0)
-        #
-        # check message action
-        #
-        self.check_message = QCheckBox("Check Message")
-        self.check_message.setChecked(False)
-        self.check_message_value = QSpinBox()
-        self.check_message_value.setValue(0)
-        self.reply_widget = QWidget()
-        self.reply_layout = QHBoxLayout(self.reply_widget)
-        self.reply = QCheckBox("Reply")
-        self.reply.setChecked(False)
-        self.reply_value = QLineEdit()
-        self.reply_value.setText(r"{Hi|Hello|Hey|How are you}")
-        self.reply_layout.addWidget(self.reply)
-        self.reply_layout.addWidget(self.reply_value)
-        self.reply_layout.setContentsMargins(0, 0, 0, 0)
-
-        #
-        # create post action
-        #
-        self.create_post = QCheckBox("Create Post")
-        self.create_post.setChecked(False)
-        self.create_post_value = QSpinBox()
-        self.create_post_value.setValue(0)
-        self.photo_img = QCheckBox("Photo")
-        self.photo_img.setChecked(False)
-        self.photo_widget = QWidget()
-        self.photo_layout = QHBoxLayout(self.photo_widget)
-        self.photo_img_value = QLineEdit()
-        self.photo_img_value.setText(r"C:/path/to/photo.jpg")
-        self.photo_img_browse = QPushButton("...")
-        self.photo_img_browse.setStyleSheet("margin: 0px; padding: 2px 10px; ")
-
-        self.photo_layout.addWidget(self.photo_img)
-        self.photo_layout.addWidget(self.photo_img_value)
-        self.photo_layout.addWidget(self.photo_img_browse)
-        self.photo_layout.setContentsMargins(0, 0, 0, 0)
-        
-        #
-        # story action
-        #
-        self.check_Story = QCheckBox("Check Story")
-        self.check_Story.setChecked(False)
-        self.check_Story_value = QSpinBox()
-        self.check_Story_value.setValue(0)
-        self.story_video_widget = QWidget()
-        self.story_video_layout = QHBoxLayout(self.story_video_widget)
-        self.story_video_value = QLineEdit()
-        self.story_video_value.setText(r"C:/path/to/video.mp4")
-        self.story_video_browse = QPushButton("...")
-        self.story_video_browse.setStyleSheet("margin: 0px; padding: 2px 10px; ")
-
-        self.story_video_layout.addWidget(self.story_video_value)
-        self.story_video_layout.addWidget(self.story_video_browse)
-        self.story_video_layout.setContentsMargins(0, 0, 0, 0)
-        #
-        # comment action
-        #
-        self.comment_post = QCheckBox("Comment Post")
-        self.comment_post.setChecked(False)
-        self.comment_post_value = QSpinBox()
-        self.comment_post_value.setValue(0)
-        self.comment_post_value_box = QLineEdit()
-        self.comment_post_value_box.setText(r"comment1, comment2, comment3")
-        
-        #
-        # share action
-        #
-        self.share_post_group = QCheckBox("Share Post to Group")
-        self.share_post_group.setChecked(False)
-        self.share_post_group_value = QSpinBox()
-        self.share_post_group_value.setValue(0)
-        self.profile_widget = QWidget()
-        self.profile_layout = QHBoxLayout(self.profile_widget)
-        self.profile = QCheckBox("Profile")
-        self.profile_group_value = QLineEdit()
-        self.profile_group_value.setPlaceholderText(r"profile link1, profile link2, profile link3")
-        self.profile_layout.addWidget(self.profile)
-        self.profile_layout.addWidget(self.profile_group_value)
-        self.profile_layout.setContentsMargins(0, 0, 0, 0)
-        #
-        # loop action
-        #
-        self.Number_loop_time_label = QLabel("Number of Active Loops")
-        self.Number_loop_time_value = QSpinBox()
-        self.Number_loop_time_value.setValue(1)
-        self.active_between_time = QCheckBox("Active Between Time")
-        self.active_between_time.setChecked(False)
-        self.active_between_time_start_value = QSpinBox()
-        self.active_between_time_start_value.setValue(0)
-        self.active_between_time_end_value = QSpinBox()
-        self.active_between_time_end_value.setValue(0)
-        #
-        # install apk action
-        #
-        self.install_apk_widget = QWidget()
-        self.install_apk_layout = QHBoxLayout(self.install_apk_widget)
-        self.install_apk = QCheckBox("Install APK")
-        self.install_apk.setChecked(False)
-        self.install_apk_value = QLineEdit()
-        self.install_apk_value.setText(r"C:/path/to/app.apk")
-        self.install_apk_browse = QPushButton("...")
-        self.install_apk_browse.setStyleSheet("margin: 0px; padding: 2px 10px; ")
-        self.install_apk_layout.addWidget(self.install_apk)
-        self.install_apk_layout.addWidget(self.install_apk_value)
-        self.install_apk_layout.addWidget(self.install_apk_browse)
-        self.install_apk_layout.setContentsMargins(0, 0, 0, 0)
-        
-        #
-        # shutdown action
-        #
-        self.shutdown_when_finish = QCheckBox("Shutdown when finish")
-        self.shutdown_when_finish.setChecked(False)
 
 
         active_layout_main_top.addWidget(self.check_notification, 0, 0)
-        active_layout_main_top.addWidget(self.check_notification_value, 0, 1, alignment=Qt.AlignmentFlag.AlignLeft)
+        active_layout_main_top.addWidget(self.check_notification_time, 0, 1, alignment=Qt.AlignmentFlag.AlignLeft)
         active_layout_main_top.addWidget(self.check_primary_location, 0, 3)
-        active_layout_main_top.addWidget(self.scroll_newsfeed, 1, 0)
-        active_layout_main_top.addWidget(self.scroll_newsfeed_start_value, 1, 1, alignment=Qt.AlignmentFlag.AlignLeft)
+
+        active_layout_main_top.addWidget(self.scroll_feed, 1, 0)
+        active_layout_main_top.addWidget(self.scroll_feed_start, 1, 1, alignment=Qt.AlignmentFlag.AlignLeft)
         active_layout_main_top.addWidget(QLabel("To"), 1, 2, alignment=Qt.AlignmentFlag.AlignCenter)
-        active_layout_main_top.addWidget(self.scroll_newsfeed_widget, 1, 3, 1, 2, alignment=Qt.AlignmentFlag.AlignLeft)
+        active_layout_main_top.addWidget(self.scroll_feed_widget, 1, 3, 1, 2, alignment=Qt.AlignmentFlag.AlignLeft)
+
         active_layout_main_top.addWidget(self.scroll_video, 2, 0)
-        active_layout_main_top.addWidget(self.scroll_video_start_value, 2, 1, alignment=Qt.AlignmentFlag.AlignLeft)
+        active_layout_main_top.addWidget(self.scroll_video_start, 2, 1, alignment=Qt.AlignmentFlag.AlignLeft)
         active_layout_main_top.addWidget(QLabel("To"), 2, 2, alignment=Qt.AlignmentFlag.AlignCenter)
         active_layout_main_top.addWidget(self.scroll_video_widget, 2, 3, 1, 2, alignment=Qt.AlignmentFlag.AlignLeft)
-        active_layout_main_top.addWidget(self.scroll_reels, 3, 0)
-        active_layout_main_top.addWidget(self.scroll_reels_start_value, 3, 1, alignment=Qt.AlignmentFlag.AlignLeft)
+
+        active_layout_main_top.addWidget(self.scroll_reel, 3, 0)
+        active_layout_main_top.addWidget(self.scroll_reel_start, 3, 1, alignment=Qt.AlignmentFlag.AlignLeft)
         active_layout_main_top.addWidget(QLabel("To"), 3, 2, alignment=Qt.AlignmentFlag.AlignCenter)
-        active_layout_main_top.addWidget(self.scroll_reels_widget, 3, 3, 1, 2, alignment=Qt.AlignmentFlag.AlignLeft)
+        active_layout_main_top.addWidget(self.scroll_reel_widget, 3, 3, 1, 2, alignment=Qt.AlignmentFlag.AlignLeft)
+
         active_layout_main_top.addWidget(self.confirm_friend, 4, 0)
-        active_layout_main_top.addWidget(self.confirm_friend_value, 4, 1, alignment=Qt.AlignmentFlag.AlignLeft)
+        active_layout_main_top.addWidget(self.confirm_friend_time, 4, 1, alignment=Qt.AlignmentFlag.AlignLeft)
         active_layout_main_top.addWidget(self.add_friend, 4, 2)
-        active_layout_main_top.addWidget(self.add_friend_value, 4, 3, alignment=Qt.AlignmentFlag.AlignLeft)
-        active_layout_main_top.addWidget(self.reaction_post, 5, 0)
-        active_layout_main_top.addWidget(self.reaction_post_value, 5, 1, alignment=Qt.AlignmentFlag.AlignLeft)
+        active_layout_main_top.addWidget(self.add_friend_time, 4, 3, alignment=Qt.AlignmentFlag.AlignLeft)
+
+        active_layout_main_top.addWidget(self.react_post, 5, 0)
+        # react_post has no extra value SpinBox according to config, skip if unnecessary
+
         active_layout_main_top.addWidget(self.check_message, 6, 0)
-        active_layout_main_top.addWidget(self.check_message_value, 6, 1, alignment=Qt.AlignmentFlag.AlignLeft)
-        active_layout_main_top.addWidget(self.reply_widget, 6, 2, 1, 2)
-        active_layout_main_top.addWidget(self.create_post, 7, 0)
-        active_layout_main_top.addWidget(self.create_post_value, 7, 1, alignment=Qt.AlignmentFlag.AlignLeft)
-        active_layout_main_top.addWidget(self.photo_widget, 7, 2, 1, 2)
-        active_layout_main_top.addWidget(self.check_Story, 8, 0)
-        active_layout_main_top.addWidget(self.check_Story_value, 8, 1, alignment=Qt.AlignmentFlag.AlignLeft)
-        active_layout_main_top.addWidget(self.story_video_widget, 8, 2, 1, 2)
+        active_layout_main_top.addWidget(self.check_message_time, 6, 1, alignment=Qt.AlignmentFlag.AlignLeft)
+        active_layout_main_top.addWidget(self.reply_text, 6, 2, 1, 2)  # reply_text QLineEdit
+
+        active_layout_main_top.addWidget(self.check_post, 7, 0)
+        active_layout_main_top.addWidget(self.check_post_time, 7, 1, alignment=Qt.AlignmentFlag.AlignLeft)
+        active_layout_main_top.addWidget(self.photo, 7, 2, 1, 2)
+
+        active_layout_main_top.addWidget(self.check_story, 8, 0)
+        active_layout_main_top.addWidget(self.check_story_time, 8, 1, alignment=Qt.AlignmentFlag.AlignLeft)
+        active_layout_main_top.addWidget(self.video_loc, 8, 2, 1, 2)
+
         active_layout_main_top.addWidget(self.comment_post, 9, 0)
-        active_layout_main_top.addWidget(self.comment_post_value, 9, 1, alignment=Qt.AlignmentFlag.AlignLeft)
-        active_layout_main_top.addWidget(self.comment_post_value_box, 9, 2, 1, 2)
-        active_layout_main_top.setColumnStretch(3, 1)
-        active_layout_main_top.addWidget(self.share_post_group, 10, 0)
-        active_layout_main_top.addWidget(self.share_post_group_value, 10, 1, alignment=Qt.AlignmentFlag.AlignLeft)
-        active_layout_main_top.addWidget(self.profile_widget, 10, 2, 1, 2)
-        active_layout_main_top.addWidget(self.Number_loop_time_label, 11, 0)
-        active_layout_main_top.addWidget(self.Number_loop_time_value, 11, 1, alignment=Qt.AlignmentFlag.AlignLeft)
+        active_layout_main_top.addWidget(self.comment_post_time, 9, 1, alignment=Qt.AlignmentFlag.AlignLeft)
+        active_layout_main_top.addWidget(self.comment_text, 9, 2, 1, 2)
+
+        active_layout_main_top.addWidget(self.share_to_gp, 10, 0)
+        active_layout_main_top.addWidget(self.share_to_gp_time, 10, 1, alignment=Qt.AlignmentFlag.AlignLeft)
+        active_layout_main_top.addWidget(self.profile, 10, 2, 1, 2)
+
+        active_layout_main_top.addWidget(QLabel("Number of Active Loops"), 11, 0)
+        active_layout_main_top.addWidget(self.active_loop, 11, 1, alignment=Qt.AlignmentFlag.AlignLeft)
         active_layout_main_top.addWidget(QLabel("Times"), 11, 2)
-        active_layout_main_top.addWidget(self.active_between_time, 12, 0)
-        active_layout_main_top.addWidget(self.active_between_time_start_value, 12, 1, alignment=Qt.AlignmentFlag.AlignLeft)
+
+        active_layout_main_top.addWidget(self.active_between, 12, 0)
+        active_layout_main_top.addWidget(self.active_between_start, 12, 1, alignment=Qt.AlignmentFlag.AlignLeft)
         active_layout_main_top.addWidget(QLabel("To"), 12, 2, alignment=Qt.AlignmentFlag.AlignCenter)
-        active_layout_main_top.addWidget(self.active_between_time_end_value, 12, 3, alignment=Qt.AlignmentFlag.AlignLeft)
-        active_layout_main_top.addWidget(self.shutdown_when_finish, 13, 0)
-        active_layout_main_top.addWidget(self.install_apk_widget, 13, 1, 1, 3)
+        active_layout_main_top.addWidget(self.active_between_end, 12, 3, alignment=Qt.AlignmentFlag.AlignLeft)
+
+        active_layout_main_top.addWidget(self.shutdown, 13, 0)
+        active_layout_main_top.addWidget(self.install_apk, 13, 1, 1, 3)
+
+        active_layout_main_top.setColumnStretch(3, 1)
         active_layout_main_top.setRowStretch(14, 1)
         active_layout_main_top.setSpacing(18)
+
 
 
         #

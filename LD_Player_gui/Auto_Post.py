@@ -24,7 +24,7 @@ class Auto_Post():
 
         self.closeAppium = QCheckBox("Auto Close Appium")
         self.closeAppium.setChecked(True)
-        
+
         #trigger
         self.Open_ld.clicked.connect(lambda: self.GUI.LDPlayer_Start(self.specific_ld_ID))
         self.closeAppium.stateChanged.connect(lambda: self.scheduleCheck())

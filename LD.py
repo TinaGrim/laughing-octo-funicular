@@ -164,6 +164,13 @@ class BobPrimeApp(QMainWindow):
         self.resume = not stop
         print(self.resume)
         
+    def change_config(self, section: str, option: str, value: str) -> None:
+        if not self.config.has_section(section):
+            self.config.add_section(section)
+        self.config.set(section, option, value)
+        print(f"Config changed: [{section}] {option} = {value}")
+        self.save_settings()
+        
     def LDPlayer_Start(self, IDs: list[int]) -> None:
         self.Auto_Post.select_all_ld.setChecked(False)
         self.Auto_Post.selected_LD.setText(f"{0} Selected")
