@@ -73,6 +73,8 @@ class Active():
         #
         self.react_post = QCheckBox("React Post")
         self.react_post.setChecked(False)
+        self.react_post_time = QSpinBox()
+        self.react_post_time.setValue(0)
 
         #
         # check message action
@@ -144,6 +146,10 @@ class Active():
         self.active_between_start.setValue(0)
         self.active_between_end = QSpinBox()
         self.active_between_end.setValue(0)
+        self.active_between_end_widget = QWidget()
+        self.active_between_end_layout = QHBoxLayout(self.active_between_end_widget)
+        self.active_between_end_layout.addWidget(self.active_between_end)
+        self.active_between_end_layout.addWidget(QLabel("Minutes"))
 
         #
         # install apk action
@@ -201,6 +207,7 @@ class Active():
             "add_friend_time": _int("add_friend_time"),
 
             "react_post": _bool("react_post"),
+            "react_post_time": _int("react_post_time"),
 
             "check_message": _bool("check_message"),
             "check_message_time": _int("check_message_time"),
@@ -279,6 +286,7 @@ class Active():
             "scroll_reel_end",
             "confirm_friend_time",
             "add_friend_time",
+            "react_post_time",
             "check_message_time",
             "check_post_time",
             "comment_post_time",
@@ -347,28 +355,32 @@ class Active():
         active_layout_main_top.addWidget(self.add_friend_time, 4, 3, alignment=Qt.AlignmentFlag.AlignLeft)
 
         active_layout_main_top.addWidget(self.react_post, 5, 0)
-        # react_post has no extra value SpinBox according to config, skip if unnecessary
+        active_layout_main_top.addWidget(self.react_post_time, 5, 1, alignment=Qt.AlignmentFlag.AlignLeft)
 
         active_layout_main_top.addWidget(self.check_message, 6, 0)
         active_layout_main_top.addWidget(self.check_message_time, 6, 1, alignment=Qt.AlignmentFlag.AlignLeft)
-        active_layout_main_top.addWidget(self.reply_text, 6, 2, 1, 2)  # reply_text QLineEdit
-
+        active_layout_main_top.addWidget(self.reply, 6, 2)
+        active_layout_main_top.addWidget(self.reply_text, 6, 3, 1, 2)
+        
         active_layout_main_top.addWidget(self.check_post, 7, 0)
         active_layout_main_top.addWidget(self.check_post_time, 7, 1, alignment=Qt.AlignmentFlag.AlignLeft)
         active_layout_main_top.addWidget(self.photo, 7, 2, 1, 2)
-
+        active_layout_main_top.addWidget(self.photo_loc, 7, 3)
+        active_layout_main_top.addWidget(self.photo_browse, 7, 4)
         active_layout_main_top.addWidget(self.check_story, 8, 0)
         active_layout_main_top.addWidget(self.check_story_time, 8, 1, alignment=Qt.AlignmentFlag.AlignLeft)
         active_layout_main_top.addWidget(self.video_loc, 8, 2, 1, 2)
+        active_layout_main_top.addWidget(self.story_video_browse, 8, 4)
 
         active_layout_main_top.addWidget(self.comment_post, 9, 0)
         active_layout_main_top.addWidget(self.comment_post_time, 9, 1, alignment=Qt.AlignmentFlag.AlignLeft)
-        active_layout_main_top.addWidget(self.comment_text, 9, 2, 1, 2)
+        active_layout_main_top.addWidget(self.comment_text, 9, 2, 1, 4)
 
         active_layout_main_top.addWidget(self.share_to_gp, 10, 0)
         active_layout_main_top.addWidget(self.share_to_gp_time, 10, 1, alignment=Qt.AlignmentFlag.AlignLeft)
         active_layout_main_top.addWidget(self.profile, 10, 2, 1, 2)
-
+        active_layout_main_top.addWidget(self.profile_link, 10, 3, 1, 2)
+        
         active_layout_main_top.addWidget(QLabel("Number of Active Loops"), 11, 0)
         active_layout_main_top.addWidget(self.active_loop, 11, 1, alignment=Qt.AlignmentFlag.AlignLeft)
         active_layout_main_top.addWidget(QLabel("Times"), 11, 2)
@@ -376,10 +388,11 @@ class Active():
         active_layout_main_top.addWidget(self.active_between, 12, 0)
         active_layout_main_top.addWidget(self.active_between_start, 12, 1, alignment=Qt.AlignmentFlag.AlignLeft)
         active_layout_main_top.addWidget(QLabel("To"), 12, 2, alignment=Qt.AlignmentFlag.AlignCenter)
-        active_layout_main_top.addWidget(self.active_between_end, 12, 3, alignment=Qt.AlignmentFlag.AlignLeft)
+        active_layout_main_top.addWidget(self.active_between_end_widget, 12, 3, alignment=Qt.AlignmentFlag.AlignLeft)
 
         active_layout_main_top.addWidget(self.shutdown, 13, 0)
-        active_layout_main_top.addWidget(self.install_apk, 13, 1, 1, 3)
+        active_layout_main_top.addWidget(self.install_apk, 13, 1)
+        active_layout_main_top.addWidget(self.apk_loc, 13, 2, 1, 2)
 
         active_layout_main_top.setColumnStretch(3, 1)
         active_layout_main_top.setRowStretch(14, 1)

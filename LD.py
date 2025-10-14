@@ -94,7 +94,6 @@ class BobPrimeApp(QMainWindow):
 
         
         #timer
-        self.starttime = time.time()
         self.timer.timeout.connect(self.update_time)
         self.timer.start(500)
         
@@ -125,12 +124,10 @@ class BobPrimeApp(QMainWindow):
         self.pause.clicked.connect(lambda: self.Stop_LDPlayer(True))
         self.play.clicked.connect(lambda: self.Stop_LDPlayer(False))
         
-        # Auto Post
-
-        
         #Init
-        self.update_time()
         self.init()
+        self.starttime = time.time()
+        self.update_time()
     
     def _load(self):
         self.config = ConfigParser()
@@ -192,7 +189,6 @@ class BobPrimeApp(QMainWindow):
     def New_LDPlayer_Detect(self) -> None:
         try:
             ids = self.Grim.current_ld_ids()
-            print(self.LDPlayer_indexs, ids)
             if self.LDPlayer_indexs == ids :
                 return
             else:

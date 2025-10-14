@@ -8,29 +8,136 @@ class Auto_Post():
     def __init__(self, GUI) -> None:
         self.GUI = GUI
         self.opt = option()
+        def _get(key, default=None):
+            return self.GUI.config["Auto_Post"][key]
+        def _bool(key, default=False):
+            v = _get(key, default)
+            if isinstance(v, bool): return v
+            return str(v).lower() in ("true", "1", "yes", "on")
+        def _int(key, default=0):
+            try: return int(_get(key, default))
+            except Exception: return default
+        def _str(key, default=""):
+            v = _get(key, default)
+            return str(v if v is not None else default)
         
-        self.LD_Button_list_qp = QButtonGroup()
-        self.LD_Button_list_qp.setExclusive(False)
+        self.config = {
+            "enable_schedule_post": _bool("enable_schedule_post"),
+            "enable_post_when_run": _bool("enable_post_when_run"),
+            "shutdown_pc": _bool("shutdown_pc"),
+            "close_appium": _bool("close_appium"),
+            "enable_post": _bool("enable_post"),
+            "page_name": _str("page_name"),
+            "app_name": _str("app_name"),
+            "comment_on_post_reel": _bool("comment_on_post_reel"),
+            "comment_on_post_photo": _bool("comment_on_post_photo"),
+            "comment_on_post_video": _bool("comment_on_post_video"),
+            "everyday": _bool("everyday"),
+            "mon" : _bool("mon"),
+            "tue" : _bool("tue"),
+            "wed" : _bool("wed"),
+            "thu" : _bool("thu"),
+            "fri" : _bool("fri"),
+            "sat" : _bool("sat"),
+            "sun" : _bool("sun"),
+        }
+        # setup
         self.Check_Box_LD_Name = []
         self.timeline_table_list = []
         self.specific_ld_ID = []
+        
+        
         # widgets
+        self.LD_Button_list_qp = QButtonGroup()
+        self.LD_Button_list_qp.setExclusive(False)
+        
+        
+        self.enable_schedule_post = QCheckBox("Enable Schedule Post")
+        self.enable_schedule_post.setChecked(self.config["enable_schedule_post"])
+        self.enable_post_when_run = QCheckBox("Enable Post When Run")
+        self.enable_post_when_run.setChecked(self.config["enable_post_when_run"])
+        self.shutdown_pc = QCheckBox("Shutdown PC")
+        self.shutdown_pc.setChecked(self.config["shutdown_pc"])
+
+        self.close_appium = QCheckBox("Auto Close Appium")
+        self.close_appium.setChecked(self.config["close_appium"])
+        
+        
         self.Open_ld = QPushButton("➕")
         self.Open_ld.setStyleSheet("margin: 0px 0px 10px 0px;")
         self.deleteButton = QPushButton("🗑️")
         self.deleteButton.setStyleSheet("margin: 0px 0px 10px 0px;")
         self.createButton = QPushButton("✒️")
         self.createButton.setStyleSheet("margin: 0px 0px 10px 0px;")
+        self.enable_post = QCheckBox("Enable Post")
+        self.enable_post.setChecked(self.config["enable_post"])
+        self.page_name = QLineEdit()
+        self.page_name.setText(self.config["page_name"])
+        self.app_name = QLineEdit()
+        self.app_name.setText(self.config["app_name"])
+        self.comment_on_post_reel = QCheckBox("Reel")
+        self.comment_on_post_reel.setChecked(self.config["comment_on_post_reel"])
+        self.comment_on_post_photo = QCheckBox("Photo")
+        self.comment_on_post_photo.setChecked(self.config["comment_on_post_photo"])
+        self.comment_on_post_video = QCheckBox("Video")
+        self.comment_on_post_video.setChecked(self.config["comment_on_post_video"])
+        self.mon = QCheckBox("Mon")
+        self.mon.setChecked(self.config["mon"])
+        self.tue = QCheckBox("Tue")
+        self.tue.setChecked(self.config["tue"])
+        self.wed = QCheckBox("Wed")
+        self.wed.setChecked(self.config["wed"])
+        self.thu = QCheckBox("Thu")
+        self.thu.setChecked(self.config["thu"])
+        self.fri = QCheckBox("Fri")
+        self.fri.setChecked(self.config["fri"])
+        self.sat = QCheckBox("Sat")
+        self.sat.setChecked(self.config["sat"])
+        self.sun = QCheckBox("Sun")
+        self.sun.setChecked(self.config["sun"])
+        
+        self.dashboard = QCheckBox("Dashboard")
+        self.posttable = QPushButton("☰ Post Table")
+        self.timeline = QPushButton("⏱︎ Timeline")
+        self.everyday = QGroupBox("Everyday")
+        self.everyday.setCheckable(True)
+        self.everyday.setChecked(self.config["everyday"])
 
-        self.closeAppium = QCheckBox("Auto Close Appium")
-        self.closeAppium.setChecked(True)
 
         #trigger
         self.Open_ld.clicked.connect(lambda: self.GUI.LDPlayer_Start(self.specific_ld_ID))
-        self.closeAppium.stateChanged.connect(lambda: self.scheduleCheck())
+        self.close_appium.stateChanged.connect(lambda: self.scheduleCheck())
+        # __ bool __
+        for key in [
+            "enable_schedule_post",
+            "enable_post_when_run",
+            "shutdown_pc",
+            "close_appium",
+            "enable_post",
+            "comment_on_post_reel",
+            "comment_on_post_photo",
+            "comment_on_post_video",
+            "everyday",
+            "mon",
+            "tue",
+            "wed",
+            "thu",
+            "fri",
+            "sat",
+            "sun",
+        ]:
+            widget = getattr(self, key)
+            widget.toggled.connect(lambda checked, b=key: self.GUI.change_config("Auto_Post", b, str(checked)))
+        # __ text __
+        for text in [
+            "page_name",
+            "app_name",
+        ]:
+            widget = getattr(self, text)
+            widget.textChanged.connect(lambda value, t=text: self.GUI.change_config("Auto_Post", t, value))
         
     def scheduleCheck(self) -> bool:
-        self.scheduleClose = self.closeAppium.isChecked()
+        self.scheduleClose = self.close_appium.isChecked()
         return self.scheduleClose
               
     def Tab_auto_post(self) -> QWidget:
@@ -45,12 +152,12 @@ class Auto_Post():
         """Schedule"""
         Group_Box_Schedule = QGroupBox()
         Group_schedule = QVBoxLayout()
-        
-        
-        Group_schedule.addWidget(QCheckBox("Enable Schedule Post"))
-        Group_schedule.addWidget(QCheckBox("Enable Post When Run"))
-        Group_schedule.addWidget(QCheckBox("Shutdown PC"))
-        Group_schedule.addWidget(self.closeAppium)
+
+
+        Group_schedule.addWidget(self.enable_schedule_post)
+        Group_schedule.addWidget(self.enable_post_when_run)
+        Group_schedule.addWidget(self.shutdown_pc)
+        Group_schedule.addWidget(self.close_appium)
         Group_Box_Schedule.setLayout(Group_schedule)
         """End Schedule"""
         
@@ -85,19 +192,13 @@ class Auto_Post():
         page_setup_layout_Group_Layout = QVBoxLayout(page_setup_layout_Group)
         
         page_setup_header = QHBoxLayout()
-        self.enable_post = QCheckBox("Enable Post")
-        self.enable_post.setChecked(False)
         page_setup_name = QLabel("Page Name")
-        page_setup_name_value = QLineEdit()
-        page_setup_name_value.setText("Grim")
         page_setup_app = QLabel("App")
-        page_setup_app_value = QLineEdit()
-        page_setup_app_value.setText("com.facebook.katana")
         page_setup_header.addWidget(self.enable_post)
         page_setup_header.addWidget(page_setup_name)
-        page_setup_header.addWidget(page_setup_name_value)
+        page_setup_header.addWidget(self.page_name)
         page_setup_header.addWidget(page_setup_app)
-        page_setup_header.addWidget(page_setup_app_value)
+        page_setup_header.addWidget(self.app_name)
         
         
         page_setup_main_widget = QWidget()
@@ -117,53 +218,39 @@ class Auto_Post():
         
         page_setup_post_on = QGroupBox("Comment on post")
         page_setup_post_on_layout = QHBoxLayout(page_setup_post_on)
-        self.Reel = QCheckBox("Reel")
-        self.Text = QCheckBox("Photo")
-        self.Story = QCheckBox("video")
-        page_setup_post_on_layout.addWidget(self.Reel)
-        page_setup_post_on_layout.addWidget(self.Text)
-        page_setup_post_on_layout.addWidget(self.Story)
+        page_setup_post_on_layout.addWidget(self.comment_on_post_reel)
+        page_setup_post_on_layout.addWidget(self.comment_on_post_photo)
+        page_setup_post_on_layout.addWidget(self.comment_on_post_video)
         page_setup_post_on_layout.setContentsMargins(5, 0, 0, 0)
         page_setup_post_on.setStyleSheet("margin: 10px 0px; padding: 0px;")
         
         
-        page_setup_schedule_day = QGroupBox("Everyday")
-        page_setup_schedule_day.setCheckable(True)
-        page_setup_schedule_day.setChecked(True)
-        
-        page_setup_schedule_day_layout = QVBoxLayout(page_setup_schedule_day)
-        
+
+        page_setup_schedule_day_layout = QVBoxLayout(self.everyday)
+
         page_setup_schedule_day_widget1 = QWidget()
         page_setup_schedule_day_layout1 = QHBoxLayout(page_setup_schedule_day_widget1)
-        self.Monday = QCheckBox("Mon")
-        self.Tuesday = QCheckBox("Tue")
-        self.Wednesday = QCheckBox("Wed")
-        self.Thursday = QCheckBox("Thu")
         page_setup_schedule_day_widget2 = QWidget()
         page_setup_schedule_day_layout2 = QHBoxLayout(page_setup_schedule_day_widget2)
-        
-        self.Friday = QCheckBox("Fri")
-        self.Saturday = QCheckBox("Sat")
-        self.Sunday = QCheckBox("Sun")
-        page_setup_schedule_day_layout1.addWidget(self.Monday)
-        page_setup_schedule_day_layout1.addWidget(self.Tuesday)
-        page_setup_schedule_day_layout1.addWidget(self.Wednesday)
-        page_setup_schedule_day_layout1.addWidget(self.Thursday)
+        page_setup_schedule_day_layout1.addWidget(self.mon)
+        page_setup_schedule_day_layout1.addWidget(self.tue)
+        page_setup_schedule_day_layout1.addWidget(self.wed)
+        page_setup_schedule_day_layout1.addWidget(self.thu)
         page_setup_schedule_day_layout1.addStretch(1)
         
         page_setup_schedule_day_layout1.setContentsMargins(5, 0, 0, 0)
         page_setup_schedule_day_widget1.setStyleSheet("margin: 10px 0px 0px 0px; padding: 0px;")
         
         
-        page_setup_schedule_day_layout2.addWidget(self.Friday)
-        page_setup_schedule_day_layout2.addWidget(self.Saturday)
-        page_setup_schedule_day_layout2.addWidget(self.Sunday)
+        page_setup_schedule_day_layout2.addWidget(self.fri)
+        page_setup_schedule_day_layout2.addWidget(self.sat)
+        page_setup_schedule_day_layout2.addWidget(self.sun)
         page_setup_schedule_day_layout2.addStretch(1)
         
         page_setup_schedule_day_layout2.setContentsMargins(5, 0, 0, 0)
         page_setup_schedule_day_widget2.setStyleSheet("margin: 0px 0px 0px 0px; padding: 0px;")
         
-        page_setup_schedule_day.setStyleSheet("margin: 10px 0px; padding: 0px;")
+        self.everyday.setStyleSheet("margin: 10px 0px; padding: 0px;")
         
         page_setup_schedule_day_layout.addWidget(page_setup_schedule_day_widget1)
         page_setup_schedule_day_layout.addWidget(page_setup_schedule_day_widget2)
@@ -171,7 +258,7 @@ class Auto_Post():
         
         page_setup_schedule_layout.addWidget(page_setup_post_on)
         page_setup_schedule_layout.addStretch(1)
-        page_setup_schedule_layout.addWidget(page_setup_schedule_day)
+        page_setup_schedule_layout.addWidget(self.everyday)
         
         page_setup_schedule_layout.setContentsMargins(0, 0, 0, 0)
         page_setup_schedule_widget.setStyleSheet("margin: 5px; padding: 0px;")
@@ -185,9 +272,6 @@ class Auto_Post():
         
 
         page_setup_timeline_bottom = QHBoxLayout()
-        self.dashboard = QCheckBox("Dashboard")
-        self.posttable = QPushButton("☰ Post Table")
-        self.timeline = QPushButton("⏱︎ Timeline")
         page_setup_timeline_bottom.addWidget(self.dashboard)
         page_setup_timeline_bottom.addWidget(self.posttable)
         page_setup_timeline_bottom.addWidget(self.timeline)
