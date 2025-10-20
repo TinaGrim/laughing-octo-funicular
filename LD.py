@@ -96,8 +96,8 @@ class BobPrimeApp(QMainWindow):
         #timer
         self.timer.timeout.connect(self.update_time)
         self.timer.start(500)
-        
-        self.LDPlayer_time.timeout.connect(self.New_LDPlayer_Detect)
+
+        self.LDPlayer_time.timeout.connect(lambda: threading.Thread(target=self.New_LDPlayer_Detect).start())
         self.LDPlayer_time.start(3000)
         
         #table activity
@@ -105,8 +105,9 @@ class BobPrimeApp(QMainWindow):
         self.activityTimer.start(1000)
         
         #table LDName
-        self.LDNameTimer.timeout.connect(self.Auto_Post.update_auto_post_table)
-        self.LDNameTimer.start(60000)
+        # self.LDNameTimer.timeout.connect(self.Auto_Post.update_auto_post_table)
+        # self.LDNameTimer.start(50000)
+        
         self.Auto_Post.LD_Button_list_qp.idToggled.connect(self.Auto_Post.Select_LDPlayer)
         
         #table devices
@@ -114,8 +115,8 @@ class BobPrimeApp(QMainWindow):
         self.DevicesTimer.start(30000)
 
         #table devices list
-        self.DeviceList.timeout.connect(self.Manage.update_devices_list)
-        self.DeviceList.start(30000)
+        # self.DeviceList.timeout.connect(self.Manage.update_devices_list)
+        # self.DeviceList.start(30000)
         self.Manage.devices_list_qp.idToggled.connect(self.Manage.Select_list_devices)
         
 
@@ -188,14 +189,15 @@ class BobPrimeApp(QMainWindow):
 
     def New_LDPlayer_Detect(self) -> None:
         try:
-            ids = self.Grim.current_ld_ids()
+            ids = option.current_ld_ids()
+            col = self.config.getint('Devices', 'arangement_count')
             if self.LDPlayer_indexs == ids :
                 return
             else:
                 self.LDPlayer_indexs = ids
                 for index, ID in enumerate(self.LDPlayer_indexs):
-                    
-                    self.Grim.Arrangment(ID, index)
+
+                    option.Arrangment(ID, index // col, index % col)
                     time.sleep(1)
     
         except Exception as e:
@@ -204,17 +206,19 @@ class BobPrimeApp(QMainWindow):
     def LDPlayer_Process(self, IDs: list[int]) -> None:
         steps = [
             lambda ld: ld.open(),
-            lambda ld: time.sleep(5),
+            lambda ld: time.sleep(self.config.getint('Devices', 'wait_after_ld_boot')),
             lambda ld: ld.check_command(),
             lambda ld: ld.remote()
         ]
         
         for step in steps:
             for ld in self.LDPlayers:
+                
                 if ld.ID in IDs:
                     step(ld)
                     if step == steps[0]:
-                        time.sleep(5)
+                        time.sleep(self.config.getint('Devices', 'between_ld_minutes'))
+    
         
     def update_time(self) -> None:
         """Update the time label with current time using replace"""
@@ -261,6 +265,7 @@ class BobPrimeApp(QMainWindow):
             self.table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch) 
         self.update_exist_activity_table(driver_list, activityData)
         return self.table
+
 
     def update_exist_activity_table(self, driver_list: list[str], activityData: dict):
 

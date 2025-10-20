@@ -11,7 +11,84 @@ class Manage():
         self.devices_list_qp = QButtonGroup()
         self.devices_list_qp.setExclusive(False)
         self.Check_Box_List_Devices = []
+        def _get(key, default=None):
+            return self.GUI.config["Manage"][key]
+        def _bool(key, default=False):
+            v = _get(key, default)
+            if isinstance(v, bool): return v
+            return str(v).lower() in ("true", "1", "yes", "on")
+        def _int(key, default=0):
+            try: return int(_get(key, default))
+            except Exception: return default
+        def _str(key, default=""):
+            v = _get(key, default)
+            return str(v if v is not None else default)
+        # widget
+        self.enable_ld_manager = QGroupBox("Enable LDPlayer Manager")
+        self.enable_ld_manager.setCheckable(True)
+        self.enable_ld_manager.setChecked(True)
+        self.number_of_active = QSpinBox()
+        self.number_of_active.setStyleSheet("margin: 0px;")
         
+        self.number_of_active.setValue(1)
+        self.add_new_ld = QCheckBox("Add New LDPlayers")
+        self.add_new_ld_count = QSpinBox()
+        self.add_new_ld_count.setValue(1)
+        self.add_new_ld_count.setStyleSheet("margin: 0px;")
+
+        self.copy_ld = QCheckBox("Copy From")
+        self.backup = QCheckBox("Backup LDPlayer To")
+        self.backup_loc = QLineEdit()
+        self.backup_loc.setText(r"C:/path/to/self.backup.zip")
+        self.backup_browse = QPushButton("...")
+        self.backup_browse.setStyleSheet("margin: 0px; padding: 2px 10px; ")
+        self.restore = QCheckBox("Restore LDPlayer From")
+        self.restore_loc = QLineEdit()
+        self.restore_loc.setText(r"C:/path/to/self.backup.zip")
+        self.restore_browse = QPushButton("...")
+        self.restore_browse.setStyleSheet("margin: 0px; padding: 2px 10px; ")
+        self.remove_ld = QCheckBox("Remove LDPlayer")
+        self.shutdown = QCheckBox("Shutdown PC When Finish")
+        self.enable_facebook_manager = QGroupBox("Enable LDPlayer Manager")
+        self.enable_facebook_manager.setCheckable(True)
+        self.enable_facebook_manager.setChecked(True)
+        self.enable_ld_manager.setStyleSheet("margin: 8px;")
+        self.enable_facebook_manager.setStyleSheet("margin: 8px;")
+        self.auto_pull_name = QCheckBox("Auto Pull Account/Page Name")
+        self.clear_exist_name = QCheckBox("Clear Existing Names")
+        self.fb_login = QCheckBox("FB Login")
+        self.fb_login_loc = QLineEdit()
+        self.fb_login_loc.setText(r"C:/path/to/FBlocal.txt")
+        self.account_name = QCheckBox("Account/Page Name")
+        self.account_name_btn = QPushButton("@")
+        self.create_page = QCheckBox("Create Pages")
+        self.shutdown_pc = QCheckBox("Shutdown PC When Finish")
+        self.account_name_btn.setStyleSheet("margin: 0px; padding: 2px 10px; ")
+        self.copy_ld_from = QComboBox()
+        self.copy_ld_from.addItems(self.opt.check_ld_in_list())
+        self.copy_ld_from.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        
+        self.config = {
+            "enable_ld_manager": _bool("enable_ld_manager"),
+            "backup_loc": _str("backup_loc"),
+            "restore_loc": _str("restore_loc"),
+            "enable_facebook_manager": _bool("enable_facebook_manager"),
+            "fb_login_loc": _str("fb_login_loc")
+        }
+        # __ text __
+        for wid in [
+            "backup_loc", "restore_loc", "fb_login_loc",
+        ]:
+            widget = getattr(self, wid)
+            widget.textChanged.connect(lambda text, w=wid: self.GUI.change_config("Manage", w, text))
+        # __ toggle __
+        for wid in [
+            "enable_ld_manager",
+            "enable_facebook_manager"
+        ]:
+            widget = getattr(self, wid)
+            widget.toggled.connect(lambda checked, w=wid: self.GUI.change_config("Manage", w, str(checked)))
+
     def Tab_manage(self) -> QWidget:
         ld_manage_widget = QWidget()
         ld_manage_layout = QHBoxLayout(ld_manage_widget)
@@ -34,69 +111,40 @@ class Manage():
         ld_manage_manager_layout = QVBoxLayout(ld_manage_manager)
         ld_manage_manager_layout.setContentsMargins(0, 10, 0, 0)
 
-        ld_manage_group_boxtop = QGroupBox("Enable LDPlayer Manager")
-        ld_manage_group_boxtop.setCheckable(True)
-        ld_manage_group_boxtop.setChecked(True)
-        ld_manage_manager_layout_top = QVBoxLayout(ld_manage_group_boxtop)
-        
+        ld_manage_manager_layout_top = QVBoxLayout(self.enable_ld_manager)
+
         number_active = QHBoxLayout()
         number = QLabel("Number of Active Batch")
-        number_value = QSpinBox()
-        number_value.setStyleSheet("margin: 0px;")
-        
-        number_value.setValue(1)
         number_active.addWidget(number)
-        number_active.addWidget(number_value)
+        number_active.addWidget(self.number_of_active)
         number_active.addStretch(1)
 
-        new_ld = QHBoxLayout()
-        new_ld_label = QCheckBox("Add New LDPlayers")
-        new_ld_value = QSpinBox()
-        new_ld_value.setValue(1)
-        new_ld_value.setStyleSheet("margin: 0px;")
-
-        copy_from = QCheckBox("Copy From")
-        copy_from_value = QComboBox()
-        copy_from_value.addItems(self.opt.check_ld_in_list())
-        copy_from_value.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        add_new_ld = QHBoxLayout()
         
         
-        new_ld.addWidget(new_ld_label)
-        new_ld.addWidget(new_ld_value)
-        new_ld.addWidget(copy_from)
-        new_ld.addWidget(copy_from_value)
+        add_new_ld.addWidget(self.add_new_ld)
+        add_new_ld.addWidget(self.add_new_ld_count)
+        add_new_ld.addWidget(self.copy_ld)
+        add_new_ld.addWidget(self.copy_ld_from)        
         
         backup = QHBoxLayout()
-        backup_label = QCheckBox("Backup LDPlayer To")
-        backup_value = QLineEdit()
-        backup_value.setText(r"C:/path/to/backup.zip")
-        backup_browse = QPushButton("...")
-        backup_browse.setStyleSheet("margin: 0px; padding: 2px 10px; ")
-        
-        backup.addWidget(backup_label)
-        backup.addWidget(backup_value)
-        backup.addWidget(backup_browse)
+        backup.addWidget(self.backup)
+        backup.addWidget(self.backup_loc)
+        backup.addWidget(self.backup_browse)
         
         restore = QHBoxLayout()
-        restore_label = QCheckBox("Restore LDPlayer From")
-        restore_value = QLineEdit()
-        restore_value.setText(r"C:/path/to/backup.zip")
-        restore_browse = QPushButton("...")
-        restore_browse.setStyleSheet("margin: 0px; padding: 2px 10px; ")
         
-        restore.addWidget(restore_label)
-        restore.addWidget(restore_value)
-        restore.addWidget(restore_browse)
+        restore.addWidget(self.restore)
+        restore.addWidget(self.restore_loc)
+        restore.addWidget(self.restore_browse)
         
         remove = QHBoxLayout()
-        remove_label = QCheckBox("Remove LDPlayer")
-        remove.addWidget(remove_label)
+        remove.addWidget(self.remove_ld)
         shutdown = QHBoxLayout()
-        shutdown_label = QCheckBox("Shutdown PC When Finish")
-        shutdown.addWidget(shutdown_label)
+        shutdown.addWidget(self.shutdown)
         
         ld_manage_manager_layout_top.addLayout(number_active)
-        ld_manage_manager_layout_top.addLayout(new_ld)
+        ld_manage_manager_layout_top.addLayout(add_new_ld)
         ld_manage_manager_layout_top.addLayout(backup)
         ld_manage_manager_layout_top.addLayout(restore)
         ld_manage_manager_layout_top.addLayout(remove)
@@ -105,39 +153,26 @@ class Manage():
 
         ld_manage_manager_layout_top.setContentsMargins(10, 20, 0, 0)
         
-        ld_manage_group_boxbottom = QGroupBox("Enable LDPlayer Manager")
-        ld_manage_group_boxbottom.setCheckable(True)
-        ld_manage_group_boxbottom.setChecked(True)
-        ld_manage_manager_layout_bottom = QVBoxLayout(ld_manage_group_boxbottom)
-        autoput = QHBoxLayout()
-        autoput_label = QCheckBox("Auto Pull Account/Page Name")
-        clear_existing = QCheckBox("Clear Existing Names")
         
-        autoput.addWidget(autoput_label)
-        autoput.addWidget(clear_existing)
+        ld_manage_manager_layout_bottom = QVBoxLayout(self.enable_facebook_manager)
+        autoput = QHBoxLayout()
+        autoput.addWidget(self.auto_pull_name)
+        autoput.addWidget(self.clear_exist_name)
         autoput.addStretch(1)
         
         FBlocal = QHBoxLayout()
-        FBlocal_label = QCheckBox("FB Login")
-        FBlocal_value = QLineEdit()
-        FBlocal_value.setText(r"C:/path/to/FBlocal.txt")
         FBlocal_browse = QPushButton("...")
         FBlocal_browse.setStyleSheet("margin: 0px; padding: 2px 10px; ")
-        account_page_name = QCheckBox("Account/Page Name")
-        account_page_name_btn = QPushButton("@")
-        account_page_name_btn.setStyleSheet("margin: 0px; padding: 2px 10px; ")
-        FBlocal.addWidget(FBlocal_label)
-        FBlocal.addWidget(FBlocal_value)
+        FBlocal.addWidget(self.fb_login)
+        FBlocal.addWidget(self.fb_login_loc)
         FBlocal.addWidget(FBlocal_browse)
-        FBlocal.addWidget(account_page_name)
-        FBlocal.addWidget(account_page_name_btn)
+        FBlocal.addWidget(self.account_name)
+        FBlocal.addWidget(self.account_name_btn)
         
         createpage = QHBoxLayout()
-        createpage_label = QCheckBox("Create Pages")
-        createpage.addWidget(createpage_label)
+        createpage.addWidget(self.create_page)
         shutdownbottom = QHBoxLayout()
-        shutdownbottom_label = QCheckBox("Shutdown PC When Finish")
-        shutdownbottom.addWidget(shutdownbottom_label)
+        shutdownbottom.addWidget(self.shutdown_pc)
 
         ld_manage_manager_layout_bottom.addLayout(autoput)
         ld_manage_manager_layout_bottom.addLayout(FBlocal)
@@ -146,11 +181,9 @@ class Manage():
         ld_manage_manager_layout_bottom.addStretch(1)
         ld_manage_manager_layout_bottom.setContentsMargins(10, 20, 0, 0)
 
-        ld_manage_group_boxtop.setStyleSheet("margin: 8px;")
-        ld_manage_group_boxbottom.setStyleSheet("margin: 8px;")
 
-        ld_manage_manager_layout.addWidget(ld_manage_group_boxtop)
-        ld_manage_manager_layout.addWidget(ld_manage_group_boxbottom)
+        ld_manage_manager_layout.addWidget(self.enable_ld_manager)
+        ld_manage_manager_layout.addWidget(self.enable_facebook_manager)
         ld_manage_layout.addWidget(ld_manage_list, 3)
         ld_manage_layout.addWidget(ld_manage_manager, 7)
 
@@ -168,9 +201,9 @@ class Manage():
             self.devices_list.resizeColumnsToContents()
             self.devices_list.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)  
             self.devices_list.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
-        if getattr(self, "select_all_devices", None):
-            self.select_all_devices.setChecked(False)
-            self.selected_Devices.setText(f"{0} Selected")
+        # if getattr(self, "select_all_devices", None):
+        #     self.select_all_devices.setChecked(False)
+        #     self.selected_Devices.setText(f"{0} Selected")
         self.update_exist_devices_list(list_devices)
         return self.devices_list
 
@@ -180,6 +213,7 @@ class Manage():
         for i in range(0, len(list_devices)):
             self.devices_list.setRowCount(len(list_devices))
             self.list_devices_checkBox = QCheckBox(str(i+1))
+            self.list_devices_checkBox.setChecked(True if (i+1) in getattr(self, "specific_list_devices_ID", []) else False)
             self.devices_list_qp.addButton(self.list_devices_checkBox, i+1)
             self.devices_list.setCellWidget(i, 0, self.list_devices_checkBox)
             self.devices_list.setItem(i, 1, QTableWidgetItem(list_devices[i]))

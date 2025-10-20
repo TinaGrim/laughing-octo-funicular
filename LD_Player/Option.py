@@ -55,6 +55,7 @@ class option:
         "Messenger": """//android.widget.TextView[@content-desc="Messenger"]""",
         "cancelAuth": """//android.widget.ImageView[@content-desc="Cancel"]""",
         "createAccount": """//android.widget.Button[@content-desc="Create new account"]/android.view.ViewGroup""",
+        "findMyAccount": """//android.view.View[@content-desc="Find my account"]""",
         "getStarted2": """//android.view.View[@content-desc="Get started"]""",
         "getStarted": """//android.view.View[@content-desc="Create new account"]""",
         "permissionDeny": """//android.widget.Button[@resource-id="com.android.packageinstaller:id/permission_deny_button"]""",
@@ -146,18 +147,18 @@ class option:
         except FileNotFoundError:
             print("LDPlayer config file not found.")
             return []
-
-    def Arrangment(self, ID: int, index: int) -> None:
+    @staticmethod
+    def Arrangment(ID: int, row: int, col: int) -> None:
         """Arranging LDPlayer windows"""
         try:
-            ID = ID - 1
-            LD_Name = f"LDPlayer" if ID == 0 else f"LDPlayer-{ID}"
+            Index = ID - 1
+            LD_Name = f"LDPlayer" if Index == 0 else f"LDPlayer-{Index}"
             found = False
             while not found:
                 for w in pygetwindow.getAllWindows():
                     if w.title == LD_Name:
-                        w.moveTo(index * 360, 0)
-                        print(self.ok + f"LDPlayer {ID + 1} Arranged successfully")
+                        w.moveTo(col * (w.width), row * (w.height))
+                        print("[ \033[92mOK\033[0m ] " + f"LDPlayer {ID} Arranged successfully")
                         found = True
                         break
 
@@ -195,12 +196,12 @@ class option:
         }
         return des_cap
 
-    def __info(self, Show: int)->subprocess.STARTUPINFO:
+    def __info(self, id: int)->subprocess.STARTUPINFO:
         """Just for hide window - Windows only"""
         if platform.system() == "Windows":
             startupinfo = subprocess.STARTUPINFO()
             startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-            startupinfo.wShowWindow = Show
+            startupinfo.wShowWindow = id
             return startupinfo
         else:
             sys.exit(1)
@@ -308,8 +309,8 @@ class option:
     # username = "tinagrim@yandex.com"
     # password = "frshsghyvjqeiayv"  # Use app password if 2FA is enabled
     # filter_email = "tinagrim+001kh@yandex.com"
-
-    def current_ld_names(self)-> list[str]:
+    @staticmethod
+    def current_ld_names()-> list[str]:
 
         Drivers_list_opened = []
         
@@ -330,8 +331,8 @@ class option:
                 driver_name: str = line.split("\t")[0]
                 Drivers_list_opened.append(driver_name)
         return Drivers_list_opened if Drivers_list_opened else [] # sample [emulator-5554, emulator-5556] is open
-    
-    def current_ld_ids(self)-> list[int]:
+    @staticmethod
+    def current_ld_ids()-> list[int]:
 
         Drivers_list_opened = []
         
@@ -520,3 +521,6 @@ class Activity:
         except Exception as e:
             print(f"Error loading proxies: {e}")
             return []
+        
+
+    

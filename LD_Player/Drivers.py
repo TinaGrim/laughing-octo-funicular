@@ -51,10 +51,14 @@ class LDPlayerRemote():
             self.action("No Action...")
             sys.exit(1)
         except NoSuchElementException as e:
+            print(str(func))
+            
             print("[ \033[91mClose\033[0m ] " + "Found no element => " + str(e))
             self.action("No Action...")
             sys.exit(1)
         except TimeoutException as e:
+            print(str(func))
+            
             print(f"[ \033[91mClose\033[0m ] " + "Time out => " + str(e))
             self.action("No Action...")
             sys.exit(1)
@@ -66,15 +70,24 @@ class LDPlayerRemote():
     def is_pause(self):
         if hasattr(self.LDPlayer, 'resume_event'):
             self.LDPlayer.resume_event.wait()
-    def wait_and_click_to(self, xpath, timesleep=3, timeout=30):
+    def wait_and_click_to(self, xpath, timesleep=3, timeout:float=30):
         self.is_pause()
             
         time.sleep(timesleep)
         el = WebDriverWait(self.Driver, timeout).until(EC.presence_of_element_located((By.XPATH, xpath)))
         el.click()
         return el
-
-    def wait_and_send_keys_to(self, xpath, text, timesleep=3, timeout=30):
+    
+    def check_element(self, xpath, timesleep=0.5, timeout:float=3):
+        self.is_pause()
+        time.sleep(timesleep)
+        try:
+            WebDriverWait(self.Driver, timeout).until(EC.presence_of_element_located((By.XPATH, xpath)))
+        except (NoSuchElementException, TimeoutException):
+            return False
+        return True
+    
+    def wait_and_send_keys_to(self, xpath, text, timesleep=3, timeout: float=30):
         self.is_pause()
         time.sleep(timesleep)
         el = WebDriverWait(self.Driver, timeout).until(EC.presence_of_element_located((By.XPATH, xpath)))
@@ -183,7 +196,7 @@ class LDPlayerRemote():
                 print("Driver did not exist...")
                 return 0
             
-            self.scroll_region(top=0, left=0, height=400, direction="down", percent=1.0)
+            # self.scroll_region(top=0, left=0, height=400, direction="down", percent=1.0)
 
             
             
@@ -194,12 +207,14 @@ class LDPlayerRemote():
             time.sleep(8)
             self._find_cancel()
             
-            self.action("Create Account", self.wait_and_click_to, self.GET.SELECTOR["createAccount"], 4)
+            self.action("Create Account")
+            # self.action("Create Account", self.wait_and_click_to, self.GET.SELECTOR["createAccount"], 4)
+            
             try:
-                self.wait_and_click_to(self.GET.SELECTOR["getStarted"], timeout=10)
+                self.wait_and_click_to(self.GET.SELECTOR["getStarted"],timesleep=5, timeout=10)
             except Exception:
                 self.wait_and_click_to(self.GET.SELECTOR["getStarted2"], timeout=10)
-
+                
             self.action("Deny Permission", self.wait_and_click_to, self.GET.SELECTOR["permissionDeny"], timesleep=4, timeout=10)
 
 
@@ -321,54 +336,64 @@ class LDPlayerRemote():
             file.write("="*50 + "\nFirst Name: {First_Name} \nLast Name: {Last_Name} \nEmail: {Mail}\nDate of Birth: {Day}/{month}/{Year}\nGender: {Gender}\n".format(First_Name=self.IMFORMATION["firstName"],Last_Name=self.IMFORMATION["lastName"],Mail=Mail,Day=Day,month=Month,Year=Year,Gender=Gender))
 
     def _find_cancel(self):
-            try:
-                output = subprocess.check_output(f'adb -s {self.emu} shell dumpsys activity activities', shell=True).decode('utf-8')
-                Attempt = 0
-                passing = False
-                for line in output.splitlines():
-                    if re.match("Activities=", line.strip()):
-                        line = line.split("=", 1)
-                        act = line[1].strip("[]")
-                        print("[ \033[92mOK\033[0m ] " + f"Current Activity: {act}")
-                        break
+        passed = False
+        while not passed:
+            cancel_auth = self.check_element(self.GET.SELECTOR["cancelAuth"], timesleep=0, timeout=3)
+            if not cancel_auth:
+                find_account = self.check_element(self.GET.SELECTOR["findMyAccount"], timesleep=0, timeout=3)
+            else:
+                find_account = False
 
-                while "AssistedSignInGET" not in act and "AssistedSignInActivity" not in act:
+            print(f"from {self.driverID}, cancel_auth: {cancel_auth}")
+            if find_account:
+                print("click Create account")
+                self.wait_and_click_to(self.GET.SELECTOR["getStarted"], timesleep=0, timeout=3)
+                
+            elif cancel_auth:
+                
+                print("click Cancel Auth")
+                self.wait_and_click_to(self.GET.SELECTOR["cancelAuth"], timesleep=0, timeout=3)
+                print("next")
+                self.wait_and_click_to(self.GET.SELECTOR["getStarted"], timesleep=1, timeout=15)
+                passed = True
+                continue
+            
+            print("check get started")
+            passed = self.check_element(self.GET.SELECTOR["findMyAccount"], timesleep=0, timeout=10)
+            print(passed)
 
-                    if Attempt < 8:
-                        time.sleep(5)
-                        Attempt += 1
-                        output = subprocess.check_output(f'adb -s emulator-55{(self.driverID-1)*2+54} shell dumpsys activity activities', shell=True).decode('utf-8')
-                        for line in output.splitlines():
-                            if re.match("Activities=", line.strip()):
-                                line = line.split("=", 1)
-                                act = line[1].strip("[]")
-                                print("[ \033[92mOK\033[0m ] " + f"Current Activity: {act}")
-                                break
-                    else:
-                        print("Not found try pass")
-                        passing = True
-                        break
-                if not passing:
-                    print("[ \033[92mOK\033[0m ] " + "Found Cancel Button")
-                    self.wait_and_click_to(self.GET.SELECTOR["cancelAuth"])
+            # try:
+            #     output = subprocess.check_output(f'adb -s {self.emu} shell dumpsys activity activities', shell=True).decode('utf-8')
+            #     Attempt = 0
+            #     passing = False
+            #     for line in output.splitlines():
+            #         if re.match("Activities=", line.strip()):
+            #             line = line.split("=", 1)
+            #             act = line[1].strip("[]")
+            #             print("[ \033[92mOK\033[0m ] " + f"Current Activity: {act}")
+            #             break
 
-            except subprocess.CalledProcessError as e:
-                print(f"Error executing adb command: {e}")
+            #     while "AssistedSignInGET" not in act and "AssistedSignInActivity" not in act:
 
-if __name__ == "__main__":
-    URL = "http://127.0.0.1:5000/"
+            #         if Attempt < 8:
+            #             time.sleep(5)
+            #             Attempt += 1
+            #             output = subprocess.check_output(f'adb -s emulator-55{(self.driverID-1)*2+54} shell dumpsys activity activities', shell=True).decode('utf-8')
+            #             for line in output.splitlines():
+            #                 if re.match("Activities=", line.strip()):
+            #                     line = line.split("=", 1)
+            #                     act = line[1].strip("[]")
+            #                     print("[ \033[92mOK\033[0m ] " + f"Current Activity: {act}")
+            #                     break
+            #         else:
+            #             print("Not found try pass")
+            #             passing = True
+            #             break
+            #     if not passing:
+            #         print("[ \033[92mOK\033[0m ] " + "Found Cancel Button")
+            #         self.wait_and_click_to(self.GET.SELECTOR["cancelAuth"])
 
-    try:
-        get_order = requests.get(URL + "Order", headers={"Content-Type": "application/json"})
-        response = get_order.json()
-        order_IDs: list[int] = response.get("Order", False)
-        print("[ \033[92mOK\033[0m ]" ,"LDPlayer open => ", order_IDs)
-    except Exception as e:
-        print(f"Server Error: {e}")
+            # except subprocess.CalledProcessError as e:
+            #     print(f"Error executing adb command: {e}")
 
-    if order_IDs:
-        for i in order_IDs:
-            Mythread = threading.Thread(
-                target=lambda ID=i: LDPlayerRemote(ID))
-            Mythread.start()
 

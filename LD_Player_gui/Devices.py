@@ -87,15 +87,16 @@ class Devices():
 
         self.cpu_count = QComboBox()
         self.cpu_count.addItems(["1 core","2 cores","3 cores","4 cores","5 cores","6 cores","7 cores","8 cores"])
-        self.cpu_count.setCurrentIndex(self.get_int("cpu_count") - 1)
+        self.cpu_count.setCurrentIndex(self.config["cpu_count"] - 1)
 
         self.ram_count = QComboBox()
-        self.ram_count.addItems(["512MB","1GB","2GB","3GB","4GB"])
-        self.ram_count.setCurrentIndex(self.get_int("ram_count") - 1)
+        ram_list = ["512MB","1GB","2GB","3GB","4GB"]
+        self.ram_count.addItems(ram_list)
+        self.ram_count.setCurrentIndex(ram_list.index(f"{self.config['ram_count']}GB") if f"{self.config['ram_count']}GB" in ram_list else 0)
 
         self.arangement = QCheckBox("Arrange LDplayer")
         self.arangement_count = QSpinBox()
-        self.arangement_count.setValue(self.get_int("arangement_count"))
+        self.arangement_count.setValue(self.config["arangement_count"])
         self.arangement_count.setStyleSheet("margin: 0px;")
 
         self.auto_fit = QCheckBox("Auto Fit")
@@ -106,21 +107,20 @@ class Devices():
         self.screen_resolution.setCurrentIndex(
             next(
                 (i for i in range(self.screen_resolution.count())
-                if self.screen_resolution.itemText(i) == self.GUI.config["Devices"]["screen_resolution"]),
-                0
+                if self.screen_resolution.itemText(i) == self.config["screen_resolution"]),0
             )
         )
 
         self.run_at_startup = QCheckBox("Run at Startup")
         self.run_at_startup.setChecked(self.config["run_at_startup"])
         self.run_at_startup_seconds = QSpinBox()
-        self.run_at_startup_seconds.setValue(self.get_int("run_at_startup_seconds"))
+        self.run_at_startup_seconds.setValue(self.config["run_at_startup_seconds"])
         self.run_at_startup_seconds.setStyleSheet("margin: 0px;")
 
         self.auto_stop = QCheckBox("Auto Stop at")
         self.auto_stop.setChecked(self.config["auto_stop"])
         self.auto_stop_minutes = QSpinBox()
-        self.auto_stop_minutes.setValue(self.get_int("auto_stop_minutes"))
+        self.auto_stop_minutes.setValue(self.config["auto_stop_minutes"])
         self.auto_stop_minutes.setStyleSheet("margin: 0px;")
 
         self.shutdown = QCheckBox("Shutdown")
@@ -129,7 +129,7 @@ class Devices():
         self.clear_cache = QCheckBox("Clear cache every run counts")
         self.clear_cache.setChecked(self.config["clear_cache"])
         self.clear_cache_count = QSpinBox()
-        self.clear_cache_count.setValue(self.get_int("clear_cache_count"))
+        self.clear_cache_count.setValue(self.config["clear_cache_count"])
         self.clear_cache_count.setStyleSheet("margin: 0px;")
 
         self.clear_fb = QCheckBox("Clear FB user data if exceeds 900 MB")
@@ -138,7 +138,7 @@ class Devices():
         self.clear_ld = QCheckBox("Clear LDPlayer if exceeds ")
         self.clear_ld.setChecked(self.config["clear_ld"])
         self.clear_ld_gb = QSpinBox()
-        self.clear_ld_gb.setValue(self.get_int("clear_ld_gb"))
+        self.clear_ld_gb.setValue(self.config["clear_ld_gb"])
         self.clear_ld_gb.setStyleSheet("margin: 0px;")
 
         self.close_all_when_stop = QCheckBox("Close all LD when stop")
@@ -386,10 +386,6 @@ class Devices():
             self.sys_loc.setText(dir)
             self.GUI.change_config("Devices", "Sys_loc", dir)
 
-    def get_bool(self, value) -> bool:
-        return self.GUI.config["Devices"][value] in [True, 'True', 'true', 1, '1']
-    def get_int(self, value) -> int:
-        return int(self.GUI.config["Devices"][value])
     
     def update_devices_table(self) -> QTableWidget:
         

@@ -453,9 +453,7 @@ class Auto_Post():
             self.LDName_table.resizeColumnsToContents()
             self.LDName_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)  
             self.LDName_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
-        if getattr(self, "select_all_ld", None):
-            self.select_all_ld.setChecked(False)
-            self.selected_LD.setText(f"{0} Selected")
+
         self.update_exist_auto_post_table(driver_list)
         return self.LDName_table
     
@@ -463,11 +461,11 @@ class Auto_Post():
         if not driver_list:
             self.LDName_table.setRowCount(0)
             return
-        
+    
         for i, driver_name in enumerate(driver_list):
             self.LDName_table.setRowCount(len(driver_list))
-            
             self.checkBox = QCheckBox(str(i + 1))
+            self.checkBox.setChecked(True if (i+1) in self.specific_ld_ID else False)
             self.LD_Button_list_qp.addButton(self.checkBox, i + 1)
             self.LDName_table.setCellWidget(i, 0, self.checkBox)
             self.LDName_table.setItem(i, 1, QTableWidgetItem(driver_name))
