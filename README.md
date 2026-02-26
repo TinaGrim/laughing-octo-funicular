@@ -36,30 +36,32 @@ A powerful automation and control tool for **LDPlayer Android emulator** with bo
 - **LDPlayer** ([Download](https://www.ldplayer.net/))
 - **PHP 7.x** (for web features)
 
-### Installation
+### Install
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/TinaGrim/laughing-octo-funicular.git
-   cd laughing-octo-funicular
-2. **Install Python dependencies**
-   ```bash
-   pip install -r requirements.txt
-3. **Configure LDPlayer path**
-   **Edit config.ini**
-   ```bash
-   git clone https://github.com/TinaGrim/laughing-octo-funicular.git
-   [LDPlayer]
-    path = C:\LDPlayer\LDPlayer9
-    default_instance = leidian0
-4. **Run the application**
-   **GUI Mode:**
-   ```bash
-   python LD_Player_gui/main.py
-   ```
-   **CLI Mode:**
-   ```bash
-   python LD.py --help
+```bash
+git clone https://github.com/TinaGrim/laughing-octo-funicular.git
+cd laughing-octo-funicular
+pip install -r requirements.txt
+```
+
+### Configure
+
+Edit `config.ini` and set your LDPlayer installation path:
+
+```ini
+[LDPlayer]
+path = C:\LDPlayer\LDPlayer9
+```
+
+### Run
+
+```bash
+python LD.py
+```
+
+The GUI window opens and the Flask server starts automatically at `http://127.0.0.1:5000`.
+
+---
 ## 📁 Project Structure
 
 ```
