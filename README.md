@@ -61,30 +61,66 @@ A powerful automation and control tool for **LDPlayer Android emulator** with bo
    ```bash
    python LD.py --help
 ## 📁 Project Structure
-```text
-laughing-octo-funicular/
-├── 📂 LD_Player_gui/          # GUI application files
-│   ├── main.py                 # GUI entry point
-│   ├── style/                  # CSS stylesheets
-│   └── Logo/                   # Application icons
-├── 📂 server/                   # PHP backend
-│   ├── index.php                # Main server file
-│   └── chatBot.php              # Chatbot integration
-├── 📂 test/                      # Test files
-├── 🐍 LD.py                       # Core LDPlayer controller
-├── ⚙️ config.ini                  # Configuration file
-├── 📊 Data.txt                    # User/data storage
-├── 📦 requirements.txt            # Python dependencies
-├── 🔒 .gitignore                   # Git ignore rules
-└── 📜 README.md                   # This file
+
 ```
-## 🛠️ Configuration Options
-**config.ini**
+laughing-octo-funicular/
+│
+├── LD.py                       # 🚀 Entry point — BobPrimeApp (QMainWindow + Flask)
+├── config.ini                  # ⚙️  Application settings
+├── Data.txt                    # 📊 Generated user/account data
+├── requirements.txt            # 📦 Python dependencies
+├── chatBot.php                 # 💬 PHP chatbot backend
+├── .env                        # 🔑 Tokens (TOKEN1–TOKEN7) — not committed
+│
+├── LD_Player/                  # Core automation package
+│   ├── __init__.py             #    Exports: LDPlayer, option, Activity, Threader
+│   ├── Main.py                 #    LDPlayer class — open, stop, resume, process
+│   ├── Option.py               #    ADB/Appium helpers, identity generation
+│   ├── Drivers.py              #    LDPlayerRemote — automated action sequences
+│   └── MyThread.py             #    Threader utility
+│
+├── LD_Player_gui/              # GUI tab modules (PySide6)
+│   ├── Active.py               #    Automation actions configuration
+│   ├── Devices.py              #    Emulator instance & hardware settings
+│   ├── Manage.py               #    Account/page management
+│   └── Auto_Post.py            #    Scheduled posting
+│
+├── server/                     # Flask web layer
+│   ├── server_routes.py        #    Blueprint routes & API logic
+│   ├── index.html              #    Dashboard home
+│   ├── DevicesList.html        #    Device list view
+│   ├── LDActivity.html         #    Activity monitor
+│   ├── Order.html              #    Order page
+│   └── schedule.html           #    Schedule page
+│
+├── style/                      # Styling
+│   ├── style.qss               #    Qt stylesheet for the desktop GUI
+│   ├── style.css               #    Web dashboard CSS
+│   └── DevicesList.css         #    Device list page CSS
+│
+├── Logo/                       # App icons (play, pause, logo, etc.)
+└── test/                       # Unit tests
+    └── test_proxy.py           #    Proxy & activity tests
+```
+
+---
+## ⚙️ Configuration
+
+All settings live in `config.ini` and are read/written by the GUI automatically.
+
 ```ini
 [LDPlayer]
-path = C:\LDPlayer\LDPlayer9
-instances = leidian0, leidian1
+path = C:\LDPlayer\LDPlayer9       # LDPlayer install directory
+instances = leidian0, leidian1      # Default instances
 auto_start = true
+
+[Devices]
+LD_loc = C:\LDPlayer\LDPlayer9     # Also configurable from GUI
+number_of_active_ld = 2
+wait_after_ld_boot = 30
+arangement_count = 3                # Grid columns for window arrangement
+cpu_count = 2
+hardware_acceleration = true
 
 [Automation]
 delay = 2
@@ -94,26 +130,52 @@ retry_count = 3
 port = 8080
 debug = false
 ```
+
+---
+
 **Data.txt Format**
 ```text
 user1,config1,timestamp
 user2,config2,timestamp
 ```
-## 💻 Usage Examples
-**Basic LDPlayer Control**
+## 💻 Usage
+
+### Programmatic Control
+
 ```python
-from LD import LDPlayer
+from LD_Player import LDPlayer, option
 
-# Initialize controller
-ld = LDPlayer(config_path='config.ini')
+# List currently running emulators via ADB
+running_ids = option.current_ld_ids()
+print("Running:", running_ids)       # e.g. [1, 2]
 
-# Start an instance
-ld.start_instance('leidian0')
-
-# List all instances
-instances = ld.list_instances()
-print(instances)
+# Get LDPlayer instance names
+names = option.current_ld_names()
+print("Names:", names)               # e.g. ["LDPlayer-1", "LDPlayer-2"]
 ```
+
+### Automation Flow (simplified)
+
+```python
+from LD_Player import option
+
+bot = option(Number=[1, 2, 3])
+
+# 1. Open emulators
+bot.Open_LD()
+
+# 2. Wait for devices to boot
+for id in bot.number:
+    bot.wait_for_ldplayer_device(id)
+
+# 3. Setup Appium and configure each instance
+bot.Full_setup()
+
+# 4. Launch remote drivers for automated actions
+bot.Remote_Driver()
+```
+
+---
 **GUI Mode Shortcuts**
 - Ctrl+S: Save configuration
 - Ctrl+R: Refresh instances
@@ -170,6 +232,16 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📬 Contact
 
 Project Link: [https://github.com/TinaGrim/laughing-octo-funicular](https://github.com/TinaGrim/laughing-octo-funicular)
+
+---
+### Languages
+
+```
+Python ███████████████████████░░  91%
+PHP    ██░░░░░░░░░░░░░░░░░░░░░░   6%
+CSS    █░░░░░░░░░░░░░░░░░░░░░░░   2%
+HTML   █░░░░░░░░░░░░░░░░░░░░░░░   1%
+```
 
 ---
 
