@@ -119,10 +119,59 @@ print(instances)
 - Ctrl+R: Refresh instances
 - F5: Start selected instance
 - F6: Stop selected instance
-## 🌐 Web API Endpoints
-Endpoint	Method	Description
-/api/instances	GET	List all instances
-/api/start/{id}	POST	Start an instance
-/api/stop/{id}	POST	Stop an instance
-/api/config	GET/POST	Get/Set configuration
+## 🌐 API Endpoints
+
+| Endpoint | Method | Description | Status |
+|----------|--------|-------------|--------|
+| `/api/instances` | `GET` | 📋 List all running LDPlayer instances | ![Active](https://img.shields.io/badge/status-active-brightgreen) |
+| `/api/start/{id}` | `POST` | ▶️ Start a specific LDPlayer instance | ![Active](https://img.shields.io/badge/status-active-brightgreen) |
+| `/api/stop/{id}` | `POST` | ⏹️ Stop a specific LDPlayer instance | ![Active](https://img.shields.io/badge/status-active-brightgreen) |
+| `/api/restart/{id}` | `POST` | 🔄 Restart a specific LDPlayer instance | ![Beta](https://img.shields.io/badge/status-beta-yellow) |
+| `/api/config` | `GET` | ⚙️ Retrieve current configuration | ![Active](https://img.shields.io/badge/status-active-brightgreen) |
+| `/api/config` | `POST` | ✏️ Update configuration settings | ![Active](https://img.shields.io/badge/status-active-brightgreen) |
+| `/api/automation/run` | `POST` | 🤖 Execute automation script | ![Beta](https://img.shields.io/badge/status-beta-yellow) |
+| `/api/data` | `GET` | 📊 Retrieve stored data | ![Active](https://img.shields.io/badge/status-active-brightgreen) |
+| `/api/chatbot/message` | `POST` | 💬 Send message to chatbot | ![New](https://img.shields.io/badge/status-new-blue) |
+## 📝 Requirements
+
+### Python Packages
+- tkinter
+- configparser
+- requests
+- pillow
+
+### System Requirements
+- Windows 7/8/10/11
+- 4GB RAM minimum
+- 500MB free disk space
+- LDPlayer installed
+
+## 🔧 Troubleshooting
+
+### Common Issues
+
+**LDPlayer path not found**
+- Verify LDPlayer installation
+- Check path in `config.ini`
+- Use forward slashes or double backslashes
+
+**GUI won't start**
+- Install tkinter: `pip install tk`
+- Check Python version compatibility
+
+**Permission errors**
+- Run as administrator
+- Check file permissions for `Data.txt`
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 📬 Contact
+
+Project Link: [https://github.com/TinaGrim/laughing-octo-funicular](https://github.com/TinaGrim/laughing-octo-funicular)
+
+---
+
+**⭐ Star this repository if you find it useful!**
   
